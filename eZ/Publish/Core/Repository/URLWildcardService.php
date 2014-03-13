@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\Repository\URLWildcardService class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  * @package eZ\Publish\Core\Repository
@@ -248,27 +248,6 @@ class URLWildcardService implements URLWildcardServiceInterface
         }
 
         throw new NotFoundException( "URLWildcard", $url );
-    }
-
-    /**
-     * Map by specificity
-     *
-     * @param \eZ\Publish\SPI\Persistence\Content\UrlWildcard[] $spiUrlWildcards
-     *
-     * @todo use or remove
-     *
-     * @return array
-     */
-    private function buildSpecificityScoreMap( array $spiUrlWildcards )
-    {
-        $map = array();
-
-        foreach ( $spiUrlWildcards as $spiUrlWildcard )
-        {
-            $map[$spiUrlWildcard->id] = preg_replace( "/[\\D]/", "", strtr( $spiUrlWildcard->sourceUrl, "/*", "10" ) );
-        }
-
-        return $map;
     }
 
     /**

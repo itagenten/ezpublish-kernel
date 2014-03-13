@@ -2,7 +2,7 @@
 /**
  * File containing the RestContentType ValueObjectVisitor class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -98,6 +98,28 @@ class RestContentType extends RestContentTypeBase
         $generator->endAttribute( 'href' );
         $generator->endObjectElement( 'Modifier' );
 
+        $generator->startObjectElement( 'Groups', 'ContentTypeGroupRefList' );
+        $generator->startAttribute(
+            'href',
+            $this->router->generate(
+                'ezpublish_rest_loadGroupsOfContentType',
+                array( 'contentTypeId' => $contentType->id )
+            )
+        );
+        $generator->endAttribute( 'href' );
+        $generator->endObjectElement( 'Groups' );
+
+        $generator->startObjectElement( 'Draft', 'ContentType' );
+        $generator->startAttribute(
+            'href',
+            $this->router->generate(
+                'ezpublish_rest_loadContentTypeDraft',
+                array( 'contentTypeId' => $contentType->id )
+            )
+        );
+        $generator->endAttribute( 'href' );
+        $generator->endObjectElement( 'Draft' );
+
         $generator->startValueElement( 'remoteId', $contentType->remoteId );
         $generator->endValueElement( 'remoteId' );
 
@@ -107,13 +129,19 @@ class RestContentType extends RestContentTypeBase
         $generator->startValueElement( 'nameSchema', $contentType->nameSchema );
         $generator->endValueElement( 'nameSchema' );
 
-        $generator->startValueElement( 'isContainer', ( $contentType->isContainer ? 'true' : 'false' ) );
+        $generator->startValueElement(
+            'isContainer',
+            $this->serializeBool( $generator, $contentType->isContainer )
+        );
         $generator->endValueElement( 'isContainer' );
 
         $generator->startValueElement( 'mainLanguageCode', $contentType->mainLanguageCode );
         $generator->endValueElement( 'mainLanguageCode' );
 
-        $generator->startValueElement( 'defaultAlwaysAvailable', ( $contentType->defaultAlwaysAvailable ? 'true' : 'false' ) );
+        $generator->startValueElement(
+            'defaultAlwaysAvailable',
+            $this->serializeBool( $generator, $contentType->defaultAlwaysAvailable )
+        );
         $generator->endValueElement( 'defaultAlwaysAvailable' );
 
         $generator->startValueElement( 'defaultSortField', $this->serializeSortField( $contentType->defaultSortField ) );

@@ -2,7 +2,7 @@
 /**
  * File containing the ContentTypeCreate parser class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -10,7 +10,6 @@
 namespace eZ\Publish\Core\REST\Server\Input\Parser;
 
 use eZ\Publish\Core\REST\Common\Input\ParsingDispatcher;
-use eZ\Publish\Core\REST\Common\RequestParser;
 use eZ\Publish\Core\REST\Common\Input\ParserTools;
 use eZ\Publish\Core\REST\Common\Exceptions;
 use eZ\Publish\API\Repository\ContentTypeService;
@@ -68,7 +67,6 @@ class ContentTypeCreate extends Base
      */
     public function parse( array $data, ParsingDispatcher $parsingDispatcher )
     {
-        // @todo XSD says that minOccurs = 0 for identifier, but identifier is required
         if ( !array_key_exists( 'identifier', $data ) )
         {
             throw new Exceptions\Parser( "Missing 'identifier' element for ContentTypeCreate." );
@@ -123,7 +121,6 @@ class ContentTypeCreate extends Base
             $contentTypeCreateStruct->defaultAlwaysAvailable = $this->parserTools->parseBooleanValue( $data['defaultAlwaysAvailable'] );
         }
 
-        // @todo XSD says that names is mandatory, but content type can be created without names
         if ( array_key_exists( 'names', $data ) )
         {
             if ( !is_array( $data['names'] ) || !array_key_exists( 'value', $data['names'] ) || !is_array( $data['names']['value'] ) )

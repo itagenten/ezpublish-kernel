@@ -2,20 +2,18 @@
 /**
  * File containing the FallbackRouter class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishLegacyBundle\Routing;
 
-use eZModule;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class FallbackRouter implements RouterInterface
 {
@@ -32,13 +30,13 @@ class FallbackRouter implements RouterInterface
     private $logger;
 
     /**
-     * @var \Symfony\Component\DependencyInjection\ContainerInterface
+     * @var UrlGenerator
      */
-    private $container;
+    private $urlGenerator;
 
-    public function __construct( ContainerInterface $container, RequestContext $context = null, LoggerInterface $logger = null )
+    public function __construct( UrlGenerator $urlGenerator, RequestContext $context = null, LoggerInterface $logger = null )
     {
-        $this->container = $container;
+        $this->urlGenerator = $urlGenerator;
         $this->context = $context = $context ?: new RequestContext;
         $this->logger = $logger;
     }
@@ -113,10 +111,7 @@ class FallbackRouter implements RouterInterface
 
             $moduleUri = $parameters['module_uri'];
             unset( $parameters['module_uri'] );
-            // Using service container here because of urlGenerator dependency on legacy kernel which is in the "request" scope.
-            // So cannot inject it in the constructor since a router is not yet in that scope.
-            $urlGenerator = $this->container->get( 'ezpublish_legacy.url_generator' );
-            return $urlGenerator->generate( $moduleUri, $parameters, $absolute );
+            return $this->urlGenerator->generate( $moduleUri, $parameters, $absolute );
         }
 
         throw new RouteNotFoundException();

@@ -2,15 +2,18 @@
 /**
  * File containing the GlobalHelper class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\MVC\Symfony\Templating;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use eZ\Publish\API\Repository\LocationService;
+use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\Core\MVC\Symfony\Routing\UrlAliasRouter;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * Templating helper object globally accessible, through the "ezpublish" variable (in Twig).
@@ -19,13 +22,38 @@ use eZ\Publish\Core\MVC\Symfony\Routing\UrlAliasRouter;
 class GlobalHelper
 {
     /**
-     * @var \Symfony\Component\DependencyInjection\ContainerInterface
+     * @var \eZ\Publish\Core\MVC\ConfigResolverInterface
      */
-    protected $container;
+    protected $configResolver;
 
-    public function __construct( ContainerInterface $container )
+    /**
+     * @var \eZ\Publish\API\Repository\LocationService
+     */
+    protected $locationService;
+
+    /**
+     * @var \Symfony\Component\Routing\RouterInterface
+     */
+    protected $router;
+
+    /**
+     * @var \Symfony\Component\HttpFoundation\Request
+     */
+    protected $request;
+
+    public function __construct( ConfigResolverInterface $configResolver, LocationService $locationService, RouterInterface $router )
     {
-        $this->container = $container;
+        $this->configResolver = $configResolver;
+        $this->locationService = $locationService;
+        $this->router = $router;
+    }
+
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     */
+    public function setRequest( Request $request = null )
+    {
+        $this->request = $request;
     }
 
     /**
@@ -35,9 +63,9 @@ class GlobalHelper
      */
     public function getSiteaccess()
     {
-        if ( $this->container->has( 'ezpublish.siteaccess' ) )
+        if ( $this->request )
         {
-            return $this->container->get( 'ezpublish.siteaccess' );
+            return $this->request->attributes->get( 'siteaccess' );
         }
     }
 
@@ -48,9 +76,9 @@ class GlobalHelper
      */
     public function getViewParameters()
     {
-        if ( $this->container->has( 'request' ) )
+        if ( $this->request )
         {
-            return $this->container->get( 'request' )->attributes->get( 'viewParameters' );
+            return $this->request->attributes->get( 'viewParameters' );
         }
     }
 
@@ -62,9 +90,9 @@ class GlobalHelper
      */
     public function getViewParametersString()
     {
-        if ( $this->container->has( 'request' ) )
+        if ( $this->request )
         {
-            return $this->container->get( 'request' )->attributes->get( 'viewParametersString' );
+            return $this->request->attributes->get( 'viewParametersString' );
         }
     }
 
@@ -75,9 +103,9 @@ class GlobalHelper
      */
     public function getRequestedUriString()
     {
-        if ( $this->container->has( 'request' ) )
+        if ( $this->request )
         {
-            return $this->container->get( 'request' )->attributes->get( 'semanticPathinfo' );
+            return $this->request->attributes->get( 'semanticPathinfo' );
         }
     }
 
@@ -92,18 +120,16 @@ class GlobalHelper
      */
     public function getSystemUriString()
     {
-        if ( $this->container->has( 'request' ) )
+        if ( $this->request )
         {
-            /** @var $request \Symfony\Component\HttpFoundation\Request */
-            $request = $this->container->get( 'request' );
-            if ( $request->attributes->get( '_route' ) === UrlAliasRouter::URL_ALIAS_ROUTE_NAME )
+            if ( $this->request->attributes->get( '_route' ) === UrlAliasRouter::URL_ALIAS_ROUTE_NAME )
             {
-                return $this->container->get( 'router' )
+                return $this->router
                     ->generate(
                         '_ezpublishLocation',
                         array(
-                            'locationId' => $request->attributes->get( 'locationId' ),
-                            'viewType' => $request->attributes->get( 'viewType' )
+                            'locationId' => $this->request->attributes->get( 'locationId' ),
+                            'viewType' => $this->request->attributes->get( 'viewType' )
                         )
                     );
             }
@@ -113,15 +139,24 @@ class GlobalHelper
     }
 
     /**
+     * Returns the root location.
+     *
+     * @return \eZ\Publish\API\Repository\Values\Content\Location
+     */
+    public function getRootLocation()
+    {
+        return $this->locationService->loadLocation(
+            $this->configResolver->getParameter( 'content.tree_root.location_id' )
+        );
+    }
+
+    /**
      * Returns the config resolver.
      *
      * @return \eZ\Publish\Core\MVC\ConfigResolverInterface
      */
     public function getConfigResolver()
     {
-        if ( $this->container->has( 'ezpublish.config.resolver' ) )
-        {
-            return $this->container->get( 'ezpublish.config.resolver' );
-        }
+        return $this->configResolver;
     }
 }

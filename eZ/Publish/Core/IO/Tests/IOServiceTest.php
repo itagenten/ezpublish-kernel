@@ -2,20 +2,16 @@
 /**
  * File contains: eZ\Publish\Core\Repository\Tests\Service\Integration\IOBase class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\IO\Tests;
 
-use eZ\Publish\API\Repository\Exceptions\PropertyNotFoundException as PropertyNotFound;
-use eZ\Publish\API\Repository\Exceptions\PropertyReadOnlyException;
-use eZ\Publish\API\Repository\Exceptions\NotFoundException;
 use eZ\Publish\Core\IO\Handler as IOHandlerInterface;
 use eZ\Publish\Core\IO\Values\BinaryFile;
 use eZ\Publish\Core\IO\Values\BinaryFileCreateStruct;
-use eZ\Publish\SPI\IO\BinaryFileCreateStruct as SPIBinaryFileCreateStruct;
 use eZ\Publish\SPI\IO\BinaryFile as SPIBinaryFile;
 use eZ\Publish\SPI\IO\MimeTypeDetector;
 use PHPUnit_Framework_TestCase;
@@ -160,6 +156,29 @@ class IOServiceTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @covers \eZ\Publish\Core\IO\IOService::loadBinaryFile
+     * @expectedException \eZ\Publish\Core\Base\Exceptions\NotFoundException
+     */
+    public function testLoadBinaryFileNotFound()
+    {
+        $id = 'id.ext';
+        $prefixedUri = $this->getPrefixedUri( $id );
+        $this->getIOHandlerMock()
+            ->expects( $this->once() )
+            ->method( 'load' )
+            ->with( $prefixedUri )
+            ->will(
+                $this->throwException(
+                    new \eZ\Publish\Core\Base\Exceptions\NotFoundException(
+                        'BinaryFile', $prefixedUri
+                    )
+                )
+            );
+
+        $this->getIOService()->loadBinaryFile( $id );
+    }
+
+    /**
      * @covers \eZ\Publish\Core\IO\IOService::getFileInputStream
      * @depends testCreateBinaryFile
      */
@@ -189,6 +208,43 @@ class IOServiceTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * @depends testCreateBinaryFile
+     * @covers IOService \eZ\Publish\Core\IO\IOService::exists()
+     */
+    public function testExists( BinaryFile $binaryFile)
+    {
+        $this->getIOHandlerMock()
+            ->expects( $this->once() )
+            ->method( 'exists' )
+            ->with( $this->equalTo( $this->getPrefixedUri( $binaryFile->id ) ) )
+            ->will( $this->returnValue( true ) );
+
+        self::assertTrue(
+            $this->getIOService()->exists(
+                $binaryFile->id
+            )
+        );
+    }
+
+    /**
+     * @covers IOService \eZ\Publish\Core\IO\IOService::exists()
+     */
+    public function testExistsNot()
+    {
+        $this->getIOHandlerMock()
+            ->expects( $this->once() )
+            ->method( 'exists' )
+            ->with( $this->equalTo( $this->getPrefixedUri( __METHOD__ ) ) )
+            ->will( $this->returnValue( false ) );
+
+        self::assertFalse(
+            $this->getIOService()->exists(
+                __METHOD__
+            )
+        );
+    }
+
+    /**
      * @covers \eZ\Publish\Core\IO\IOService::deleteBinaryFile
      * @depends testCreateBinaryFile
      */
@@ -198,6 +254,30 @@ class IOServiceTest extends PHPUnit_Framework_TestCase
             ->expects( $this->once() )
             ->method( 'delete' )
             ->with( $this->equalTo( $this->getPrefixedUri( $binaryFile->id ) ) );
+
+        $this->getIOService()->deleteBinaryFile( $binaryFile );
+    }
+
+    /**
+     * @covers \eZ\Publish\Core\IO\IOService::deleteBinaryFile
+     * @expectedException \eZ\Publish\Core\Base\Exceptions\NotFoundException
+     */
+    public function testDeleteBinaryFileNotFound()
+    {
+        $binaryFile = new BinaryFile(
+            array( 'id' => __METHOD__ )
+        );
+
+        $prefixedId = $this->getPrefixedUri( $binaryFile->id );
+        $this->getIOHandlerMock()
+            ->expects( $this->once() )
+            ->method( 'delete' )
+            ->with( $this->equalTo( $prefixedId ) )
+            ->will(
+                $this->throwException(
+                    new \eZ\Publish\Core\Base\Exceptions\NotFoundException( 'BinaryFile', $prefixedId )
+                )
+            );
 
         $this->getIOService()->deleteBinaryFile( $binaryFile );
     }
@@ -252,7 +332,7 @@ class IOServiceTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @return IOHandlerInterface
+     * @return IOHandlerInterface|\PHPUnit_Framework_MockObject_MockObject
      */
     private function getIOHandlerMock()
     {
@@ -264,7 +344,7 @@ class IOServiceTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @return MimeTypeDetector
+     * @return MimeTypeDetector|\PHPUnit_Framework_MockObject_MockObject
      */
     private function getMimeTypeDetectorMock()
     {

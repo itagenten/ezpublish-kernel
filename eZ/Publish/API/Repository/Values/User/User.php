@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\API\Repository\Values\User\User class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -17,7 +17,7 @@ use eZ\Publish\API\Repository\Values\Content\Content;
  * @property-read string $login
  * @property-read string $email
  * @property-read string $passwordHash
- * @property-read string $hashAlgorithm Hash algorithm used to has the password
+ * @property-read string $hashAlgorithm Hash algorithm used to hash the password
  * @property-read boolean $enabled User can not login if false
  * @property-read int $maxLogin Max number of time user is allowed to login
  */

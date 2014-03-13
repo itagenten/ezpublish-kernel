@@ -2,13 +2,14 @@
 /**
  * File containing the Configuration class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\DependencyInjection;
 
+use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\Collector\SuggestionCollectorInterface;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
@@ -20,8 +21,14 @@ class Configuration implements ConfigurationInterface
      */
     private $configParsers;
 
-    public function __construct( array $configParsers )
+    /**
+     * @var Configuration\Suggestion\Collector\SuggestionCollectorInterface
+     */
+    private $suggestionCollector;
+
+    public function __construct( array $configParsers, SuggestionCollectorInterface $suggestionCollector )
     {
+        $this->suggestionCollector = $suggestionCollector;
         $this->configParsers = $configParsers;
     }
 
@@ -35,6 +42,7 @@ class Configuration implements ConfigurationInterface
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root( 'ezpublish' );
 
+        $this->addRepositoriesSection( $rootNode );
         $this->addSiteaccessSection( $rootNode );
         $this->addImageMagickSection( $rootNode );
         $this->addHttpCacheSection( $rootNode );
@@ -43,6 +51,50 @@ class Configuration implements ConfigurationInterface
         $this->addRouterSection( $rootNode );
 
         return $treeBuilder;
+    }
+
+    public function addRepositoriesSection( ArrayNodeDefinition $rootNode )
+    {
+        $rootNode
+            ->children()
+                ->arrayNode( 'repositories' )
+                    ->info( 'Content repositories configuration' )
+                    ->example(
+                        array(
+                            'main' => array(
+                                'engine' => 'legacy',
+                                'connection' => 'my_doctrine_connection_name'
+                            )
+                        )
+                    )
+                    ->useAttributeAsKey( 'alias' )
+                    ->prototype( 'array' )
+                        ->beforeNormalization()
+                            // If set to null, use default values.
+                            // %ezpublish.api.storage_engine.default% as engine, and default connection (if applicable).
+                            ->ifNull()
+                            ->then(
+                                function ()
+                                {
+                                    return array( 'engine' => '%ezpublish.api.storage_engine.default%', 'connection' => 'default' );
+                                }
+                            )
+                        ->end()
+                        ->children()
+                            ->scalarNode( 'engine' )->isRequired()->info( 'The storage engine to use' )->end()
+                            ->scalarNode( 'connection' )
+                                ->defaultValue( 'default' )
+                                ->info( 'The connection name, if applicable (e.g. Doctrine connection name). Defaults to "default"' )
+                            ->end()
+                            ->arrayNode( 'config' )
+                                ->info( 'Arbitrary configuration options, supported by your storage engine' )
+                                ->useAttributeAsKey( 'key' )
+                                ->prototype( 'variable' )->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ->end();
     }
 
     public function addSiteaccessSection( ArrayNodeDefinition $rootNode )
@@ -94,19 +146,32 @@ class Configuration implements ConfigurationInterface
                             ->useAttributeAsKey( 'key' )
                             ->normalizeKeys( false )
                             ->prototype( 'array' )
+                                ->useAttributeAsKey( 'key' )
                                 ->beforeNormalization()
-                                    // Value passed to the matcher should always be an array.
-                                    // If value is not an array, we transform it to a hash, with 'value' as key.
-                                    ->ifTrue(
+                                    ->always(
                                         function ( $v )
                                         {
-                                            return !is_array( $v );
-                                        }
-                                    )
-                                    ->then(
-                                        function ( $v )
-                                        {
-                                            return array( 'value' => $v );
+                                            // Value passed to the matcher should always be an array.
+                                            // If value is not an array, we transform it to a hash, with 'value' as key.
+                                            if ( !is_array( $v ) )
+                                            {
+                                                return array( 'value' => $v );
+                                            }
+
+                                            // If passed value is a numerically indexed array, we must convert it into a hash.
+                                            // See https://jira.ez.no/browse/EZP-21876
+                                            if ( array_keys( $v ) === range( 0, count( $v ) - 1 ) )
+                                            {
+                                                $final = array();
+                                                foreach ( $v as $i => $val )
+                                                {
+                                                    $final["i$i"] = $val;
+                                                }
+
+                                                return $final;
+                                            }
+
+                                            return $v;
                                         }
                                     )
                                 ->end()
@@ -314,6 +379,10 @@ EOT;
                                     ->prototype( 'scalar' )->end()
                                     ->info( $nonSAAwareInfo )
                                     ->example( array( 'my_route_name', 'some_prefix_' ) )
+                                ->end()
+                                ->arrayNode( 'legacy_aware_routes' )
+                                    ->prototype( 'scalar' )->end()
+                                    ->info( 'Routes that are allowed when legacy_mode is true. Must be routes identifiers (e.g. "my_route_name"). Can be a prefix, so that all routes beginning with given prefix will be taken into account.' )
                                 ->end()
                             ->end()
                         ->end()

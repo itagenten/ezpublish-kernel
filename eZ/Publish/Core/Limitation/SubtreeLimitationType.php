@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\API\Repository\Values\User\Limitation\SubtreeLimitation class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -77,11 +77,15 @@ class SubtreeLimitationType extends AbstractPersistenceLimitationType implements
         {
             try
             {
-                $pathArray = explode( '/', trim( '/', $path ) );
+                $pathArray = explode( '/', trim( $path, '/' ) );
                 $subtreeRootLocationId = end( $pathArray );
-                $this->persistence->locationHandler()->load( $subtreeRootLocationId );
+                $spiLocation = $this->persistence->locationHandler()->load( $subtreeRootLocationId );
             }
             catch ( APINotFoundException $e )
+            {
+            }
+
+            if ( !isset( $spiLocation ) || strpos( $spiLocation->pathString, $path ) !== 0 )
             {
                 $validationErrors[] = new ValidationError(
                     "limitationValues[%key%] => '%value%' does not exist in the backend",

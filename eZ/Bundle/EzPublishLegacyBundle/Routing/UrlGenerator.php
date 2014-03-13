@@ -2,7 +2,7 @@
 /**
  * File containing the UrlGenerator class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -14,7 +14,6 @@ use eZ\Publish\Core\MVC\Symfony\SiteAccess\SiteAccessAware;
 use eZ\Publish\Core\MVC\Symfony\SiteAccess\URILexer;
 use eZModule;
 use eZ\Publish\Core\MVC\Symfony\Routing\Generator;
-use Symfony\Component\Routing\RequestContext;
 
 class UrlGenerator extends Generator implements SiteAccessAware
 {

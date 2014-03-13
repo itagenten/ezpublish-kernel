@@ -2,7 +2,7 @@
 /**
  * File containing the BinaryFileStorage Gateway
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -12,6 +12,8 @@ namespace eZ\Publish\Core\FieldType\BinaryFile\BinaryFileStorage\Gateway;
 use eZ\Publish\SPI\Persistence\Content\VersionInfo;
 use eZ\Publish\SPI\Persistence\Content\Field;
 use eZ\Publish\Core\FieldType\BinaryBase\BinaryBaseStorage\Gateway\LegacyStorage as BaseLegacyStorage;
+use eZ\Publish\Core\Persistence\Database\SelectQuery;
+use eZ\Publish\Core\Persistence\Database\InsertQuery;
 
 class LegacyStorage extends BaseLegacyStorage
 {
@@ -28,7 +30,7 @@ class LegacyStorage extends BaseLegacyStorage
     /**
      * Returns a column to property mapping for the storage table.
      *
-     * @return void
+     * @return array
      */
     protected function getPropertyMapping()
     {
@@ -47,13 +49,13 @@ class LegacyStorage extends BaseLegacyStorage
      * add additional columns to be fetched from the database. Please do not
      * forget to call the parent when overwriting this method.
      *
-     * @param \ezcQuerySelect $selectQuery
+     * @param eZ\Publish\Core\Persistence\Database\SelectQuery $selectQuery
      * @param int $fieldId
      * @param int $versionNo
      *
      * @return void
      */
-    protected function setFetchColumns( \ezcQuerySelect $selectQuery, $fieldId, $versionNo )
+    protected function setFetchColumns( SelectQuery $selectQuery, $fieldId, $versionNo )
     {
         $connection = $this->getConnection();
 
@@ -76,7 +78,7 @@ class LegacyStorage extends BaseLegacyStorage
      *
      * @return void
      */
-    protected function setInsertColumns( \ezcQueryInsert $insertQuery, VersionInfo $versionInfo, Field $field )
+    protected function setInsertColumns( InsertQuery $insertQuery, VersionInfo $versionInfo, Field $field )
     {
         $connection = $this->getConnection();
 

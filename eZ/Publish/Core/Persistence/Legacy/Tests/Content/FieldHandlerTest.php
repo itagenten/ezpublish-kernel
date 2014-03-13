@@ -2,14 +2,13 @@
 /**
  * File contains: eZ\Publish\Core\Persistence\Legacy\Tests\Content\FieldHandlerTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\Persistence\Legacy\Tests\Content;
 
-use eZ\Publish\Core\Persistence\Legacy\Tests\TestCase;
 use eZ\Publish\SPI\Persistence\Content\Type;
 use eZ\Publish\SPI\Persistence\Content;
 use eZ\Publish\SPI\Persistence\Content\ContentInfo;
@@ -296,14 +295,8 @@ class FieldHandlerTest extends LanguageAwareTestCase
      */
     protected function assertCreateExistingFieldsInNewVersion( $storageHandlerUpdatesFields = false )
     {
-        $typeHandlerMock = $this->getTypeHandlerMock();
         $contentGatewayMock = $this->getContentGatewayMock();
         $storageHandlerMock = $this->getStorageHandlerMock();
-
-        $typeHandlerMock->expects( $this->once() )
-            ->method( "load" )
-            ->with( $this->equalTo( 1 ) )
-            ->will( $this->returnValue( $this->getContentTypeFixture() ) );
 
         $contentGatewayMock->expects( $this->exactly( 6 ) )
             ->method( 'insertExistingField' )
@@ -317,10 +310,11 @@ class FieldHandlerTest extends LanguageAwareTestCase
         $fieldValue = new FieldValue();
         foreach ( array( 1, 2, 3 ) as $fieldDefinitionId )
         {
-            foreach ( array( "eng-US", "eng-GB" ) as $languageCode )
+            foreach ( array( "eng-US", "eng-GB" ) as $languageIndex => $languageCode )
             {
                 $field = new Field(
                     array(
+                        "id" => $fieldDefinitionId * 10 + $languageIndex + 1,
                         "fieldDefinitionId" => $fieldDefinitionId,
                         "type" => "some-type",
                         "value" => $fieldValue,
@@ -329,11 +323,6 @@ class FieldHandlerTest extends LanguageAwareTestCase
                 );
                 $originalField = clone $field;
                 $field->versionNo = 1;
-                // These fields are copied from main language
-                if ( ( $fieldDefinitionId == 2 || $fieldDefinitionId == 3 ) && $languageCode == "eng-US" )
-                {
-                    $originalField->languageCode = "eng-GB";
-                }
                 $storageHandlerMock->expects( $this->at( $callNo++ ) )
                     ->method( 'copyFieldData' )
                     ->with(
@@ -461,6 +450,7 @@ class FieldHandlerTest extends LanguageAwareTestCase
             {
                 $copyField = clone $field;
                 $originalField = clone $field;
+                $originalField->id = $fieldDefinitionId * 10 + 2;
                 $originalField->languageCode = "eng-GB";
                 continue;
             }
@@ -583,10 +573,11 @@ class FieldHandlerTest extends LanguageAwareTestCase
         $fieldsToCopy = array();
         foreach ( array( 1, 2, 3 ) as $fieldDefinitionId )
         {
-            foreach ( array( "eng-US", "eng-GB" ) as $languageCode )
+            foreach ( array( "eng-US", "eng-GB" ) as $languageIndex => $languageCode )
             {
                 $field = new Field(
                     array(
+                        "id" => $fieldDefinitionId * 10 + $languageIndex + 1,
                         "fieldDefinitionId" => $fieldDefinitionId,
                         "type" => "some-type",
                         "versionNo" => 1,
@@ -598,19 +589,22 @@ class FieldHandlerTest extends LanguageAwareTestCase
                 if ( ( $fieldDefinitionId == 2 || $fieldDefinitionId == 3 ) && $languageCode != "eng-GB" )
                 {
                     $originalField = clone $field;
+                    $originalField->id = $fieldDefinitionId * 10 + $languageIndex + 2;
                     $originalField->languageCode = "eng-GB";
                     $fieldsToCopy[] = array(
                         "copy" => clone $field,
                         "original" => $originalField
                     );
-                    continue;
                 }
-                $storageHandlerMock->expects( $this->at( $callNo++ ) )
-                    ->method( 'storeFieldData' )
-                    ->with(
-                        $this->isInstanceOf( 'eZ\\Publish\\SPI\\Persistence\\Content\\VersionInfo' ),
-                        $this->equalTo( $field )
-                    )->will( $this->returnValue( $storageHandlerUpdatesFields ) );
+                else
+                {
+                    $storageHandlerMock->expects( $this->at( $callNo++ ) )
+                        ->method( 'storeFieldData' )
+                        ->with(
+                            $this->isInstanceOf( 'eZ\\Publish\\SPI\\Persistence\\Content\\VersionInfo' ),
+                            $this->equalTo( $field )
+                        )->will( $this->returnValue( $storageHandlerUpdatesFields ) );
+                }
             }
         }
 
@@ -635,6 +629,7 @@ class FieldHandlerTest extends LanguageAwareTestCase
     {
         $fieldHandler = $this->getFieldHandler();
         $mapperMock = $this->getMapperMock();
+        $contentGatewayMock = $this->getContentGatewayMock();
 
         $this->assertUpdateFieldsExistingLanguages( false );
 
@@ -642,6 +637,13 @@ class FieldHandlerTest extends LanguageAwareTestCase
             ->method( 'convertToStorageValue' )
             ->with( $this->isInstanceOf( 'eZ\\Publish\\SPI\\Persistence\\Content\\Field' ) )
             ->will( $this->returnValue( new StorageFieldValue() ) );
+
+        $contentGatewayMock->expects( $this->exactly( 6 ) )
+            ->method( 'updateField' )
+            ->with(
+                $this->isInstanceOf( 'eZ\\Publish\\SPI\\Persistence\\Content\\Field' ),
+                $this->isInstanceOf( 'eZ\\Publish\\Core\\Persistence\\Legacy\\Content\\StorageFieldValue' )
+            );
 
         $fieldHandler->updateFields(
             $this->getContentFixture(),
@@ -667,7 +669,7 @@ class FieldHandlerTest extends LanguageAwareTestCase
             ->with( $this->isInstanceOf( 'eZ\\Publish\\SPI\\Persistence\\Content\\Field' ) )
             ->will( $this->returnValue( new StorageFieldValue() ) );
 
-        $contentGatewayMock->expects( $this->exactly( 6 ) )
+        $contentGatewayMock->expects( $this->exactly( 12 ) )
             ->method( 'updateField' )
             ->with(
                 $this->isInstanceOf( 'eZ\\Publish\\SPI\\Persistence\\Content\\Field' ),
@@ -853,10 +855,12 @@ class FieldHandlerTest extends LanguageAwareTestCase
         $field->value = new FieldValue;
 
         $firstFieldUs = clone $field;
+        $firstFieldUs->id = 11;
         $firstFieldUs->fieldDefinitionId = 1;
         $firstFieldUs->languageCode = "eng-US";
 
         $secondFieldGb = clone $field;
+        $secondFieldGb->id = 22;
         $secondFieldGb->fieldDefinitionId = 2;
         $secondFieldGb->languageCode = "eng-GB";
 
@@ -941,29 +945,32 @@ class FieldHandlerTest extends LanguageAwareTestCase
         $field->value = new FieldValue;
 
         $firstFieldGb = clone $field;
+        $firstFieldGb->id = 12;
         $firstFieldGb->fieldDefinitionId = 1;
         $firstFieldGb->languageCode = "eng-GB";
 
         $secondFieldUs = clone $field;
+        $secondFieldUs->id = 21;
         $secondFieldUs->fieldDefinitionId = 2;
         $secondFieldUs->languageCode = "eng-US";
 
         $thirdFieldGb = clone $field;
+        $thirdFieldGb->id = 32;
         $thirdFieldGb->fieldDefinitionId = 3;
         $thirdFieldGb->languageCode = "eng-GB";
 
         $thirdFieldUs = clone $field;
+        $thirdFieldUs->id = 31;
         $thirdFieldUs->fieldDefinitionId = 3;
         $thirdFieldUs->languageCode = "eng-US";
 
-        $content->fields = array_merge(
-            $content->fields,
-            array(
-                $firstFieldGb,
-                $secondFieldUs,
-                $thirdFieldGb,
-                $thirdFieldUs
-            )
+        $content->fields = array(
+            $content->fields[0],
+            $firstFieldGb,
+            $secondFieldUs,
+            $content->fields[1],
+            $thirdFieldUs,
+            $thirdFieldGb
         );
 
         return $content;

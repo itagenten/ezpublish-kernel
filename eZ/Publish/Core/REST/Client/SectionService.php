@@ -2,7 +2,7 @@
 /**
  * File containing the SectionService class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -250,7 +250,7 @@ class SectionService implements APISectionService, Sessionable
         $inputMessage->headers['Accept'] = $this->outputVisitor->getMediaType( 'Content' );
         $inputMessage->headers['X-HTTP-Method-Override'] = 'PATCH';
 
-        $response = $this->client->request(
+        $this->client->request(
             'POST',
             $contentInfo->id,
             $inputMessage
@@ -259,7 +259,7 @@ class SectionService implements APISectionService, Sessionable
         // Will throw exception on error, no return value for method
         // @todo: Deactivated due to missing implementation of visitor for
         // content on the server side.
-        // $result = $this->inputDispatcher->parse( $response );
+        // Should be: $result = $this->inputDispatcher->parse( $response );
     }
 
     /**

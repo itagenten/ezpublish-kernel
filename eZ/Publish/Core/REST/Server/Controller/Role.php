@@ -2,15 +2,17 @@
 /**
  * File containing the Role controller class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\REST\Server\Controller;
 
+use eZ\Publish\API\Repository\Exceptions\LimitationValidationException;
 use eZ\Publish\Core\REST\Common\Message;
 use eZ\Publish\Core\REST\Common\Exceptions;
+use eZ\Publish\Core\REST\Server\Exceptions\BadRequestException;
 use eZ\Publish\Core\REST\Server\Values;
 use eZ\Publish\Core\REST\Server\Controller as RestController;
 
@@ -192,9 +194,9 @@ class Role extends RestController
     {
         $loadedRole = $this->roleService->loadRole( $roleId );
 
-        foreach ( $loadedRole->getPolicies() as $rolePolicy )
+        foreach ( $loadedRole->getPolicies() as $policy )
         {
-            $this->roleService->removePolicy( $loadedRole, $rolePolicy );
+            $this->roleService->deletePolicy( $policy );
         }
 
         return new Values\NoContent();
@@ -237,10 +239,17 @@ class Role extends RestController
             )
         );
 
-        $role = $this->roleService->addPolicy(
-            $this->roleService->loadRole( $roleId ),
-            $createStruct
-        );
+        try
+        {
+            $role = $this->roleService->addPolicy(
+                $this->roleService->loadRole( $roleId ),
+                $createStruct
+            );
+        }
+        catch ( LimitationValidationException $e )
+        {
+            throw new BadRequestException( $e->getMessage() );
+        }
 
         $policies = $role->getPolicies();
 
@@ -281,10 +290,17 @@ class Role extends RestController
         {
             if ( $policy->id == $policyId )
             {
-                return $this->roleService->updatePolicy(
-                    $policy,
-                    $updateStruct
-                );
+                try
+                {
+                    return $this->roleService->updatePolicy(
+                        $policy,
+                        $updateStruct
+                    );
+                }
+                catch ( LimitationValidationException $e )
+                {
+                    throw new BadRequestException( $e->getMessage() );
+                }
             }
         }
 
@@ -316,7 +332,7 @@ class Role extends RestController
 
         if ( $policy !== null )
         {
-            $this->roleService->removePolicy( $role, $policy );
+            $this->roleService->deletePolicy( $policy );
             return new Values\NoContent();
         }
 
@@ -342,7 +358,14 @@ class Role extends RestController
         $user = $this->userService->loadUser( $userId );
         $role = $this->roleService->loadRole( $roleAssignment->roleId );
 
-        $this->roleService->assignRoleToUser( $role, $user, $roleAssignment->limitation );
+        try
+        {
+            $this->roleService->assignRoleToUser( $role, $user, $roleAssignment->limitation );
+        }
+        catch ( LimitationValidationException $e )
+        {
+            throw new BadRequestException( $e->getMessage() );
+        }
 
         $roleAssignments = $this->roleService->getRoleAssignmentsForUser( $user );
         return new Values\RoleAssignmentList( $roleAssignments, $user->id );
@@ -369,7 +392,15 @@ class Role extends RestController
         $userGroup = $this->userService->loadUserGroup( $groupLocation->contentId );
 
         $role = $this->roleService->loadRole( $roleAssignment->roleId );
-        $this->roleService->assignRoleToUserGroup( $role, $userGroup, $roleAssignment->limitation );
+
+        try
+        {
+            $this->roleService->assignRoleToUserGroup( $role, $userGroup, $roleAssignment->limitation );
+        }
+        catch ( LimitationValidationException $e )
+        {
+            throw new BadRequestException( $e->getMessage() );
+        }
 
         $roleAssignments = $this->roleService->getRoleAssignmentsForUserGroup( $userGroup );
         return new Values\RoleAssignmentList( $roleAssignments, $groupPath, true );
@@ -412,7 +443,7 @@ class Role extends RestController
         $this->roleService->unassignRoleFromUserGroup( $role, $userGroup );
 
         $roleAssignments = $this->roleService->getRoleAssignmentsForUserGroup( $userGroup );
-        return new Values\RoleAssignmentList( $roleAssignments, $grouPath, true );
+        return new Values\RoleAssignmentList( $roleAssignments, $groupPath, true );
     }
 
     /**

@@ -2,7 +2,7 @@
 /**
  * File containing the Input Dispatcher class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -84,7 +84,6 @@ class Dispatcher
         {
             // TODO expose default format
             $contentTypeParts[1] = "xml";
-            //throw new Exceptions\Parser( "No format specification in content type. Missing '+(json|xml|…)' in '{$message->headers['Content-Type']}'." );
         }
 
         $media  = $contentTypeParts[0];

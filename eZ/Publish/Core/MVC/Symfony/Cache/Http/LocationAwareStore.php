@@ -2,7 +2,7 @@
 /**
  * File containing the LocationAwareStore class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -93,6 +93,7 @@ class LocationAwareStore extends Store implements ContentPurger
             $key = substr( $key, $pos + 1 );
 
             list( $locationCacheDir, $locationId ) = explode( '/', $prefix );
+            unset( $locationCacheDir );
             // If cache purge is in progress, serve stale cache instead of regular cache.
             // We first check for a global cache purge, then for the current location.
             foreach ( array( $this->getLocationCacheLockName(), $this->getLocationCacheLockName( $locationId ) ) as $cacheLockFile )

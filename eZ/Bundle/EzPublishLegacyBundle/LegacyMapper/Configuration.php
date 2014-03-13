@@ -2,7 +2,7 @@
 /**
  * File containing the Configuration class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -15,15 +15,16 @@ use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\Core\MVC\Symfony\Cache\GatewayCachePurger;
 use eZ\Bundle\EzPublishLegacyBundle\Cache\PersistenceCachePurger;
 use eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator;
+use eZ\Publish\Core\Persistence\Database\DatabaseHandler;
 use ezpEvent;
 use ezxFormToken;
+use Symfony\Component\DependencyInjection\ContainerAware;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Maps configuration parameters to the legacy parameters
  */
-class Configuration implements EventSubscriberInterface
+class Configuration extends ContainerAware implements EventSubscriberInterface
 {
     /**
      * @var \eZ\Publish\Core\MVC\ConfigResolverInterface
@@ -46,9 +47,9 @@ class Configuration implements EventSubscriberInterface
     private $urlAliasGenerator;
 
     /**
-     * @var \Symfony\Component\DependencyInjection\ContainerInterface
+     * @var \eZ\Publish\Core\Persistence\Database\DatabaseHandler
      */
-    private $container;
+    private $legacyDbHandler;
 
     /**
      * @var array
@@ -56,35 +57,37 @@ class Configuration implements EventSubscriberInterface
     private $options;
 
     /**
-     * Disables the feature when set using setIsEnabled()
+     * Disables the feature when set using setEnabled()
+     *
      * @var bool
      */
-    private $isEnabled = true;
+    private $enabled = true;
 
     public function __construct(
         ConfigResolverInterface $configResolver,
         GatewayCachePurger $gatewayCachePurger,
         PersistenceCachePurger $persistenceCachePurger,
-        ContainerInterface $container,
         UrlAliasGenerator $urlAliasGenerator,
+        DatabaseHandler $legacyDbHandler,
         array $options = array()
     )
     {
         $this->configResolver = $configResolver;
         $this->gatewayCachePurger = $gatewayCachePurger;
         $this->persistenceCachePurger = $persistenceCachePurger;
-        $this->container = $container;
         $this->urlAliasGenerator = $urlAliasGenerator;
+        $this->legacyDbHandler = $legacyDbHandler;
         $this->options = $options;
     }
 
     /**
      * Toggles the feature
+     *
      * @param bool $isEnabled
      */
-    public function setIsEnabled( $isEnabled )
+    public function setEnabled( $isEnabled )
     {
-        $this->isEnabled = (bool)$isEnabled;
+        $this->enabled = (bool)$isEnabled;
     }
 
     public static function getSubscribedEvents()
@@ -98,27 +101,24 @@ class Configuration implements EventSubscriberInterface
      * Adds settings to the parameters that will be injected into the legacy kernel
      *
      * @param \eZ\Publish\Core\MVC\Legacy\Event\PreBuildKernelEvent $event
-     *
-     * @todo Cache computed settings somehow
      */
     public function onBuildKernel( PreBuildKernelEvent $event )
     {
-        if ( !$this->isEnabled )
+        if ( !$this->enabled )
         {
             return;
         }
 
-        $databaseSettings = $this->configResolver->getParameter( "database" );
+        $databaseSettings = $this->legacyDbHandler->getConnection()->getParams();
         $settings = array();
         foreach (
             array(
-                "server" => "Server",
+                "host" => "Server",
                 "port" => "Port",
                 "user" => "User",
                 "password" => "Password",
-                "database_name" => "Database",
-                "type" => "DatabaseImplementation",
-                "socket" => "Socket"
+                "dbname" => "Database",
+                "unix_socket" => "Socket"
             ) as $key => $iniKey
         )
         {
@@ -131,8 +131,17 @@ class Configuration implements EventSubscriberInterface
             {
                 switch ( $key )
                 {
-                    case "socket":
+                    case "unix_socket":
                         $settings["site.ini/DatabaseSettings/$iniKey"] = "disabled";
+                        break;
+                    case "driver":
+                        $driverMap = array(
+                            'pdo_mysql' => 'mysqli',
+                            'pdo_pgsql' => 'pgsql',
+                            'oci8' => 'oracle'
+                        );
+                        if ( isset( $driverMap[$databaseSettings[$key]] ) )
+                            $settings["site.ini/DatabaseSettings/DatabaseImplementation"] = $driverMap[$databaseSettings[$key]];
                         break;
                 }
             }
@@ -147,6 +156,9 @@ class Configuration implements EventSubscriberInterface
         );
         // Multisite settings (PathPrefix and co)
         $settings += $this->getMultiSiteSettings();
+
+        // User settings
+        $settings["site.ini/UserSettings/AnonymousUserID"] = $this->configResolver->getParameter( "anonymous_user_id" );
 
         $event->getParameters()->set(
             "injected-settings",

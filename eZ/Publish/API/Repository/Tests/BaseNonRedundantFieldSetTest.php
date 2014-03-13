@@ -2,7 +2,7 @@
 /**
  * File containing the NonRedundantFieldSetTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -15,7 +15,7 @@ use eZ\Publish\Core\FieldType\TextLine\Value as TextLineValue;
  * Base class for for create and update Content operations in the ContentService with regard to
  * non-redundant set of fields being passed to the storage.
  */
-class BaseNonRedundantFieldSetTest extends BaseTest
+abstract class BaseNonRedundantFieldSetTest extends BaseTest
 {
     /**
      * Creates a fully functional ContentType and returns it.
@@ -148,18 +148,40 @@ class BaseNonRedundantFieldSetTest extends BaseTest
         return $content;
     }
 
+    protected function createMultilingualTestContent()
+    {
+        $fieldValues = array(
+            "field1" => array( "eng-US" => "value 1" ),
+            "field2" => array( "eng-US" => "value 2" ),
+            "field3" => array(
+                "eng-US" => "value 3",
+                "eng-GB" => "value 3 eng-GB"
+            ),
+            "field4" => array(
+                "eng-US" => "value 4",
+                "eng-GB" => "value 4 eng-GB"
+            )
+        );
+
+        return $this->createTestContent( "eng-US", $fieldValues );
+    }
+
     protected function createTestContentForUpdate()
     {
         $fieldValues = array(
             "field1" => array( "eng-US" => "value 1" ),
             "field2" => array( "eng-US" => "value 2" ),
-            "field3" => array( "eng-US" => "value 3" ),
-            "field4" => array( "eng-US" => "value 4" )
+            "field3" => array(
+                "eng-US" => "value 3",
+                "eng-GB" => "value 3 eng-GB"
+            ),
+            "field4" => array(
+                "eng-US" => "value 4",
+                "eng-GB" => "value 4 eng-GB"
+            )
         );
 
-        $content = $this->createTestContent( "eng-US", $fieldValues );
-
-        return $content;
+        return $this->createTestContent( "eng-US", $fieldValues );
     }
 
     protected function updateTestContent( $initialLanguageCode, array $fieldValues )
@@ -180,8 +202,7 @@ class BaseNonRedundantFieldSetTest extends BaseTest
         }
 
         $content = $contentService->updateContent( $content->getVersionInfo(), $contentUpdateStruct );
-        $content = $contentService->loadContent( $content->id, null, $content->versionInfo->versionNo );
 
-        return $content;
+        return $contentService->loadContent( $content->id, null, $content->versionInfo->versionNo );
     }
 }

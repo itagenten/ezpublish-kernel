@@ -2,7 +2,7 @@
 /**
  * File containing the EmailAddressValueTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -11,7 +11,6 @@ namespace eZ\Publish\Core\FieldType\Tests;
 
 use eZ\Publish\Core\FieldType\EmailAddress\Type as EmailAddressType;
 use eZ\Publish\Core\FieldType\EmailAddress\Value as EmailAddressValue;
-use ReflectionObject;
 
 /**
  * @group fieldType
@@ -32,7 +31,24 @@ class EmailAddressTest extends FieldTypeTest
      */
     protected function createFieldTypeUnderTest()
     {
-        return new EmailAddressType();
+        $transformationProcessorMock = $this->getTransformationProcessorMock();
+
+        $transformationProcessorMock->expects( $this->any() )
+            ->method( 'transformByGroup' )
+            ->with( $this->anything(), 'lowercase' )
+            ->will(
+                $this->returnCallback(
+                    function( $value, $group )
+                    {
+                        return strtolower( $value );
+                    }
+                )
+            );
+
+        $fieldType = new EmailAddressType();
+        $fieldType->setTransformationProcessor( $transformationProcessorMock );
+
+        return $fieldType;
     }
 
     /**
@@ -373,6 +389,25 @@ class EmailAddressTest extends FieldTypeTest
                     ),
                 )
             ),
+        );
+    }
+
+    protected function provideFieldTypeIdentifier()
+    {
+        return 'ezemail';
+    }
+
+    public function provideDataForGetName()
+    {
+        return array(
+            array(
+                new EmailAddressValue( 'john.doe@example.com' ),
+                'john.doe@example.com'
+            ),
+            array(
+                new EmailAddressValue( 'JANE.DOE@EXAMPLE.COM' ),
+                'jane.doe@example.com'
+            )
         );
     }
 }

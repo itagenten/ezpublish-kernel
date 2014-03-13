@@ -2,7 +2,7 @@
 /**
  * File containing the Test Setup Factory base class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -42,7 +42,6 @@ class SetupFactory extends APILegacySetupFactory
 
             $serviceSettings['persistence_handler']['alias'] = 'persistence_handler_legacy';
             $serviceSettings['io_handler']['alias'] = 'io_handler_legacy';
-            $serviceSettings['persistence_handler_legacy']['arguments']['config']['dsn'] = self::$dsn;
             $serviceSettings['legacy_db_handler']['arguments']['dsn'] = self::$dsn;
 
             static::$legacyServiceContainer = new ServiceContainer(

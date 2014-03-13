@@ -2,7 +2,7 @@
 /**
  * File containing the ParentContentTypeLimitationTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -11,7 +11,6 @@ namespace eZ\Publish\API\Repository\Tests\Values\User\Limitation;
 
 use eZ\Publish\API\Repository\Values\User\Limitation\ContentTypeLimitation;
 use eZ\Publish\API\Repository\Values\User\Limitation\ParentContentTypeLimitation;
-use eZ\Publish\API\Repository\Tests\Values\User\Limitation\BaseLimitationTest;
 
 /**
  * Test case for the {@link \eZ\Publish\API\Repository\Values\User\Limitation\ParentContentTypeLimitation}
@@ -41,6 +40,7 @@ class ParentContentTypeLimitationTest extends BaseLimitationTest
         $user = $this->createUserVersion1();
 
         $roleService = $repository->getRoleService();
+        $contentService = $repository->getContentService();
 
         $role = $roleService->loadRoleByIdentifier( 'Editor' );
 
@@ -63,11 +63,12 @@ class ParentContentTypeLimitationTest extends BaseLimitationTest
         $repository->setCurrentUser( $user );
 
         $draft = $this->createWikiPageDraft();
+        $content = $contentService->publishVersion( $draft->versionInfo );
         /* END: Use Case */
 
         $this->assertEquals(
             'An awesome wiki page',
-            $draft->getFieldValue( 'title' )->text
+            $content->getFieldValue( 'title' )->text
         );
     }
 

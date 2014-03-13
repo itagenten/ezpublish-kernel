@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\API\Repository\Values\Content\Query\Criterion\Visibility class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -16,6 +16,8 @@ use InvalidArgumentException;
 
 /**
  * A criterion that matches content based on its visibility
+ *
+ * @deprecated Since 5.3, use Location search instead
  */
 class Visibility extends Criterion implements CriterionInterface
 {
@@ -35,6 +37,8 @@ class Visibility extends Criterion implements CriterionInterface
      * @param int $value Visibility: self::VISIBLE, self::HIDDEN
      *
      * @throws \InvalidArgumentException
+     *
+     * @deprecated Since 5.3, use Location search instead
      */
     public function __construct( $value )
     {

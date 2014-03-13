@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\FieldType\XmlText\Converter\Html5 class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -13,6 +13,7 @@ use eZ\Publish\Core\FieldType\XmlText\Converter;
 use eZ\Publish\Core\Base\Exceptions\InvalidArgumentType;
 use DOMDocument;
 use XSLTProcessor;
+use RuntimeException;
 
 /**
  * Converts internal XmlText representation to HTML5
@@ -121,6 +122,11 @@ class Html5 implements Converter
         $insertBeforeEl = $xslDoc->documentElement->firstChild;
         foreach ( $this->getSortedCustomStylesheets() as $stylesheet )
         {
+            if ( !file_exists( $stylesheet ) )
+            {
+                throw new RuntimeException( "Cannot find XSL stylesheet for XMLText rendering: $stylesheet" );
+            }
+
             $newEl = $xslDoc->createElement( 'xsl:import' );
             $hrefAttr = $xslDoc->createAttribute( 'href' );
             $hrefAttr->value = $stylesheet;

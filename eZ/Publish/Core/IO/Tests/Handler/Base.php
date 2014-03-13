@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\IO\Tests\Base class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -103,7 +103,8 @@ abstract class Base extends PHPUnit_Framework_TestCase
         self::assertFalse( $this->IOHandler->exists( $secondPath ) );
         self::assertEquals(
             md5_file( $this->imageInputPath ),
-            md5( fread( $this->IOHandler->getFileResource( $firstPath ), $binaryFile->size ) )
+            md5( fread( $this->IOHandler->getFileResource( $firstPath ), $binaryFile->size ) ),
+            "Failed asserting that file contents was updated\n"
         );
 
         $newFilePath = __DIR__ . DIRECTORY_SEPARATOR . 'ezplogo2.png';
@@ -121,26 +122,6 @@ abstract class Base extends PHPUnit_Framework_TestCase
             md5_file( $newFilePath ),
             md5( fread( $this->IOHandler->getFileResource( $secondPath ), $updatedFile->size ) )
         );
-    }
-
-    /**
-     * @covers \eZ\Publish\Core\IO\Handler::update
-     */
-    public function testUpdateMtime()
-    {
-        $path = 'images/update-mtime.gif';
-        $struct = $this->getCreateStructFromLocalFile( $this->imageInputPath, $path );
-        $binaryFile = $this->IOHandler->create( $struct );
-
-        $newMtime = new DateTime( 'last week' );
-        $updateStruct = new BinaryFileUpdateStruct();
-        $updateStruct->mtime = $newMtime;
-
-        $updatedBinaryFile = $this->IOHandler->update( $path, $updateStruct );
-        self::assertEquals( $binaryFile->uri, $updatedBinaryFile->uri );
-        self::assertEquals( $binaryFile->size, $updatedBinaryFile->size );
-
-        self::assertEquals( $newMtime, $updatedBinaryFile->mtime );
     }
 
     /**
@@ -266,7 +247,7 @@ abstract class Base extends PHPUnit_Framework_TestCase
 
     /**
      * @covers \eZ\Publish\Core\IO\Handler::getFileResource
-     * @expectedException eZ\Publish\Core\Base\Exceptions\NotFoundException
+     * @expectedException \eZ\Publish\Core\Base\Exceptions\NotFoundException
      */
     public function testGetFileResourceNonExistingFile()
     {
@@ -287,7 +268,7 @@ abstract class Base extends PHPUnit_Framework_TestCase
 
     /**
      * @covers \eZ\Publish\Core\IO\Handler::getFileContents
-     * @expectedException eZ\Publish\Core\Base\Exceptions\NotFoundException
+     * @expectedException \eZ\Publish\Core\Base\Exceptions\NotFoundException
      */
     public function testGetFileContentsNonExistingFile()
     {

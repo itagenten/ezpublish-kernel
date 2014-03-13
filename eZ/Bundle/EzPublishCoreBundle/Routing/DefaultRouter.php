@@ -2,17 +2,19 @@
 /**
  * File containing the DefaultRouter class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\Routing;
 
+use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\Core\MVC\Symfony\SiteAccess;
 use eZ\Publish\Core\MVC\Symfony\SiteAccess\SiteAccessAware;
 use eZ\Publish\Core\MVC\Symfony\SiteAccess\URILexer;
 use Symfony\Bundle\FrameworkBundle\Routing\Router;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\RequestMatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -27,6 +29,18 @@ class DefaultRouter extends Router implements RequestMatcherInterface, SiteAcces
     protected $siteAccess;
 
     protected $nonSiteAccessAwareRoutes = array();
+
+    protected $legacyAwareRoutes = array();
+
+    /**
+     * @var \eZ\Publish\Core\MVC\ConfigResolverInterface
+     */
+    protected $configResolver;
+
+    public function setConfigResolver( ConfigResolverInterface $configResolver )
+    {
+        $this->configResolver = $configResolver;
+    }
 
     public function setSiteAccess( SiteAccess $siteAccess = null )
     {
@@ -45,6 +59,16 @@ class DefaultRouter extends Router implements RequestMatcherInterface, SiteAcces
     }
 
     /**
+     * Injects route names that are allowed to run with legacy_mode: true.
+     *
+     * @param array $routes
+     */
+    public function setLegacyAwareRoutes( array $routes )
+    {
+        $this->legacyAwareRoutes = $routes;
+    }
+
+    /**
      * @param \Symfony\Component\HttpFoundation\Request $request The request to match
      *
      * @return array An array of parameters
@@ -56,10 +80,23 @@ class DefaultRouter extends Router implements RequestMatcherInterface, SiteAcces
     {
         if ( $request->attributes->has( 'semanticPathinfo' ) )
         {
-            return $this->match( $request->attributes->get( 'semanticPathinfo' ) );
+            $attributes = $this->match( $request->attributes->get( 'semanticPathinfo' ) );
+        }
+        else
+        {
+            $attributes = $this->match( $request->getPathInfo() );
         }
 
-        return $this->match( $request->getPathInfo() );
+        if (
+            isset( $attributes['_route'] )
+            && !$this->isLegacyAwareRoute( $attributes['_route'] )
+            && $this->configResolver->getParameter( 'legacy_mode' ) === true
+        )
+        {
+            throw new ResourceNotFoundException( "Legacy mode activated, default router is bypassed" );
+        }
+
+        return $attributes;
     }
 
     public function generate( $name, $parameters = array(), $referenceType = self::ABSOLUTE_PATH )
@@ -114,5 +151,25 @@ class DefaultRouter extends Router implements RequestMatcherInterface, SiteAcces
         }
 
         return true;
+    }
+
+    /**
+     * Checks if $routeName can be used in legacy mode.
+     *
+     * @param string $routeName
+     *
+     * @return bool
+     */
+    protected function isLegacyAwareRoute( $routeName )
+    {
+        foreach ( $this->legacyAwareRoutes as $legacyAwareRoute )
+        {
+            if ( strpos( $routeName, $legacyAwareRoute ) === 0 )
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

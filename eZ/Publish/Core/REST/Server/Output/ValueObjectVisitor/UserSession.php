@@ -2,7 +2,7 @@
 /**
  * File containing the UserSession ValueObjectVisitor class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -33,9 +33,6 @@ class UserSession extends ValueObjectVisitor
 
         $sessionHref = $this->router->generate( 'ezpublish_rest_deleteSession', array( 'sessionId' => $data->sessionId ) );
         $visitor->setHeader( 'Location', $sessionHref );
-
-        // @deprecated Since 5.0, this cookie is used for legacy until Static cache support is removed along with this cookie
-        $visitor->setHeader( 'Set-Cookie', 'is_logged_in=true; path=/' );
 
         //@todo Needs refactoring, disabling certain headers should not be done this way
         $visitor->setHeader( 'Accept-Patch', false );

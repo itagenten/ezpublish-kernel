@@ -2,7 +2,7 @@
 /**
  * File containing the SelectionTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -11,7 +11,7 @@ namespace eZ\Publish\Core\FieldType\Tests;
 
 use eZ\Publish\Core\FieldType\Selection\Type as Selection;
 use eZ\Publish\Core\FieldType\Selection\Value as SelectionValue;
-use ReflectionObject;
+use eZ\Publish\SPI\FieldType\Value as SPIValue;
 
 /**
  * @group fieldType
@@ -32,7 +32,10 @@ class SelectionTest extends FieldTypeTest
      */
     protected function createFieldTypeUnderTest()
     {
-        return new Selection();
+        $fieldType = new Selection();
+        $fieldType->setTransformationProcessor( $this->getTransformationProcessorMock() );
+
+        return $fieldType;
     }
 
     /**
@@ -67,7 +70,7 @@ class SelectionTest extends FieldTypeTest
     /**
      * Returns the empty value expected from the field type.
      *
-     * @return void
+     * @return SelectionValue
      */
     protected function getEmptyValueExpectation()
     {
@@ -341,6 +344,27 @@ class SelectionTest extends FieldTypeTest
                     'options' => 23,
                 )
             ),
+        );
+    }
+
+    protected function provideFieldTypeIdentifier()
+    {
+        return 'ezselection';
+    }
+
+    /**
+     * @dataProvider provideDataForGetName
+     * @expectedException \RuntimeException
+     */
+    public function testGetName( SPIValue $value, $expected )
+    {
+        $this->getFieldTypeUnderTest()->getName( $value );
+    }
+
+    public function provideDataForGetName()
+    {
+        return array(
+            array( $this->getEmptyValueExpectation(), '' )
         );
     }
 }

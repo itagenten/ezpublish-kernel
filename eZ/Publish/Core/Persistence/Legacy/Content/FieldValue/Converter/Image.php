@@ -2,7 +2,7 @@
 /**
  * File containing the Image converter
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -97,7 +97,7 @@ class Image implements Converter
      */
     protected function createLegacyXml( array $data )
     {
-        $pathInfo = pathinfo( $data['uri'] );
+        $pathInfo = pathinfo( ltrim( $data['uri'], '/' ) );
         return $this->fillXml( $data, $pathInfo, time() );
     }
 
@@ -136,7 +136,7 @@ EOT;
             htmlspecialchars( $pathInfo['extension'] ), // suffix="%s"
             htmlspecialchars( $pathInfo['filename'] ), // basename="%s"
             htmlspecialchars( $pathInfo['dirname'] ), // dirpath
-            htmlspecialchars( $imageData['id'] ), // url
+            htmlspecialchars( ltrim( $imageData['uri'], '/' ) ), // url
             htmlspecialchars( $pathInfo['basename'] ), // @todo: Needs original file name, for whatever reason?
             htmlspecialchars( $imageData['mime'] ), // mime_type
             htmlspecialchars( $imageData['width'] ), // width

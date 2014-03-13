@@ -2,7 +2,7 @@
 /**
  * File containing the MediaTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -10,17 +10,11 @@
 namespace eZ\Publish\Core\Persistence\Legacy\Tests\Content\FieldValue\Converter;
 
 use eZ\Publish\Core\FieldType\Media\Type as MediaType;
-use eZ\Publish\Core\FieldType\Media\Value as MediaTypeValue;
 use eZ\Publish\Core\FieldType\FieldSettings;
-use eZ\Publish\SPI\Persistence\Content\FieldValue;
-use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldValue;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
 use eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Media as MediaTypeConverter;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition as PersistenceFieldDefinition;
 use eZ\Publish\SPI\Persistence\Content\FieldTypeConstraints;
-use eZ\Publish\API\Repository\Repository;
-use eZ\Publish\Core\IO\Handler\InMemory as InMemoryIOHandler;
-use eZ\Publish\Core\Persistence\InMemory\Handler as InMemoryPersistenceHandler;
 use PHPUnit_Framework_TestCase;
 
 /**

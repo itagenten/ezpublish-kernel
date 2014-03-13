@@ -2,7 +2,7 @@
 /**
  * File containing a test class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -52,6 +52,16 @@ class RestContentTypeTest extends ValueObjectVisitorBaseTest
             'ezpublish_rest_loadUser',
             array( 'userId' => $restContentType->contentType->modifierId ),
             "/user/users/{$restContentType->contentType->modifierId}"
+        );
+        $this->addRouteExpectation(
+            'ezpublish_rest_loadGroupsOfContentType',
+            array( 'contentTypeId' => $restContentType->contentType->id ),
+            "/content/types/{$restContentType->contentType->id}/groups"
+        );
+        $this->addRouteExpectation(
+            'ezpublish_rest_loadContentTypeDraft',
+            array( 'contentTypeId' => $restContentType->contentType->id ),
+            "/content/types/{$restContentType->contentType->id}/draft"
         );
 
         $visitor->visit(
@@ -117,7 +127,7 @@ class RestContentTypeTest extends ValueObjectVisitorBaseTest
      *
      * @depends testVisitDefinedType
      */
-    public function testContentTypeMediaTyp( \DOMDocument $dom )
+    public function testContentTypeMediaType( \DOMDocument $dom )
     {
         $this->assertXPath( $dom, '/ContentType[@media-type="application/vnd.ez.api.ContentType+xml"]'  );
     }
@@ -250,6 +260,46 @@ class RestContentTypeTest extends ValueObjectVisitorBaseTest
     public function testModifierMediaType( \DOMDocument $dom )
     {
         $this->assertXPath( $dom, '/ContentType/Modifier[@media-type="application/vnd.ez.api.User+xml"]'  );
+    }
+
+    /**
+     * @param \DOMDocument $dom
+     *
+     * @depends testVisitDefinedType
+     */
+    public function testDraftHref( \DOMDocument $dom )
+    {
+        $this->assertXPath( $dom, '/ContentType/Draft[@href="/content/types/contentTypeId/draft"]'  );
+    }
+
+    /**
+     * @param \DOMDocument $dom
+     *
+     * @depends testVisitDefinedType
+     */
+    public function testDraftType( \DOMDocument $dom )
+    {
+        $this->assertXPath( $dom, '/ContentType/Draft[@media-type="application/vnd.ez.api.ContentType+xml"]'  );
+    }
+
+    /**
+     * @param \DOMDocument $dom
+     *
+     * @depends testVisitDefinedType
+     */
+    public function testGroupsHref( \DOMDocument $dom )
+    {
+        $this->assertXPath( $dom, '/ContentType/Groups[@href="/content/types/contentTypeId/groups"]'  );
+    }
+
+    /**
+     * @param \DOMDocument $dom
+     *
+     * @depends testVisitDefinedType
+     */
+    public function testGroupsType( \DOMDocument $dom )
+    {
+        $this->assertXPath( $dom, '/ContentType/Groups[@media-type="application/vnd.ez.api.ContentTypeGroupRefList+xml"]'  );
     }
 
     /**

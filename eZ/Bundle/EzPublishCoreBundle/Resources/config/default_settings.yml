@@ -12,21 +12,25 @@ parameters:
     ezsettings.default.block_view: {}
 
     # Common settings
-    ezsettings.default.database.params: ~
+    ezpublish.repositories: {}
+    ezsettings.default.repository: ~
     ezsettings.default.session_name: "eZSESSID{siteaccess_hash}"    # Using "{siteaccess_hash}" in session name makes it unique per siteaccess
+    ezsettings.default.session: { name: %ezsettings.default.session_name% } # Session options that will override options from framework
     ezsettings.default.legacy_mode: false
     ezsettings.default.url_alias_router: true                       # Use UrlAliasRouter by default
+    ezsettings.default.index_page: ~                    # The page to show when accessing IndexPage (/)
     ezsettings.default.languages: []
     ezsettings.default.cache_pool_name: "default"       # The cache pool name to use for a siteaccess / siteaccess-group
     ezsettings.default.var_dir: "var"                   # The root directory where all log files, cache files and other stored files are created
     ezsettings.default.storage_dir: "storage"           # Where to place new files for storage, it's relative to var directory
     ezsettings.default.binary_dir: "original"
+    ezsettings.default.anonymous_user_id: 10            # The ID of the user to be used for everyone who is not logged in
 
     # Content settings
     ezsettings.default.content.view_cache: true         # Whether to use content view cache or not (Etag/Last-Modified based)
     ezsettings.default.content.ttl_cache: true          # Whether to use TTL Cache for content (i.e. Max-Age response header)
     ezsettings.default.content.default_ttl: 60          # Default TTL cache value for content
-    ezsettings.default.content.tree_root.location_id: ~ # Root locationId for routing and link generation. Useful for multisite apps with one repository.
+    ezsettings.default.content.tree_root.location_id: 2 # Root locationId for routing and link generation. Useful for multisite apps with one repository.
     ezsettings.default.content.tree_root.excluded_uri_prefixes: [] # URI prefixes that are allowed to be outside the content tree
 
     # FieldType settings
@@ -39,6 +43,21 @@ parameters:
         -
             path: %kernel.root_dir%/../vendor/ezsystems/ezpublish-kernel/eZ/Publish/Core/FieldType/XmlText/Input/Resources/stylesheets/eZXml2Html5_custom.xsl
             priority: 0
+
+    # FieldType settings
+    # Default XSL stylesheets for RichText rendering to HTML5.
+    # Built-in stylesheets are treated as custom for the sake of extensibility.
+    ezsettings.default.fieldtypes.ezrichtext.output_custom_xsl:
+        -
+            path: %kernel.root_dir%/../vendor/ezsystems/ezpublish-kernel/eZ/Publish/Core/FieldType/RichText/Resources/stylesheets/docbook/xhtml5/output/core.xsl
+            priority: 0
+
+    ezsettings.default.fieldtypes.ezrichtext.edit_custom_xsl:
+        -
+            path: %kernel.root_dir%/../vendor/ezsystems/ezpublish-kernel/eZ/Publish/Core/FieldType/RichText/Resources/stylesheets/docbook/xhtml5/edit/core.xsl
+            priority: 0
+
+    ezsettings.default.fieldtypes.ezrichtext.input_custom_xsl: []
 
     # Cache settings
     ezsettings.default.http_cache.purge_servers: ["http://localhost/"]   # Server(s) URL(s) that will be used for purging HTTP cache with PURGE requests.
@@ -55,6 +74,9 @@ parameters:
     ezsettings.default.fielddefinition_settings_templates:
         - {template: EzPublishCoreBundle::fielddefinition_settings.html.twig, priority: 0}
 
+    # Security settings
+    ezsettings.default.security.login_template: "EzPublishCoreBundle:Security:login.html.twig"
+    ezsettings.default.security.base_layout: %ezpublish.content_view.viewbase_layout%
 
     # Image settings
     ezsettings.default.image.temporary_dir: imagetmp
@@ -230,3 +252,4 @@ parameters:
     ###
     ezpublish.siteaccess.groups: {}
     ezpublish.siteaccess.groups_by_siteaccess: {}
+    ezpublish.siteaccess.default: ~

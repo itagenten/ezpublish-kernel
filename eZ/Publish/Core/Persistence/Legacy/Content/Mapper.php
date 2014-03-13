@@ -2,7 +2,7 @@
 /**
  * File containing the Mapper class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -306,7 +306,7 @@ class Mapper
                 $versionInfo->creationDate = (int)$row["ezcontentobject_version_created"];
                 $versionInfo->modificationDate = (int)$row["ezcontentobject_version_modified"];
                 $versionInfo->initialLanguageCode = $this->languageHandler->load( $row["ezcontentobject_version_initial_language_id"] )->languageCode;
-                $versionInfo->languageIds = $this->extractLanguageIdsFromMask( (int)$row["ezcontentobject_version_language_mask"] );//array();
+                $versionInfo->languageIds = $this->extractLanguageIdsFromMask( (int)$row["ezcontentobject_version_language_mask"] );
                 $versionInfo->status = (int)$row["ezcontentobject_version_status"];
                 $versionInfo->names = array();
                 $versionInfoList[$versionId] = $versionInfo;

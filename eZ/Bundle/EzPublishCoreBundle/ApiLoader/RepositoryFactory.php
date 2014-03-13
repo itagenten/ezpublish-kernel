@@ -2,26 +2,31 @@
 /**
  * File containing the RepositoryFactory class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\ApiLoader;
 
+use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\SPI\Persistence\Handler as PersistenceHandler;
-use eZ\Publish\SPI\IO\Handler as IoHandler;
 use eZ\Publish\SPI\Limitation\Type as SPILimitationType;
 use eZ\Publish\API\Repository\Repository;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerAware;
 use eZ\Publish\Core\Base\Exceptions\InvalidArgumentException;
 
-class RepositoryFactory
+class RepositoryFactory extends ContainerAware
 {
     /**
-     * @var \Symfony\Component\DependencyInjection\ContainerInterface
+     * @var \eZ\Publish\Core\MVC\ConfigResolverInterface
      */
-    protected $container;
+    private $configResolver;
+
+    /**
+     * @var string
+     */
+    private $repositoryClass;
 
     /**
      * Collection of fieldTypes, lazy loaded via a closure
@@ -44,9 +49,10 @@ class RepositoryFactory
      */
     protected $roleLimitations = array();
 
-    public function __construct( ContainerInterface $container )
+    public function __construct( ConfigResolverInterface $configResolver, $repositoryClass )
     {
-        $this->container = $container;
+        $this->configResolver = $configResolver;
+        $this->repositoryClass = $repositoryClass;
     }
 
     /**
@@ -56,25 +62,29 @@ class RepositoryFactory
      * directly to make sure you get an instance wrapped inside Signal / Cache / * functionality.
      *
      * @param \eZ\Publish\SPI\Persistence\Handler $persistenceHandler
-     * @param \eZ\Publish\SPI\IO\Handler $ioHandler
      *
      * @return \eZ\Publish\API\Repository\Repository
      */
     public function buildRepository( PersistenceHandler $persistenceHandler )
     {
-        /** @var $configResolver \eZ\Publish\Core\MVC\ConfigResolverInterface */
-        $configResolver = $this->container->get( 'ezpublish.config.resolver' );
-        $repositoryClass = $this->container->getParameter( 'ezpublish.api.inner_repository.class' );
-        return new $repositoryClass(
+        $repository = new $this->repositoryClass(
             $persistenceHandler,
             array(
                 'fieldType'     => $this->fieldTypes,
                 'role'          => array(
                     'limitationTypes'   => $this->roleLimitations
                 ),
-                'languages'     => $configResolver->getParameter( 'languages' )
+                'languages'     => $this->configResolver->getParameter( 'languages' )
             )
         );
+
+        /** @var \eZ\Publish\API\Repository\Repository $repository */
+        $anonymousUser = $repository->getUserService()->loadUser(
+            $this->configResolver->getParameter( "anonymous_user_id" )
+        );
+        $repository->setCurrentUser( $anonymousUser );
+
+        return $repository;
     }
 
     /**

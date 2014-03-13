@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\Repository\TrashService class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  * @package eZ\Publish\Core\Repository
@@ -13,7 +13,6 @@ namespace eZ\Publish\Core\Repository;
 use eZ\Publish\API\Repository\TrashService as TrashServiceInterface;
 use eZ\Publish\API\Repository\Repository as RepositoryInterface;
 use eZ\Publish\SPI\Persistence\Handler;
-use eZ\Publish\Core\Repository\NameSchemaService;
 use eZ\Publish\API\Repository\Values\Content\Location;
 use eZ\Publish\Core\Repository\Values\Content\TrashItem;
 use eZ\Publish\API\Repository\Values\Content\TrashItem as APITrashItem;
@@ -269,8 +268,8 @@ class TrashService implements TrashServiceInterface
      */
     public function findTrashItems( Query $query )
     {
-        if ( $query->criterion !== null && !$query->criterion instanceof Criterion )
-            throw new InvalidArgumentValue( "query->criterion", $query->criterion, "Query" );
+        if ( $query->filter !== null && !$query->filter instanceof Criterion )
+            throw new InvalidArgumentValue( "query->filter", $query->filter, "Query" );
 
         if ( $query->sortClauses !== null )
         {
@@ -291,7 +290,7 @@ class TrashService implements TrashServiceInterface
             throw new InvalidArgumentValue( "query->limit", $query->limit, "Query" );
 
         $spiTrashItems = $this->persistenceHandler->trashHandler()->findTrashItems(
-            $query->criterion !== null ? $query->criterion : null,
+            $query->filter !== null ? $query->filter : null,
             $query->offset !== null && $query->offset > 0 ? (int)$query->offset : 0,
             $query->limit !== null && $query->limit >= 1 ? (int)$query->limit : null,
             $query->sortClauses !== null ? $query->sortClauses : null

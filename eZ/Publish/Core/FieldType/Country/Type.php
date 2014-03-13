@@ -2,7 +2,7 @@
 /**
  * File containing the Country class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -66,16 +66,7 @@ class Type extends FieldType
      */
     public function getName( SPIValue $value )
     {
-        return implode(
-            ", ",
-            array_map(
-                function ( $countryInfo )
-                {
-                    return $countryInfo["Name"];
-                },
-                $this->countriesInfo
-            )
-        );
+        return (string)$value;
     }
 
     /**
@@ -189,7 +180,7 @@ class Type extends FieldType
         $countries = array();
         foreach ( $value->countries as $countryInfo )
         {
-            $countries[] = strtolower( $countryInfo["Name"] );
+            $countries[] = $this->transformationProcessor->transformByGroup( $countryInfo["Name"], "lowercase" );
         }
 
         sort( $countries );

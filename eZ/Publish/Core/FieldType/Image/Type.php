@@ -2,7 +2,7 @@
 /**
  * File containing the ezimage Type class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -57,7 +57,7 @@ class Type extends FieldType
      */
     public function getName( SPIValue $value )
     {
-        return !empty( $value->alternativeText ) ? $value->alternativeText : $value->fileName;
+        return !empty( $value->alternativeText ) ? $value->alternativeText : (string)$value->fileName;
     }
 
     /**

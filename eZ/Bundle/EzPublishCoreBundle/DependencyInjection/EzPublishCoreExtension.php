@@ -2,21 +2,30 @@
 /**
  * File containing the EzPublishCoreExtension class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\DependencyInjection;
 
+use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\Collector\SuggestionCollector;
+use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\Collector\SuggestionCollectorAwareInterface;
+use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\Formatter\YamlSuggestionFormatter;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader;
 use Symfony\Component\DependencyInjection\Loader\FileLoader;
 use Symfony\Component\Config\FileLocator;
+use InvalidArgumentException;
 
 class EzPublishCoreExtension extends Extension
 {
+    /**
+     * @var \eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\Collector\SuggestionCollector
+     */
+    private $suggestionCollector;
+
     /**
      * @var \eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Parser[]
      */
@@ -24,7 +33,15 @@ class EzPublishCoreExtension extends Extension
 
     public function __construct( array $configParsers = array() )
     {
+        $this->suggestionCollector = new SuggestionCollector();
         $this->configParsers = $configParsers;
+        foreach ( $this->configParsers as $parser )
+        {
+            if ( $parser instanceof SuggestionCollectorAwareInterface )
+            {
+                $parser->setSuggestionCollector( $this->suggestionCollector );
+            }
+        }
     }
 
     public function getAlias()
@@ -48,6 +65,7 @@ class EzPublishCoreExtension extends Extension
             $container,
             new FileLocator( __DIR__ . '/../Resources/config' )
         );
+
         $configuration = $this->getConfiguration( $configs, $container );
 
         // Note: this is where the transformation occurs
@@ -59,6 +77,7 @@ class EzPublishCoreExtension extends Extension
         $loader->load( 'security.yml' );
         // Default settings
         $loader->load( 'default_settings.yml' );
+        $this->registerRepositoriesConfiguration( $config, $container );
         $this->registerSiteAccessConfiguration( $config, $container );
         $this->registerImageMagickConfiguration( $config, $container );
         $this->registerPageConfiguration( $config, $container );
@@ -71,11 +90,24 @@ class EzPublishCoreExtension extends Extension
         $this->handleSessionLoading( $container, $loader );
         $this->handleCache( $config, $container, $loader );
         $this->handleLocale( $config, $container, $loader );
+        $this->handleHelpers( $config, $container, $loader );
 
         // Map settings
         foreach ( $this->configParsers as $configParser )
         {
             $configParser->registerInternalConfig( $config, $container );
+        }
+
+        if ( $this->suggestionCollector->hasSuggestions() )
+        {
+            $message = '';
+            $suggestionFormatter = new YamlSuggestionFormatter();
+            foreach ( $this->suggestionCollector->getSuggestions() as $suggestion )
+            {
+                $message .= $suggestionFormatter->format( $suggestion ) . "\n\n";
+            }
+
+            throw new InvalidArgumentException( $message );
         }
     }
 
@@ -87,7 +119,17 @@ class EzPublishCoreExtension extends Extension
      */
     public function getConfiguration( array $config, ContainerBuilder $container )
     {
-        return new Configuration( $this->configParsers );
+        return new Configuration( $this->configParsers, $this->suggestionCollector );
+    }
+
+    private function registerRepositoriesConfiguration( array $config, ContainerBuilder $container )
+    {
+        if ( !isset( $config['repositories'] ) )
+        {
+            $config['repositories'] = array();
+        }
+
+        $container->setParameter( 'ezpublish.repositories', $config['repositories'] );
     }
 
     private function registerSiteAccessConfiguration( array $config, ContainerBuilder $container )
@@ -190,6 +232,18 @@ class EzPublishCoreExtension extends Extension
                 array_merge(
                     $container->getParameter( 'ezpublish.default_router.non_siteaccess_aware_routes' ),
                     $config['router']['default_router']['non_siteaccess_aware_routes']
+                )
+            );
+        }
+
+        // Define additional routes that are allowed with legacy_mode: true.
+        if ( isset( $config['router']['default_router']['legacy_aware_routes'] ) )
+        {
+            $container->setParameter(
+                'ezpublish.default_router.legacy_aware_routes',
+                array_merge(
+                    $container->getParameter( 'ezpublish.default_router.legacy_aware_routes' ),
+                    $config['router']['default_router']['legacy_aware_routes']
                 )
             );
         }
@@ -296,5 +350,17 @@ class EzPublishCoreExtension extends Extension
             'ezpublish.locale.conversion_map',
             $config['locale_conversion'] + $container->getParameter( 'ezpublish.locale.conversion_map' )
         );
+    }
+
+    /**
+     * Handle helpers.
+     *
+     * @param array $config
+     * @param \Symfony\Component\DependencyInjection\ContainerBuilder $container
+     * @param \Symfony\Component\DependencyInjection\Loader\FileLoader $loader
+     */
+    private function handleHelpers( array $config, ContainerBuilder $container, FileLoader $loader )
+    {
+        $loader->load( 'helpers.yml' );
     }
 }

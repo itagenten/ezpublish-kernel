@@ -12,6 +12,7 @@ namespace eZ\Bundle\EzPublishCoreBundle\Command;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Exception;
 
 class TestInitDbCommand extends ContainerAwareCommand
 {
@@ -31,11 +32,17 @@ EOT
 
     protected function execute( InputInterface $input, OutputInterface $output )
     {
-        $database = $this->getContainer()->get( 'ezpublish.config.resolver' )->getParameter( 'database.params' );
+        $database = $this->getContainer()->get( 'ezpublish.connection' )->getConnection()->getParams();
         if ( is_array( $database ) )
         {
-            $dbType = $database['type'];
-            $database = $database['database'];
+            $driverMap = array(
+                'pdo_mysql' => 'mysql',
+                'pdo_pgsql' => 'pgsql',
+                'pdo_sqlite' => 'sqlite',
+            );
+
+            $dbType = $driverMap[$database['driver']];
+            $database = $database['dbname'];
         }
         else
         {
@@ -191,7 +198,7 @@ EOT
     /**
      * Returns the database handler from the service container
      *
-     * @return \EzcDbHandler
+     * @return \eZ\Publish\Core\Persistence\Doctrine\ConnectionHandler
      */
     protected function getDatabaseHandler()
     {

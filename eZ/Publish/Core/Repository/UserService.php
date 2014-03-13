@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\Repository\UserService class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  * @package eZ\Publish\Core\Repository
@@ -33,7 +33,6 @@ use eZ\Publish\API\Repository\Values\Content\Query\Criterion\LogicalAnd as Crite
 use eZ\Publish\API\Repository\Values\Content\Query\Criterion\ContentTypeId as CriterionContentTypeId;
 use eZ\Publish\API\Repository\Values\Content\Query\Criterion\LocationId as CriterionLocationId;
 use eZ\Publish\API\Repository\Values\Content\Query\Criterion\ParentLocationId as CriterionParentLocationId;
-use eZ\Publish\API\Repository\Values\Content\Query\Criterion\Status as CriterionStatus;
 use eZ\Publish\Core\Base\Exceptions\ContentValidationException;
 use eZ\Publish\Core\Base\Exceptions\InvalidArgumentValue;
 use eZ\Publish\Core\Base\Exceptions\BadStateException;
@@ -80,7 +79,6 @@ class UserService implements UserServiceInterface
         $this->userHandler = $userHandler;
         // Union makes sure default settings are ignored if provided in argument
         $this->settings = $settings + array(
-            'anonymousUserID' => 10,
             'defaultUserPlacement' => 12,
             'userClassID' => 4,// @todo Rename this settings to swap out "Class" for "Type"
             'userGroupClassID' => 3,
@@ -219,11 +217,10 @@ class UserService implements UserServiceInterface
         $searchQuery->offset = $offset >= 0 ? (int)$offset : 0;
         $searchQuery->limit = $limit >= 0 ? (int)$limit  : null;
 
-        $searchQuery->criterion = new CriterionLogicalAnd(
+        $searchQuery->filter = new CriterionLogicalAnd(
             array(
                 new CriterionContentTypeId( $this->settings['userGroupClassID'] ),
-                new CriterionParentLocationId( $locationId ),
-                new CriterionStatus( CriterionStatus::STATUS_PUBLISHED )
+                new CriterionParentLocationId( $locationId )
             )
         );
 
@@ -559,6 +556,8 @@ class UserService implements UserServiceInterface
 
     /**
      * Loads anonymous user
+     *
+     * @deprecated since 5.3, use loadUser( $anonymousUserId ) instead
      *
      * @uses loadUser()
      *
@@ -920,11 +919,10 @@ class UserService implements UserServiceInterface
         $searchQuery->offset = 0;
         $searchQuery->limit = null;
 
-        $searchQuery->criterion = new CriterionLogicalAnd(
+        $searchQuery->filter = new CriterionLogicalAnd(
             array(
                 new CriterionContentTypeId( $this->settings['userGroupClassID'] ),
-                new CriterionLocationId( $parentLocationIds ),
-                new CriterionStatus( CriterionStatus::STATUS_PUBLISHED )
+                new CriterionLocationId( $parentLocationIds )
             )
         );
 
@@ -963,11 +961,10 @@ class UserService implements UserServiceInterface
 
         $searchQuery = new Query();
 
-        $searchQuery->criterion = new CriterionLogicalAnd(
+        $searchQuery->filter = new CriterionLogicalAnd(
             array(
                 new CriterionContentTypeId( $this->settings['userClassID'] ),
-                new CriterionParentLocationId( $mainGroupLocation->id ),
-                new CriterionStatus( CriterionStatus::STATUS_PUBLISHED )
+                new CriterionParentLocationId( $mainGroupLocation->id )
             )
         );
 

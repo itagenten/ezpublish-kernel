@@ -2,7 +2,7 @@
 /**
  * File containing the Relation converter
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -12,25 +12,25 @@ namespace eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter;
 use eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldValue;
 use eZ\Publish\SPI\Persistence\Content\FieldValue;
+use eZ\Publish\SPI\Persistence\Content\Type as ContentType;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
-use eZ\Publish\Core\FieldType\RelationList\Value as RelationListValue;
-use eZ\Publish\Core\Persistence\Legacy\EzcDbHandler;
+use eZ\Publish\Core\Persistence\Database\DatabaseHandler;
 use DOMDocument;
 
 class RelationList implements Converter
 {
     /**
-     * @var \ezcDbHandler
+     * @var \eZ\Publish\Core\Persistence\Database\DatabaseHandler
      */
     private $db;
 
     /**
      * Create instance of RelationList converter
      *
-     * @param \eZ\Publish\Core\Persistence\Legacy\EzcDbHandler $db
+     * @param \eZ\Publish\Core\Persistence\Database\DatabaseHandler $db
      */
-    public function __construct( EzcDbHandler $db )
+    public function __construct( DatabaseHandler $db )
     {
         $this->db = $db;
     }
@@ -262,6 +262,10 @@ class RelationList implements Converter
                     $q->expr->eq(
                         $this->db->quoteColumn( 'id', 'ezcontentclass' ),
                         $this->db->quoteColumn( 'contentclass_id', 'ezcontentobject' )
+                    ),
+                    $q->expr->eq(
+                        $this->db->quoteColumn( 'version', 'ezcontentclass' ),
+                        $q->bindValue( ContentType::STATUS_DEFINED, null, \PDO::PARAM_INT )
                     )
                 )
             )

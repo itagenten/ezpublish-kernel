@@ -2,7 +2,7 @@
 /**
  * File containing the content updater class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -161,7 +161,7 @@ class ContentUpdater
         $result = $this->searchHandler->findContent(
             new Query(
                 array(
-                    'criterion' => new Criterion\ContentTypeId( $contentTypeId )
+                    'filter' => new Criterion\ContentTypeId( $contentTypeId )
                 )
             )
         );

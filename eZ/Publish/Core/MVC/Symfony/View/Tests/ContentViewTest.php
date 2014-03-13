@@ -2,7 +2,7 @@
 /**
  * File containing the ContentViewTest class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -135,5 +135,53 @@ class ContentViewTest extends PHPUnit_Framework_TestCase
     public function testGetParameterFail( ContentView $contentView )
     {
         $contentView->getParameter( 'nonExistent' );
+    }
+
+    /**
+     * @dataProvider goodTemplateIdentifierProvider
+     *
+     * @param $templateIdentifier
+     */
+    public function testSetTemplateIdentifier( $templateIdentifier )
+    {
+        $contentView = new ContentView();
+        $contentView->setTemplateIdentifier( $templateIdentifier );
+        $this->assertSame( $templateIdentifier, $contentView->getTemplateIdentifier() );
+    }
+
+    public function goodTemplateIdentifierProvider()
+    {
+        return array(
+            array( 'foo:bar:baz.html.twig' ),
+            array(
+                function ()
+                {
+                    return 'foo';
+                }
+            )
+        );
+    }
+
+    /**
+     * @dataProvider badTemplateIdentifierProvider
+     *
+     * @expectedException eZ\Publish\Core\Base\Exceptions\InvalidArgumentType
+     *
+     * @param $badTemplateIdentifier
+     */
+    public function testSetTemplateIdentifierWrongType( $badTemplateIdentifier )
+    {
+        $contentView = new ContentView();
+        $contentView->setTemplateIdentifier( $badTemplateIdentifier );
+    }
+
+    public function badTemplateIdentifierProvider()
+    {
+        return array(
+            array( 123 ),
+            array( true ),
+            array( new \stdClass() ),
+            array( array( 'foo', 'bar' ) )
+        );
     }
 }

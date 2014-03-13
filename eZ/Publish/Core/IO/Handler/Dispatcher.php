@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\IO\Handler\Dispatcher class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -136,16 +136,6 @@ class Dispatcher implements IoHandlerInterface
 
         // Move file from old to new handler
         throw new \Exception( '@todo: Moving from one io handler to another one is not implemented!' );
-        /*$newHandler->create( $updateFile );
-        try
-        {
-            $oldHandler->delete( $path );
-        }
-        catch ( \Exception $e )
-        {
-            $newHandler->delete( $updateFile->uri );
-            throw $e;
-        }*/
     }
 
     /**

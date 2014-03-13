@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\Repository\URLAliasService class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  * @package eZ\Publish\Core\Repository
@@ -273,6 +273,7 @@ class URLAliasService implements URLAliasServiceInterface
         if ( $spiUrlAlias->alwaysAvailable || $this->settings["showAllTranslations"] )
         {
             $lastLevelData = end( $spiUrlAlias->pathData );
+            reset( $lastLevelData["translations"] );
             return key( $lastLevelData["translations"] );
         }
 
@@ -337,6 +338,7 @@ class URLAliasService implements URLAliasServiceInterface
 
         if ( $entries["always-available"] || $this->settings["showAllTranslations"] )
         {
+            reset( $entries["translations"] );
             return key( $entries["translations"] );
         }
 
@@ -562,6 +564,8 @@ class URLAliasService implements URLAliasServiceInterface
         return new SPIURLAlias(
             array(
                 "id" => $urlAlias->id,
+                "type" => $urlAlias->type,
+                "destination" => $urlAlias->destination,
                 "isCustom" => $urlAlias->isCustom
             )
         );
@@ -625,6 +629,11 @@ class URLAliasService implements URLAliasServiceInterface
             {
                 return $urlAlias;
             }
+        }
+
+        if ( !empty( $urlAliases ) && $this->settings["showAllTranslations"] )
+        {
+            return reset( $urlAliases );
         }
 
         throw new NotFoundException( "URLAlias", $location->id );

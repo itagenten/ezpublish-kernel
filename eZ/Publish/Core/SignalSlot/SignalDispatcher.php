@@ -2,7 +2,7 @@
 /**
  * File containing the SignalDispatcher class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -37,7 +37,7 @@ abstract class SignalDispatcher
      * $signalIdentifier
      *
      * @param string $signalIdentifier
-     * @param string $slotIdentifier
+     * @param \eZ\Publish\Core\SignalSlot\Slot $slot
      *
      * @return void
      *
@@ -45,5 +45,5 @@ abstract class SignalDispatcher
      * attachments at runtime, which can lead to hard debugging. Better only
      * accept attachments during construction (config).
      */
-    abstract public function attach( $signalIdentifier, $slotIdentifier );
+    abstract public function attach( $signalIdentifier, Slot $slot );
 }

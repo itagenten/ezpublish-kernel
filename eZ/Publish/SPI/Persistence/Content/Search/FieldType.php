@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\SPI\Persistence\Content\Search\FieldType class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -37,7 +37,7 @@ abstract class FieldType extends ValueObject
     public $highlight = false;
 
     /**
-     * The importance of that field ( boost factor) )
+     * The importance of that field (boost factor)
      *
      * @var int
      */
@@ -57,4 +57,3 @@ abstract class FieldType extends ValueObject
      */
     public $inResult = true;
 }
-

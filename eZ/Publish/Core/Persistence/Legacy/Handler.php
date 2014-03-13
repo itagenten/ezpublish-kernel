@@ -2,7 +2,7 @@
 /**
  * File containing the Handler interface
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -18,27 +18,35 @@ use eZ\Publish\Core\Persistence\Legacy\Content\Type\Mapper as TypeMapper;
 use eZ\Publish\Core\Persistence\Legacy\Content\Language\Mapper as LanguageMapper;
 use eZ\Publish\Core\Persistence\Legacy\Content\Location\Handler as LocationHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\Location\Mapper as LocationMapper;
+use eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Handler as LocationSearchHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\Location\Trash\Handler as TrashHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\ObjectState\Handler as ObjectStateHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\ObjectState\Mapper as ObjectStateMapper;
 use eZ\Publish\Core\Persistence\Legacy\Content\Mapper as ContentMapper;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageRegistry;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageHandler;
-use eZ\Publish\Core\Persistence\Legacy\Content\Search\TransformationProcessor;
-use eZ\Publish\Core\Persistence\Legacy\Content\Search\Gateway\CriterionHandler;
+use eZ\Publish\Core\Persistence\TransformationProcessor;
+use eZ\Publish\Core\Persistence\Legacy\Content\Search\Gateway\CriterionHandler as ContentCriterionHandler;
+use eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Gateway\CriterionHandler as LocationCriterionHandler;
+use eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\CriterionHandler as CommonCriterionHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias\Handler as UrlAliasHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias\Mapper as UrlAliasMapper;
-use eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias\Gateway\EzcDatabase as UrlAliasGateway;
+use eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias\Gateway\DoctrineDatabase as UrlAliasGateway;
 use eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias\Gateway\ExceptionConversion as UrlAliasExceptionConversionGateway;
 use eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias\SlugConverter;
 use eZ\Publish\Core\Persistence\Legacy\Content\UrlWildcard\Handler as UrlWildcardHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\UrlWildcard\Mapper as UrlWildcardMapper;
-use eZ\Publish\Core\Persistence\Legacy\Content\UrlWildcard\Gateway\EzcDatabase as UrlWildcardGateway;
-use eZ\Publish\Core\Persistence\Legacy\Content\Search\Gateway\SortClauseHandler;
+use eZ\Publish\Core\Persistence\Legacy\Content\UrlWildcard\Gateway\DoctrineDatabase as UrlWildcardGateway;
+use eZ\Publish\Core\Persistence\Legacy\Content\Search\Gateway\SortClauseHandler as ContentSortClauseHandler;
+use eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Gateway\SortClauseHandler as LocationSortClauseHandler;
+use eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\SortClauseHandler as CommonSortClauseHandler;
 use eZ\Publish\Core\Persistence\Legacy\User\Mapper as UserMapper;
+use eZ\Publish\Core\Persistence\Legacy\User\Role\LimitationConverter;
+use eZ\Publish\Core\Persistence\Legacy\User\Role\LimitationHandler\ObjectStateHandler as ObjectStateLimitationHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\ConverterRegistry as ConverterRegistry;
 use eZ\Publish\Core\Persistence\FieldTypeRegistry;
-use ezcDbTransactionException;
+use eZ\Publish\Core\Persistence\Database\DatabaseHandler;
+use Exception;
 use RuntimeException;
 
 /**
@@ -84,7 +92,7 @@ class Handler implements HandlerInterface
     /**
      * Content type handler
      *
-     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Type\Handler
+     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Type\MemoryCachingHandler
      */
     protected $contentTypeHandler;
 
@@ -110,11 +118,25 @@ class Handler implements HandlerInterface
     protected $locationHandler;
 
     /**
+     * Location search handler
+     *
+     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Handler
+     */
+    protected $locationSearchHandler;
+
+    /**
      * Location gateway
      *
      * @var \eZ\Publish\Core\Persistence\Legacy\Content\Location\Gateway
      */
     protected $locationGateway;
+
+    /**
+     * Location search gateway
+     *
+     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Gateway
+     */
+    protected $locationSearchGateway;
 
     /**
      * Location mapper
@@ -175,7 +197,7 @@ class Handler implements HandlerInterface
     /**
      * Language handler
      *
-     * @var \eZ\Publish\SPI\Persistence\Content\Language\Handler
+     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Language\CachingHandler
      */
     protected $languageHandler;
 
@@ -236,7 +258,7 @@ class Handler implements HandlerInterface
     protected $urlWildcardMapper;
 
     /**
-     * @var \eZ\Publish\Core\Persistence\Legacy\EzcDbHandler
+     * @var \eZ\Publish\Core\Persistence\Database\DatabaseHandler
      */
     protected $dbHandler;
 
@@ -264,9 +286,14 @@ class Handler implements HandlerInterface
     /**
      * Transform Processor
      *
-     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Search\TransformationProcessor
+     * @var \eZ\Publish\Core\Persistence\TransformationProcessor
      */
     protected $transformationProcessor;
+
+    /**
+     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\CriterionHandler\FieldValue\Converter
+     */
+    protected $criterionFieldValueConverter;
 
     /**
      * General configuration
@@ -276,13 +303,18 @@ class Handler implements HandlerInterface
     protected $config;
 
     /**
+     * @var \Doctrine\DBAL\Connection
+     */
+    protected $connection;
+
+    /**
      * Creates a new repository handler.
      *
-     * @param \eZ\Publish\Core\Persistence\Legacy\EzcDbHandler $dbHandler The database handler
+     * @param \eZ\Publish\Core\Persistence\Database\DatabaseHandler $dbHandler The database handler
      * @param \eZ\Publish\Core\Persistence\FieldTypeRegistry $fieldTypeRegistry Should contain field types
      * @param Content\FieldValue\ConverterRegistry $converterRegistry Should contain Field Type converters
      * @param Content\StorageRegistry $storageRegistry Should contain Field Type external storage handlers
-     * @param \eZ\Publish\Core\Persistence\Legacy\Content\Search\TransformationProcessor $transformationProcessor Search Text Transformation processor
+     * @param \eZ\Publish\Core\Persistence\TransformationProcessor $transformationProcessor Search Text Transformation processor
      * @param array $config List of optional configuration flags:
      *                      The flag 'defer_type_update' defines if content types should be
      *                      published immediately (false), when the
@@ -291,7 +323,7 @@ class Handler implements HandlerInterface
      *                      is then executed by the old eZ Publish core.
      */
     public function __construct(
-        EzcDbHandler $dbHandler,
+        DatabaseHandler $dbHandler,
         FieldTypeRegistry $fieldTypeRegistry,
         ConverterRegistry $converterRegistry,
         StorageRegistry $storageRegistry,
@@ -305,12 +337,13 @@ class Handler implements HandlerInterface
         $this->storageRegistry = $storageRegistry;
         $this->transformationProcessor = $transformationProcessor;
         $this->config = $config;
+
     }
 
     /**
      * @todo remove circular dependency with LocationHandler
      *
-     * @return \eZ\Publish\SPI\Persistence\Content\Handler
+     * @return \eZ\Publish\Core\Persistence\Legacy\Content\Handler
      */
     public function contentHandler()
     {
@@ -356,9 +389,9 @@ class Handler implements HandlerInterface
         if ( !isset( $this->contentGateway ) )
         {
             $this->contentGateway = new Content\Gateway\ExceptionConversion(
-                new Content\Gateway\EzcDatabase(
+                new Content\Gateway\DoctrineDatabase(
                     $this->dbHandler,
-                    new Content\Gateway\EzcDatabase\QueryBuilder( $this->dbHandler ),
+                    new Content\Gateway\DoctrineDatabase\QueryBuilder( $this->dbHandler ),
                     $this->contentLanguageHandler(),
                     $this->getLanguageMaskGenerator()
                 )
@@ -453,6 +486,45 @@ class Handler implements HandlerInterface
         return $this->storageHandler;
     }
 
+    protected function getCriterionFieldValueConverter()
+    {
+        if ( !isset( $this->criterionFieldValueConverter ) )
+        {
+            $db = $this->dbHandler;
+            $commaSeparatedCollectionValueHandler = new CommonCriterionHandler\FieldValue\Handler\Collection(
+                $db, $this->transformationProcessor, ","
+            );
+            $hyphenSeparatedCollectionValueHandler = new CommonCriterionHandler\FieldValue\Handler\Collection(
+                $db, $this->transformationProcessor, "-"
+            );
+            $compositeValueHandler = new CommonCriterionHandler\FieldValue\Handler\Composite(
+                $db, $this->transformationProcessor
+            );
+            $simpleValueHandler = new CommonCriterionHandler\FieldValue\Handler\Simple(
+                $db, $this->transformationProcessor
+            );
+
+            $this->criterionFieldValueConverter = new CommonCriterionHandler\FieldValue\Converter(
+                new CommonCriterionHandler\FieldValue\HandlerRegistry(
+                    array(
+                        "ezboolean" => $simpleValueHandler,
+                        "ezcountry" => $commaSeparatedCollectionValueHandler,
+                        "ezdate" => $simpleValueHandler,
+                        "ezdatetime" => $simpleValueHandler,
+                        "ezemail" => $simpleValueHandler,
+                        "ezinteger" => $simpleValueHandler,
+                        "ezobjectrelation" => $simpleValueHandler,
+                        "ezobjectrelationlist" => $commaSeparatedCollectionValueHandler,
+                        "ezselection" => $hyphenSeparatedCollectionValueHandler,
+                        "eztime" => $simpleValueHandler,
+                    )
+                ),
+                $compositeValueHandler
+            );
+        }
+        return $this->criterionFieldValueConverter;
+    }
+
     /**
      * @return \eZ\Publish\SPI\Persistence\Content\Search\Handler
      */
@@ -463,59 +535,64 @@ class Handler implements HandlerInterface
             $db = $this->dbHandler;
             $this->searchHandler = new Content\Search\Handler(
                 new Content\Search\Gateway\ExceptionConversion(
-                    new Content\Search\Gateway\EzcDatabase(
+                    new Content\Search\Gateway\DoctrineDatabase(
                         $db,
-                        new Content\Search\Gateway\CriteriaConverter(
+                        new Content\Search\Common\Gateway\CriteriaConverter(
                             array(
-                                new CriterionHandler\ContentId( $db ),
-                                new CriterionHandler\LogicalNot( $db ),
-                                new CriterionHandler\LogicalAnd( $db ),
-                                new CriterionHandler\LogicalOr( $db ),
-                                new CriterionHandler\Subtree( $db ),
-                                new CriterionHandler\ContentTypeId( $db ),
-                                new CriterionHandler\ContentTypeIdentifier( $db ),
-                                new CriterionHandler\ContentTypeGroupId( $db ),
-                                new CriterionHandler\DateMetadata( $db ),
-                                new CriterionHandler\LocationId( $db ),
-                                new CriterionHandler\LocationPriority( $db ),
-                                new CriterionHandler\ParentLocationId( $db ),
-                                new CriterionHandler\RemoteId( $db ),
-                                new CriterionHandler\LocationRemoteId( $db ),
-                                new CriterionHandler\SectionId( $db ),
-                                new CriterionHandler\Status( $db ),
-                                new CriterionHandler\FullText(
+                                new CommonCriterionHandler\MatchAll( $db ),
+                                new CommonCriterionHandler\ContentId( $db ),
+                                new CommonCriterionHandler\LogicalNot( $db ),
+                                new CommonCriterionHandler\LogicalAnd( $db ),
+                                new CommonCriterionHandler\LogicalOr( $db ),
+                                new ContentCriterionHandler\Subtree( $db ),
+                                new CommonCriterionHandler\ContentTypeId( $db ),
+                                new CommonCriterionHandler\ContentTypeIdentifier( $db ),
+                                new CommonCriterionHandler\ContentTypeGroupId( $db ),
+                                new CommonCriterionHandler\DateMetadata( $db ),
+                                new ContentCriterionHandler\LocationId( $db ),
+                                new ContentCriterionHandler\LocationPriority( $db ),
+                                new ContentCriterionHandler\ParentLocationId( $db ),
+                                new CommonCriterionHandler\RemoteId( $db ),
+                                new ContentCriterionHandler\LocationRemoteId( $db ),
+                                new CommonCriterionHandler\SectionId( $db ),
+                                new CommonCriterionHandler\FullText(
                                     $db,
                                     $this->transformationProcessor
                                 ),
-                                new CriterionHandler\Field(
+                                new CommonCriterionHandler\Field(
                                     $db,
                                     $this->converterRegistry,
+                                    $this->getCriterionFieldValueConverter(),
                                     $this->transformationProcessor
                                 ),
-                                new CriterionHandler\ObjectStateId( $db ),
-                                new CriterionHandler\LanguageCode(
+                                new CommonCriterionHandler\ObjectStateId( $db ),
+                                new CommonCriterionHandler\LanguageCode(
                                     $db,
                                     $this->getLanguageMaskGenerator()
                                 ),
-                                new CriterionHandler\Visibility( $db ),
-                                new CriterionHandler\UserMetadata( $db ),
+                                new ContentCriterionHandler\Visibility( $db ),
+                                new CommonCriterionHandler\UserMetadata( $db ),
+                                new CommonCriterionHandler\RelationList( $db ),
+                                new ContentCriterionHandler\Depth( $db ),
+                                new CommonCriterionHandler\MapLocationDistance( $db ),
                             )
                         ),
-                        new Content\Search\Gateway\SortClauseConverter(
+                        new Content\Search\Common\Gateway\SortClauseConverter(
                             array(
-                                new SortClauseHandler\LocationPathString( $db ),
-                                new SortClauseHandler\LocationDepth( $db ),
-                                new SortClauseHandler\LocationPriority( $db ),
-                                new SortClauseHandler\DateModified( $db ),
-                                new SortClauseHandler\DatePublished( $db ),
-                                new SortClauseHandler\SectionIdentifier( $db ),
-                                new SortClauseHandler\SectionName( $db ),
-                                new SortClauseHandler\ContentName( $db ),
-                                new SortClauseHandler\ContentId( $db ),
-                                new SortClauseHandler\Field( $db ),
+                                new ContentSortClauseHandler\LocationPathString( $db ),
+                                new ContentSortClauseHandler\LocationDepth( $db ),
+                                new ContentSortClauseHandler\LocationPriority( $db ),
+                                new CommonSortClauseHandler\DateModified( $db ),
+                                new CommonSortClauseHandler\DatePublished( $db ),
+                                new CommonSortClauseHandler\SectionIdentifier( $db ),
+                                new CommonSortClauseHandler\SectionName( $db ),
+                                new CommonSortClauseHandler\ContentName( $db ),
+                                new CommonSortClauseHandler\ContentId( $db ),
+                                new CommonSortClauseHandler\Field( $db, $this->contentLanguageHandler() ),
+                                new CommonSortClauseHandler\MapLocationDistance( $db, $this->contentLanguageHandler() ),
                             )
                         ),
-                        new Content\Gateway\EzcDatabase\QueryBuilder( $this->dbHandler ),
+                        new Content\Gateway\DoctrineDatabase\QueryBuilder( $this->dbHandler ),
                         $this->contentLanguageHandler(),
                         $this->getLanguageMaskGenerator()
                     )
@@ -559,12 +636,12 @@ class Handler implements HandlerInterface
             if ( isset( $this->config['defer_type_update'] ) && $this->config['defer_type_update'] )
             {
                 $this->typeUpdateHandler = new Type\Update\Handler\DeferredLegacy(
-                    $this->getContentGateway()
+                    $this->getContentTypeGateway()
                 );
             }
             else
             {
-                $this->typeUpdateHandler = new Type\Update\Handler\EzcDatabase(
+                $this->typeUpdateHandler = new Type\Update\Handler\DoctrineDatabase(
                     $this->getContentTypeGateway(),
                     new Type\ContentUpdater(
                         $this->searchHandler(),
@@ -588,7 +665,7 @@ class Handler implements HandlerInterface
         if ( !isset( $this->contentTypeGateway ) )
         {
             $this->contentTypeGateway = new Type\Gateway\ExceptionConversion(
-                new Type\Gateway\EzcDatabase(
+                new Type\Gateway\DoctrineDatabase(
                     $this->dbHandler,
                     $this->getLanguageMaskGenerator()
                 )
@@ -607,7 +684,7 @@ class Handler implements HandlerInterface
             $this->languageHandler = new Content\Language\CachingHandler(
                 new Content\Language\Handler(
                     new Content\Language\Gateway\ExceptionConversion(
-                        new Content\Language\Gateway\EzcDatabase( $this->dbHandler )
+                        new Content\Language\Gateway\DoctrineDatabase( $this->dbHandler )
                     ),
                     new LanguageMapper()
                 ),
@@ -634,7 +711,7 @@ class Handler implements HandlerInterface
     /**
      * @todo remove circular dependency with ContentHandler
      *
-     * @return \eZ\Publish\SPI\Persistence\Content\Location\Handler
+     * @return \eZ\Publish\Core\Persistence\Legacy\Content\Location\Handler
      */
     public function locationHandler()
     {
@@ -645,23 +722,124 @@ class Handler implements HandlerInterface
                 $this->getLocationGateway(),
                 $this->getLocationMapper(),
                 $this->contentHandler(),
-                $this->getContentMapper()
+                $this->getContentMapper(),
+                $this->objectStateHandler()
             );
         }
         return $this->locationHandler;
     }
 
     /**
+     * @return \eZ\Publish\SPI\Persistence\Content\Location\Search\Handler
+     */
+    public function locationSearchHandler()
+    {
+        if ( !isset( $this->locationSearchHandler ) )
+        {
+            $this->locationSearchHandler = new LocationSearchHandler(
+                $this->getLocationSearchGateway(),
+                $this->getLocationMapper()
+            );
+        }
+        return $this->locationSearchHandler;
+    }
+
+    /**
      * Returns a location gateway
      *
-     * @return \eZ\Publish\Core\Persistence\Legacy\Content\Location\Gateway\EzcDatabase
+     * @return \eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Gateway\DoctrineDatabase
+     */
+    protected function getLocationSearchGateway()
+    {
+        if ( !isset( $this->locationSearchGateway ) )
+        {
+            $dbHandler = $this->dbHandler;
+            $this->locationSearchGateway = new Content\Search\Location\Gateway\ExceptionConversion(
+                new Content\Search\Location\Gateway\DoctrineDatabase(
+                    $dbHandler,
+                    new Content\Search\Common\Gateway\CriteriaConverter(
+                        array(
+                            new LocationCriterionHandler\Location\Id( $dbHandler ),
+                            new LocationCriterionHandler\Location\Depth( $dbHandler ),
+                            new LocationCriterionHandler\Location\ParentLocationId( $dbHandler ),
+                            new LocationCriterionHandler\Location\Priority( $dbHandler ),
+                            new LocationCriterionHandler\Location\RemoteId( $dbHandler ),
+                            new LocationCriterionHandler\Location\Subtree( $dbHandler ),
+                            new LocationCriterionHandler\Location\Visibility( $dbHandler ),
+                            new LocationCriterionHandler\Location\IsMainLocation( $dbHandler ),
+                            new CommonCriterionHandler\ContentId( $dbHandler ),
+                            new CommonCriterionHandler\ContentTypeGroupId( $dbHandler ),
+                            new CommonCriterionHandler\ContentTypeId( $dbHandler ),
+                            new CommonCriterionHandler\ContentTypeIdentifier( $dbHandler ),
+                            new CommonCriterionHandler\DateMetadata( $dbHandler ),
+                            new CommonCriterionHandler\Field(
+                                $dbHandler,
+                                $this->converterRegistry,
+                                $this->getCriterionFieldValueConverter(),
+                                $this->transformationProcessor
+                            ),
+                            new CommonCriterionHandler\FullText(
+                                $dbHandler,
+                                $this->transformationProcessor
+                            ),
+                            new CommonCriterionHandler\LanguageCode(
+                                $dbHandler,
+                                $this->getLanguageMaskGenerator()
+                            ),
+                            new CommonCriterionHandler\LogicalAnd( $dbHandler ),
+                            new CommonCriterionHandler\LogicalNot( $dbHandler ),
+                            new CommonCriterionHandler\LogicalOr( $dbHandler ),
+                            new CommonCriterionHandler\MapLocationDistance( $dbHandler ),
+                            new CommonCriterionHandler\MatchAll( $dbHandler ),
+                            new CommonCriterionHandler\ObjectStateId( $dbHandler ),
+                            new CommonCriterionHandler\RelationList( $dbHandler ),
+                            new CommonCriterionHandler\RemoteId( $dbHandler ),
+                            new CommonCriterionHandler\SectionId( $dbHandler ),
+                            new CommonCriterionHandler\UserMetadata( $dbHandler ),
+                        )
+                    ),
+                    new Content\Search\Common\Gateway\SortClauseConverter(
+                        array(
+                            new LocationSortClauseHandler\Location\Id( $dbHandler ),
+                            new LocationSortClauseHandler\Location\Depth( $dbHandler ),
+                            new LocationSortClauseHandler\Location\Path( $dbHandler ),
+                            new LocationSortClauseHandler\Location\Priority( $dbHandler ),
+                            new LocationSortClauseHandler\Location\Visibility( $dbHandler ),
+                            new LocationSortClauseHandler\Location\IsMainLocation( $dbHandler ),
+                            new CommonSortClauseHandler\ContentId( $dbHandler ),
+                            new CommonSortClauseHandler\ContentName( $dbHandler ),
+                            new CommonSortClauseHandler\DateModified( $dbHandler ),
+                            new CommonSortClauseHandler\DatePublished( $dbHandler ),
+                            new CommonSortClauseHandler\SectionIdentifier( $dbHandler ),
+                            new CommonSortClauseHandler\SectionName( $dbHandler ),
+                            new CommonSortClauseHandler\Field(
+                                $dbHandler,
+                                $this->contentLanguageHandler()
+                            ),
+                            new CommonSortClauseHandler\MapLocationDistance(
+                                $dbHandler,
+                                $this->contentLanguageHandler()
+                            ),
+                        )
+                    )
+                )
+            );
+        }
+        return $this->locationSearchGateway;
+    }
+
+    /**
+     * Returns a location gateway
+     *
+     * @return \eZ\Publish\Core\Persistence\Legacy\Content\Location\Gateway\DoctrineDatabase
      */
     protected function getLocationGateway()
     {
         if ( !isset( $this->locationGateway ) )
         {
+            $dbHandler = $this->dbHandler;
             $this->locationGateway = new Content\Location\Gateway\ExceptionConversion(
-                new Content\Location\Gateway\EzcDatabase( $this->dbHandler )
+                new Content\Location\Gateway\DoctrineDatabase( $dbHandler )
             );
         }
         return $this->locationGateway;
@@ -682,7 +860,7 @@ class Handler implements HandlerInterface
     }
 
     /**
-     * @return \eZ\Publish\SPI\Persistence\Content\ObjectState\Handler
+     * @return \eZ\Publish\Core\Persistence\Legacy\Content\ObjectState\Handler
      */
     public function objectStateHandler()
     {
@@ -699,14 +877,14 @@ class Handler implements HandlerInterface
     /**
      * Returns an object state gateway
      *
-     * @return \eZ\Publish\Core\Persistence\Legacy\Content\ObjectState\Gateway\EzcDatabase
+     * @return \eZ\Publish\Core\Persistence\Legacy\Content\ObjectState\Gateway\DoctrineDatabase
      */
     protected function getObjectStateGateway()
     {
         if ( !isset( $this->objectStateGateway ) )
         {
             $this->objectStateGateway = new Content\ObjectState\Gateway\ExceptionConversion(
-                new Content\ObjectState\Gateway\EzcDatabase(
+                new Content\ObjectState\Gateway\DoctrineDatabase(
                     $this->dbHandler,
                     $this->getLanguageMaskGenerator()
                 )
@@ -740,10 +918,11 @@ class Handler implements HandlerInterface
         {
             $this->userHandler = new User\Handler(
                 new User\Gateway\ExceptionConversion(
-                    new User\Gateway\EzcDatabase( $this->dbHandler )
+                    new User\Gateway\DoctrineDatabase( $this->dbHandler )
                 ),
-                new User\Role\Gateway\EzcDatabase( $this->dbHandler ),
-                new UserMapper()
+                new User\Role\Gateway\DoctrineDatabase( $this->dbHandler ),
+                new UserMapper(),
+                new LimitationConverter( array( new ObjectStateLimitationHandler( $this->dbHandler ) ) )
             );
         }
         return $this->userHandler;
@@ -758,7 +937,7 @@ class Handler implements HandlerInterface
         {
             $this->sectionHandler = new Content\Section\Handler(
                 new Content\Section\Gateway\ExceptionConversion(
-                    new Content\Section\Gateway\EzcDatabase( $this->dbHandler )
+                    new Content\Section\Gateway\DoctrineDatabase( $this->dbHandler )
                 )
             );
         }
@@ -805,7 +984,7 @@ class Handler implements HandlerInterface
     /**
      * Returns a UrlAlias gateway
      *
-     * @return \eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias\Gateway\EzcDatabase
+     * @return \eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias\Gateway\DoctrineDatabase
      */
     protected function getUrlAliasGateway()
     {
@@ -872,7 +1051,7 @@ class Handler implements HandlerInterface
     /**
      * Returns a UrlWildcard gateway
      *
-     * @return \eZ\Publish\Core\Persistence\Legacy\Content\UrlWildcard\Gateway\EzcDatabase
+     * @return \eZ\Publish\Core\Persistence\Legacy\Content\UrlWildcard\Gateway\DoctrineDatabase
      */
     protected function getUrlWildcardGateway()
     {
@@ -921,7 +1100,7 @@ class Handler implements HandlerInterface
         {
             $this->dbHandler->commit();
         }
-        catch ( ezcDbTransactionException $e )
+        catch ( Exception $e )
         {
             throw new RuntimeException( $e->getMessage() );
         }
@@ -947,7 +1126,7 @@ class Handler implements HandlerInterface
             if ( isset( $this->languageHandler ) )
                 $this->languageHandler->clearCache();
         }
-        catch ( ezcDbTransactionException $e )
+        catch ( Exception $e )
         {
             throw new RuntimeException( $e->getMessage() );
         }

@@ -2,7 +2,7 @@
 /**
  * File containing the Relation converter
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -14,7 +14,6 @@ use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldValue;
 use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
-use eZ\Publish\Core\FieldType\Relation\Value as RelationValue;
 
 class Relation implements Converter
 {
@@ -38,7 +37,7 @@ class Relation implements Converter
      */
     public function toStorageValue( FieldValue $value, StorageFieldValue $storageFieldValue )
     {
-        $storageFieldValue->dataInt = isset( $value->data['destinationContentId'] )
+        $storageFieldValue->dataInt = !empty( $value->data['destinationContentId'] )
             ? $value->data['destinationContentId']
             : null;
     }
@@ -52,7 +51,7 @@ class Relation implements Converter
     public function toFieldValue( StorageFieldValue $value, FieldValue $fieldValue )
     {
         $fieldValue->data = array(
-            "destinationContentId" => $value->dataInt,
+            "destinationContentId" => $value->dataInt ?: null,
         );
         $fieldValue->sortKey = false;
     }

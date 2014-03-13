@@ -2,7 +2,7 @@
 /**
  * Repository class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -166,6 +166,13 @@ class Repository implements RepositoryInterface
     protected $domainMapper;
 
     /**
+     * Instance of permissions criterion handler
+     *
+     * @var \eZ\Publish\Core\Repository\PermissionsCriterionHandler
+     */
+    protected $permissionsCriterionHandler;
+
+    /**
      * Array of arrays of commit events indexed by the transaction count.
      *
      * @var array
@@ -202,7 +209,9 @@ class Repository implements RepositoryInterface
             'location' => array(),
             'section' => array(),
             'role' => array(),
-            'user' => array(),
+            'user' => array(
+                'anonymousUserID' => 10
+            ),
             'language' => array(),
             'trash' => array(),
             'io' => array(),
@@ -233,7 +242,9 @@ class Repository implements RepositoryInterface
     {
         if ( !$this->currentUser instanceof User )
         {
-            $this->currentUser = $this->getUserService()->loadAnonymousUser();
+            $this->currentUser = $this->getUserService()->loadUser(
+                $this->serviceSettings["user"]["anonymousUserID"]
+            );
         }
 
         return $this->currentUser;
@@ -276,7 +287,7 @@ class Repository implements RepositoryInterface
      * @throws \Exception Re throws exceptions thrown inside $callback
      * @return mixed
      */
-    final public function sudo( \Closure $callback )
+    public function sudo( \Closure $callback )
     {
         if ( $this->sudoFlag === true )
             throw new RuntimeException( "Recursive sudo use detected, abort abort!" );
@@ -521,6 +532,7 @@ class Repository implements RepositoryInterface
             $this->persistenceHandler,
             $this->getDomainMapper(),
             $this->getNameSchemaService(),
+            $this->getPermissionsCriterionHandler(),
             $this->serviceSettings['location']
         );
         return $this->locationService;
@@ -672,7 +684,9 @@ class Repository implements RepositoryInterface
         $this->searchService = new SearchService(
             $this,
             $this->persistenceHandler->searchHandler(),
+            $this->persistenceHandler->locationSearchHandler(),
             $this->getDomainMapper(),
+            $this->getPermissionsCriterionHandler(),
             $this->serviceSettings['search']
         );
         return $this->searchService;
@@ -750,6 +764,22 @@ class Repository implements RepositoryInterface
     }
 
     /**
+     * Get PermissionsCriterionHandler
+     *
+     * @access private Internal service for the Core Services
+     *
+     * @todo Move out from this & other repo instances when services becomes proper services in DIC terms using factory.
+     *
+     * @return \eZ\Publish\Core\Repository\PermissionsCriterionHandler
+     */
+    protected function getPermissionsCriterionHandler()
+    {
+        return $this->permissionsCriterionHandler !== null ?
+            $this->permissionsCriterionHandler :
+            $this->permissionsCriterionHandler = new PermissionsCriterionHandler( $this );
+    }
+
+    /**
      * Begin transaction
      *
      * Begins an transaction, make sure you'll call commit or rollback when done,
@@ -780,11 +810,19 @@ class Repository implements RepositoryInterface
 
             if ( $this->transactionDepth === 0 )
             {
+                $queueCountDown = count( $this->commitEventsQueue );
                 foreach ( $this->commitEventsQueue as $eventsQueue )
                 {
+                    --$queueCountDown;
+                    if ( empty( $eventsQueue ) )
+                        continue;
+
+                    $eventCountDown = count( $eventsQueue );
                     foreach ( $eventsQueue as $event )
                     {
-                        $event();
+                        --$eventCountDown;
+                        // event expects a boolean param, if true it means it is last event (for commit use)
+                        $event( $queueCountDown === 0 && $eventCountDown === 0 );
                     }
                 }
 
@@ -832,7 +870,8 @@ class Repository implements RepositoryInterface
         }
         else
         {
-            $event();
+            // event expects a boolean param, if true it means it is last event (for commit use)
+            $event( true );
         }
     }
 

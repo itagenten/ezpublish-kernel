@@ -2,7 +2,7 @@
 /**
  * File containing the LegacyWrapperInstallCommand class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -60,7 +60,7 @@ EOT
         $filesystem = $this->getContainer()->get( 'filesystem' );
         $legacyRootDir = rtrim( $this->getContainer()->getParameter( 'ezpublish_legacy.root_dir' ), '/' );
 
-        $output->writeln( sprintf( "Installing eZ Publish legacy assets form $legacyRootDir using the <comment>%s</comment> option", $input->getOption( 'symlink' ) ? 'symlink' : 'hard copy' ) );
+        $output->writeln( sprintf( "Installing eZ Publish legacy assets from $legacyRootDir using the <comment>%s</comment> option", $input->getOption( 'symlink' ) ? 'symlink' : 'hard copy' ) );
 
         foreach ( array( 'design', 'extension', 'share', 'var' ) as $folder )
         {
@@ -97,7 +97,7 @@ EOT
 /**
  * File containing the wrapper around the legacy $frontController file
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  */
 EOT

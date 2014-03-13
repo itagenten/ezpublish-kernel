@@ -2,7 +2,7 @@
 /**
  * File containing the HttpCache purge client class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -13,6 +13,8 @@ use eZ\Publish\Core\MVC\Symfony\Cache\PurgeClientInterface;
 use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use Buzz\Browser;
 use Buzz\Client\BatchClientInterface;
+use Buzz\Listener\BasicAuthListener;
+use Buzz\Util\Url;
 
 class PurgeClient implements PurgeClientInterface
 {
@@ -40,6 +42,23 @@ class PurgeClient implements PurgeClientInterface
     {
         $this->httpBrowser = $httpBrowser;
         $this->purgeServers = $configResolver->getParameter( 'http_cache.purge_servers' );
+    }
+
+    /**
+     * Prepares the request authentication based on Url components (username:password)
+     *
+     * @param mixed $url
+     */
+    protected function prepareUserAuth( $url )
+    {
+        if ( !$url instanceof Url )
+            $url = new Url( $url );
+
+        if ( $url->getUser() )
+        {
+            $authListener = new BasicAuthListener( $url->getUser(), $url->getPassword() );
+            $this->httpBrowser->setListener( $authListener );
+        }
     }
 
     /**
@@ -80,6 +99,8 @@ class PurgeClient implements PurgeClientInterface
      */
     protected function doPurge( $server, array $locationIds )
     {
+        $this->prepareUserAuth( $server );
+
         foreach ( $locationIds as $locationId )
         {
             $this->httpBrowser->call( $server, 'PURGE', array( 'X-Location-Id' => $locationId ) );
@@ -95,6 +116,8 @@ class PurgeClient implements PurgeClientInterface
     {
         foreach ( $this->purgeServers as $server )
         {
+            $this->prepareUserAuth( $server );
+
             $this->httpBrowser->call( $server, 'PURGE', array( 'X-Location-Id' => '*' ) );
 
             $client = $this->httpBrowser->getClient();

@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\FieldType\XmlText\Converter\EzLinkToHtml5 class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -12,7 +12,6 @@ namespace eZ\Publish\Core\FieldType\XmlText\Converter;
 use eZ\Publish\API\Repository\ContentService;
 use eZ\Publish\API\Repository\LocationService;
 use eZ\Publish\Core\FieldType\XmlText\Converter;
-use eZ\Publish\API\Repository\Repository;
 use eZ\Publish\Core\MVC\Symfony\Routing\UrlAliasRouter;
 use Psr\Log\LoggerInterface;
 use eZ\Publish\API\Repository\Exceptions\NotFoundException as APINotFoundException;

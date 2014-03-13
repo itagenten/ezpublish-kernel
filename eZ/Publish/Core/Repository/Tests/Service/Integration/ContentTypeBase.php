@@ -2,7 +2,7 @@
 /**
  * File contains: eZ\Publish\Core\Repository\Tests\Service\Integration\ContentTypeBase class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -1425,9 +1425,12 @@ abstract class ContentTypeBase extends BaseServiceTest
         $typeCreateStruct->remoteId = "other-remoteid";
         $typeCreateStruct->creatorId = $this->repository->getCurrentUser()->id;
         $typeCreateStruct->creationDate = new \DateTime();
-        $typeCreateStruct->mainLanguageCode = 'eng-GB';
+        $typeCreateStruct->mainLanguageCode = 'eng-US';
         $typeCreateStruct->names = array( 'eng-US' => 'A name.' );
         $typeCreateStruct->descriptions = array( 'eng-US' => 'A description.' );
+
+        $fieldCreate = $contentTypeService->newFieldDefinitionCreateStruct( 'test', 'eztext' );
+        $typeCreateStruct->addFieldDefinition( $fieldCreate );
 
         // Throws an exception because content type with identifier "new-type" already exists
         $type = $contentTypeService->createContentType(
@@ -1463,9 +1466,12 @@ abstract class ContentTypeBase extends BaseServiceTest
         $typeCreateStruct->remoteId = "new-remoteid";
         $typeCreateStruct->creatorId = $this->repository->getCurrentUser()->id;
         $typeCreateStruct->creationDate = new \DateTime();
-        $typeCreateStruct->mainLanguageCode = 'eng-GB';
+        $typeCreateStruct->mainLanguageCode = 'eng-US';
         $typeCreateStruct->names = array( 'eng-US' => 'A name.' );
         $typeCreateStruct->descriptions = array( 'eng-US' => 'A description.' );
+
+        $fieldCreate = $contentTypeService->newFieldDefinitionCreateStruct( 'test', 'eztext' );
+        $typeCreateStruct->addFieldDefinition( $fieldCreate );
 
         // Throws an exception because content type with remoteId "new-remoteid" already exists
         $type = $contentTypeService->createContentType(
@@ -1501,7 +1507,7 @@ abstract class ContentTypeBase extends BaseServiceTest
         $typeCreateStruct->remoteId = "new-unique-remoteid";
         $typeCreateStruct->creatorId = $this->repository->getCurrentUser()->id;
         $typeCreateStruct->creationDate = new \DateTime();
-        $typeCreateStruct->mainLanguageCode = 'eng-GB';
+        $typeCreateStruct->mainLanguageCode = 'eng-US';
         $typeCreateStruct->names = array( 'eng-US' => 'A name.' );
         $typeCreateStruct->descriptions = array( 'eng-US' => 'A description.' );
 
@@ -2555,7 +2561,7 @@ abstract class ContentTypeBase extends BaseServiceTest
      */
     public function testUpdateContentTypeDraftThrowsInvalidArgumentExceptionNoDraftForAuthenticatedUser()
     {
-        $contentTypeDraft = $this->createContentType( false, $this->getStubbedUser( 28 )->id );
+        $contentTypeDraft = $this->createContentType( false, $this->getStubbedUser( 10 )->id );
 
         /* BEGIN: Use Case */
         // $contentTypeDraft contains a ContentTypeDraft with identifier 'blog-post', belonging to the user with id=28

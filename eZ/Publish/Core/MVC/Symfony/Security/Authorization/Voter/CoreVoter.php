@@ -2,38 +2,28 @@
 /**
  * File containing the CoreVoter class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\MVC\Symfony\Security\Authorization\Voter;
 
+use eZ\Publish\API\Repository\Repository;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use eZ\Publish\API\Repository\Repository;
 use eZ\Publish\Core\MVC\Symfony\Security\Authorization\Attribute as AuthorizationAttribute;
-use eZ\Publish\Core\MVC\Symfony\Security\User;
 
 class CoreVoter implements VoterInterface
 {
     /**
-     * @var \Closure
+     * @var \eZ\Publish\API\Repository\Repository
      */
-    private $lazyRepository;
+    private $repository;
 
-    public function __construct( \Closure $lazyRepository )
+    public function __construct( Repository $repository )
     {
-        $this->lazyRepository = $lazyRepository;
-    }
-
-    /**
-     * @return \eZ\Publish\API\Repository\Repository
-     */
-    protected function getRepository()
-    {
-        $lazyRepository = $this->lazyRepository;
-        return $lazyRepository();
+        $this->repository = $repository;
     }
 
     /**
@@ -74,19 +64,14 @@ class CoreVoter implements VoterInterface
      */
     public function vote( TokenInterface $token, $object, array $attributes )
     {
-        $user = $token->getUser();
-        if ( $user instanceof User )
+        foreach ( $attributes as $attribute )
         {
-            foreach ( $attributes as $attribute )
+            if ( $this->supportsAttribute( $attribute ) )
             {
-                if ( $this->supportsAttribute( $attribute ) )
-                {
-                    // @todo: add limitation when available in the repository
-                    if ( $this->getRepository()->hasAccess( $attribute->module, $attribute->function ) === false )
-                        return VoterInterface::ACCESS_DENIED;
+                if ( $this->repository->hasAccess( $attribute->module, $attribute->function ) === false )
+                    return VoterInterface::ACCESS_DENIED;
 
-                    return VoterInterface::ACCESS_GRANTED;
-                }
+                return VoterInterface::ACCESS_GRANTED;
             }
         }
 

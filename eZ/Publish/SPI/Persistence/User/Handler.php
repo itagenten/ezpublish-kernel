@@ -2,7 +2,7 @@
 /**
  * File containing the User Handler interface
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -10,9 +10,6 @@
 namespace eZ\Publish\SPI\Persistence\User;
 
 use eZ\Publish\SPI\Persistence\User;
-use eZ\Publish\SPI\Persistence\User\Role;
-use eZ\Publish\SPI\Persistence\User\RoleUpdateStruct;
-use eZ\Publish\SPI\Persistence\User\Policy;
 
 /**
  * Storage Engine handler for user module
@@ -188,14 +185,13 @@ interface Handler
     /**
      * Removes a policy from a role
      *
-     * @param mixed $roleId
      * @param mixed $policyId
      *
      * @todo Throw exception on missing role / policy?
      *
      * @return void
      */
-    public function removePolicy( $roleId, $policyId );
+    public function deletePolicy( $policyId );
 
     /**
      * Returns the user policies associated with the user (including inherited policies from user groups)

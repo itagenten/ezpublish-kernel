@@ -2,7 +2,7 @@
 /**
  * File containing the Legacy\MoveSubtreeSlot class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -10,7 +10,6 @@
 namespace eZ\Publish\Core\SignalSlot\Slot;
 
 use eZ\Publish\Core\SignalSlot\Signal;
-use eZ\Publish\Core\SignalSlot\Slot\AbstractLegacySlot;
 use eZContentObject;
 use eZContentObjectTreeNode;
 use eZContentOperationCollection;

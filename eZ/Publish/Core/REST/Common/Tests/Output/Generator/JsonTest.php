@@ -2,7 +2,7 @@
 /**
  * File containing the JsonTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -250,6 +250,15 @@ class JsonTest extends GeneratorTest
         $generator->endObjectElement( 'stacked' );
 
         $generator->startObjectElement( 'stacked' );
+    }
+
+    public function testSerializeBool()
+    {
+        $generator = $this->getGenerator();
+
+        $this->assertTrue( $generator->serializeBool( true ) === true );
+        $this->assertTrue( $generator->serializeBool( false ) === false );
+        $this->assertTrue( $generator->serializeBool( 'notbooleanbuttrue' ) === true );
     }
 
     protected function getGenerator()

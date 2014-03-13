@@ -2,7 +2,7 @@
 /**
  * File containing the Application class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -53,6 +53,7 @@ class Application extends BaseApplication
         // Replacing legacy kernel handler web by the CLI one
         // @todo: this should be somewhat done in the legacy bundle
         $legacyHandlerCLI = $container->get( 'ezpublish_legacy.kernel_handler.cli' );
+        $container->set( 'ezpublish_legacy.kernel.lazy', null );
         $container->set( 'ezpublish_legacy.kernel_handler', $legacyHandlerCLI );
         $container->set( 'ezpublish_legacy.kernel_handler.web', $legacyHandlerCLI );
     }

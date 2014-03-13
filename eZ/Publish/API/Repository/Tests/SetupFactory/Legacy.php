@@ -2,7 +2,7 @@
 /**
  * File containing the Test Setup Factory base class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -94,7 +94,7 @@ class Legacy extends SetupFactory
      */
     public function getRepository( $initializeFromScratch = true )
     {
-        if ( $initializeFromScratch )
+        if ( $initializeFromScratch || !self::$schemaInitialized )
         {
             $this->initializeSchema();
             $this->insertData();
@@ -213,10 +213,14 @@ class Legacy extends SetupFactory
      */
     protected function clearInternalCaches()
     {
+        /** @var $handler \eZ\Publish\Core\Persistence\Legacy\Handler */
         $handler = $this->getServiceContainer()->get( 'persistence_handler_legacy' );
-
         $handler->contentLanguageHandler()->clearCache();
         $handler->contentTypeHandler()->clearCache();
+
+        /** @var $decorator \eZ\Publish\Core\Persistence\Cache\Tests\Helpers\IntegrationTestCacheServiceDecorator */
+        $decorator = $this->getServiceContainer()->get( 'persistence_handler_cache_integration_decorator' );
+        $decorator->clearAllTestData();
     }
 
     /**
@@ -298,7 +302,7 @@ class Legacy extends SetupFactory
     /**
      * Returns the database handler from the service container
      *
-     * @return EzcDbHandler
+     * @return \eZ\Publish\Core\Persistence\Doctrine\ConnectionHandler
      */
     protected function getDatabaseHandler()
     {
@@ -386,14 +390,13 @@ class Legacy extends SetupFactory
 
             $serviceSettings = $configManager->getConfiguration( 'service' )->getAll();
 
-            $serviceSettings['persistence_handler']['alias'] = 'persistence_handler_legacy';
+            $serviceSettings['persistence_handler']['alias'] = 'persistence_handler_cache';
             $serviceSettings['io_handler']['alias'] = 'io_handler_legacy';
 
             // Needed for URLAliasService tests
             $serviceSettings['inner_repository']['arguments']['service_settings']['language']['languages'][] = 'eng-US';
             $serviceSettings['inner_repository']['arguments']['service_settings']['language']['languages'][] = 'eng-GB';
 
-            $serviceSettings['persistence_handler_legacy']['arguments']['config']['dsn'] = self::$dsn;
             $serviceSettings['legacy_db_handler']['arguments']['dsn'] = self::$dsn;
 
             self::$serviceContainer = new ServiceContainer(

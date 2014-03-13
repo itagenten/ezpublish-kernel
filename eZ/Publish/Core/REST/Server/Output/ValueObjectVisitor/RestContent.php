@@ -2,7 +2,7 @@
 /**
  * File containing the RestContent ValueObjectVisitor class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -173,9 +173,20 @@ class RestContent extends ValueObjectVisitor
 
         $generator->startValueElement(
             'alwaysAvailable',
-            ( $contentInfo->alwaysAvailable ? 'true' : 'false' )
+            $this->serializeBool( $generator, $contentInfo->alwaysAvailable )
         );
         $generator->endValueElement( 'alwaysAvailable' );
+
+        $generator->startObjectElement( 'ObjectStates', 'ContentObjectStates' );
+        $generator->startAttribute(
+            'href',
+            $this->router->generate(
+                'ezpublish_rest_getObjectStatesForContent',
+                array( 'contentId' => $contentInfo->id )
+            )
+        );
+        $generator->endAttribute( 'href' );
+        $generator->endObjectElement( 'ObjectStates' );
 
         $generator->endObjectElement( 'Content' );
     }

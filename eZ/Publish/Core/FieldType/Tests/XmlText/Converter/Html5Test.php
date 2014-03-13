@@ -2,7 +2,7 @@
 /**
  * File containing the Html5 converter test
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -11,9 +11,9 @@ namespace eZ\Publish\Core\Repository\Tests\FieldType\XmlText\Converter;
 
 use eZ\Publish\Core\FieldType\XmlText\Converter\Html5;
 use PHPUnit_Framework_TestCase;
-use DomDocument;
-use DomNodeList;
-use DomXPath;
+use DOMDocument;
+use DOMNodeList;
+use DOMXPath;
 
 /**
  * Tests the Html5 converter
@@ -54,7 +54,7 @@ class Html5Test extends PHPUnit_Framework_TestCase
 
     public function testPreConverterCalled()
     {
-        $dom = new DomDocument();
+        $dom = new DOMDocument();
         $preConverterMock1 = $this->getPreConvertMock();
         $preConverterMock2 = $this->getPreConvertMock();
 
@@ -140,7 +140,7 @@ class Html5Test extends PHPUnit_Framework_TestCase
 
         $result = new DomDocument();
         $result->loadXML( $html5->convert( $dom ) );
-        $xpath = new DomXPath( $result );
+        $xpath = new DOMXPath( $result );
         $checkClosure( $xpath->query( $xpathCheck ) );
     }
 

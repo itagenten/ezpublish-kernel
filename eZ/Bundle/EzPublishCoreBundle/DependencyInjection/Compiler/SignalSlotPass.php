@@ -2,7 +2,7 @@
 /**
  * File containing the SignalSlotPass class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -12,6 +12,7 @@ namespace eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use LogicException;
+use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * This compiler pass will register slots in SignalDispatcher
@@ -33,7 +34,7 @@ class SignalSlotPass implements CompilerPassInterface
                     throw new LogicException( "Could not find 'signal' attribute on '$id' service, which is mandatory for services tagged as 'ezpublish.api.slot'" );
                 }
 
-                $signalDispatcherDef->addMethodCall( 'attach', array( $attribute['signal'], $id ) );
+                $signalDispatcherDef->addMethodCall( 'attach', array( $attribute['signal'], new Reference( $id ) ) );
             }
         }
     }

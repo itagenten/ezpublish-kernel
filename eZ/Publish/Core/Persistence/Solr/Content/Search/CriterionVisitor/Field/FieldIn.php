@@ -2,7 +2,7 @@
 /**
  * File containing the Content Search handler class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -32,7 +32,8 @@ class FieldIn extends Field
         return
             $criterion instanceof Criterion\Field &&
             ( ( $criterion->operator ?: Operator::IN ) === Operator::IN ||
-              $criterion->operator === Operator::EQ );
+                $criterion->operator === Operator::EQ ||
+                $criterion->operator === Operator::CONTAINS );
     }
 
     /**
@@ -47,7 +48,7 @@ class FieldIn extends Field
      */
     public function visit( Criterion $criterion, CriterionVisitor $subVisitor = null )
     {
-        $fieldTypes = $this->getFieldTypes();
+        $fieldTypes = $this->getFieldTypes( $criterion );
 
         $criterion->value = (array)$criterion->value;
 
@@ -62,9 +63,12 @@ class FieldIn extends Field
         $queries = array();
         foreach ( $criterion->value as $value )
         {
-            foreach ( $fieldTypes[$criterion->target] as $name )
+            foreach ( $fieldTypes[$criterion->target] as $names )
             {
-                $queries[] = $name . ':"' . $value . '"';
+                foreach ( $names as $name )
+                {
+                    $queries[] = $name . ':"' . $value . '"';
+                }
             }
         }
 

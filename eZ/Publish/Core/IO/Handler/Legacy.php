@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\IO\Handler\Legacy class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -11,7 +11,6 @@ namespace eZ\Publish\Core\IO\Handler;
 
 use eZ\Publish\Core\IO\Handler as IOHandlerInterface;
 use eZ\Publish\Core\IO\MetadataHandler;
-use eZ\Publish\Core\Base\Exceptions\InvalidArgumentValue;
 use eZ\Publish\SPI\IO\BinaryFile;
 use eZ\Publish\SPI\IO\BinaryFileCreateStruct;
 use eZ\Publish\SPI\IO\BinaryFileUpdateStruct;
@@ -34,7 +33,7 @@ class Legacy implements IOHandlerInterface
     /**
      * File resource provider
      * @see getFileResourceProvider
-     * @var FileReso
+     * @var FileResource
      */
     private $fileResourceProvider = null;
 
@@ -63,12 +62,6 @@ class Legacy implements IOHandlerInterface
      */
     private $storageDirectory;
 
-    /**
-     * Created Legacy handler instance
-     *
-     * @param string $storageDirectory
-     * @param \eZ\Publish\Core\MVC\Legacy\Kernel $legacyKernel
-     */
     public function __construct( $storageDirectory, LegacyKernel $legacyKernel = null )
     {
         if ( $legacyKernel )
@@ -312,7 +305,7 @@ class Legacy implements IOHandlerInterface
     {
         if ( !$this->exists( $spiBinaryFileId ) )
         {
-            throw new NotFoundException( 'spiBinaryFile', $spiBinaryFileId );
+            throw new NotFoundException( 'BinaryFile', $spiBinaryFileId );
         }
 
         $storagePath = $this->getStoragePath( $spiBinaryFileId );
@@ -531,7 +524,7 @@ class Legacy implements IOHandlerInterface
             return $path;
         }
 
-        if ( strpos( $path, $this->storageDirectory . DIRECTORY_SEPARATOR ) !== 0 )
+        if ( strpos( $path, $this->storageDirectory . '/' ) !== 0 )
         {
             throw new InvalidArgumentException( '$path', "Storage directory '$this->storageDirectory' not found in $path" );
         }

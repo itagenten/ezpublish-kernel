@@ -2,7 +2,7 @@
 /**
  * File containing the UrlAliasGeneratorTest class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -52,9 +52,16 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
         parent::setUp();
         $this->router = $this->getMock( 'Symfony\\Component\\Routing\\RouterInterface' );
         $this->logger = $this->getMock( 'Psr\\Log\\LoggerInterface' );
+        $repositoryClass = 'eZ\\Publish\\Core\\Repository\\Repository';
         $this->repository = $repository = $this
-            ->getMockBuilder( 'eZ\\Publish\\Core\\Repository\\Repository' )
+            ->getMockBuilder( $repositoryClass )
             ->disableOriginalConstructor()
+            ->setMethods(
+                array_diff(
+                    get_class_methods( $repositoryClass ),
+                    array( 'sudo' )
+                )
+            )
             ->getMock();
         $this->urlAliasService = $this->getMock( 'eZ\\Publish\\API\\Repository\\URLAliasService' );
         $this->locationService = $this->getMock( 'eZ\\Publish\\API\\Repository\\LocationService' );
@@ -68,21 +75,12 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
             ->will( $this->returnValue( $this->locationService ) );
 
         $this->urlAliasGenerator = new UrlAliasGenerator(
-            function () use ( $repository )
-            {
-                return $repository;
-            },
+            $this->repository,
             $this->router,
             $this->logger
         );
     }
 
-    /**
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::__construct
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::getRepository
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::loadLocation
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::getPathPrefixByRootLocationId
-     */
     public function testGetPathPrefixByRootLocationId()
     {
         $rootLocationId = 123;
@@ -105,9 +103,6 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider providerTestIsPrefixExcluded
-     *
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::setExcludedUriPrefixes
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::isUriPrefixExcluded
      */
     public function testIsPrefixExcluded( $uri, $expectedIsExcluded )
     {
@@ -137,9 +132,6 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::loadLocation
-     */
     public function testLoadLocation()
     {
         $locationId = 123;
@@ -154,9 +146,6 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider providerTestDoGenerate
-     *
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::doGenerate
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::setSiteAccess
      *
      * @param \eZ\Publish\API\Repository\Values\Content\URLAlias $urlAlias
      * @param array $parameters
@@ -203,9 +192,6 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::doGenerate
-     */
     public function testDoGenerateNoUrlAlias()
     {
         $location = new Location( array( 'id' => 123 ) );
@@ -229,15 +215,13 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider providerTestDoGenerateRootLocation
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::setRootLocationId
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::setExcludedUriPrefixes
-     * @covers eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator::doGenerate
      *
      * @param URLAlias $urlAlias
      * @param $isOutsideAndNotExcluded
      * @param $expected
+     * @param $pathPrefix
      */
-    public function testDoGenerateRootLocation( URLAlias $urlAlias, $isOutsideAndNotExcluded, $expected )
+    public function testDoGenerateRootLocation( URLAlias $urlAlias, $isOutsideAndNotExcluded, $expected, $pathPrefix )
     {
         $excludedPrefixes = array( '/products', '/shared' );
         $rootLocationId = 456;
@@ -246,7 +230,6 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
         $location = new Location( array( 'id' => 123 ) );
 
         $rootLocation = new Location( array( 'id' => $rootLocationId ) );
-        $pathPrefix = '/my/root-folder';
         $rootUrlAlias = new URLAlias( array( 'path' => $pathPrefix ) );
         $this->locationService
             ->expects( $this->once() )
@@ -281,32 +264,56 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
             array(
                 new UrlAlias( array( 'path' => '/my/root-folder/foo/bar' ) ),
                 false,
-                '/foo/bar'
+                '/foo/bar',
+                '/my/root-folder'
             ),
             array(
                 new UrlAlias( array( 'path' => '/my/root-folder/something' ) ),
                 false,
-                '/something'
+                '/something',
+                '/my/root-folder'
             ),
             array(
                 new UrlAlias( array( 'path' => '/my/root-folder' ) ),
                 false,
+                '/',
+                '/my/root-folder'
+            ),
+            array(
+                new UrlAlias( array( 'path' => '/foo/bar' ) ),
+                false,
+                '/foo/bar',
+                '/'
+            ),
+            array(
+                new UrlAlias( array( 'path' => '/something' ) ),
+                false,
+                '/something',
+                '/'
+            ),
+            array(
+                new UrlAlias( array( 'path' => '/' ) ),
+                false,
+                '/',
                 '/'
             ),
             array(
                 new UrlAlias( array( 'path' => '/outside/tree/foo/bar' ) ),
                 true,
-                '/outside/tree/foo/bar'
+                '/outside/tree/foo/bar',
+                '/my/root-folder'
             ),
             array(
                 new UrlAlias( array( 'path' => '/products/ez-publish' ) ),
                 false,
-                '/products/ez-publish'
+                '/products/ez-publish',
+                '/my/root-folder'
             ),
             array(
                 new UrlAlias( array( 'path' => '/shared/some-content' ) ),
                 false,
-                '/shared/some-content'
+                '/shared/some-content',
+                '/my/root-folder'
             ),
         );
     }

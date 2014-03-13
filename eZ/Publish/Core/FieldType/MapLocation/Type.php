@@ -2,7 +2,7 @@
 /**
  * File containing the MapLocation field type
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -98,7 +98,7 @@ class Type extends FieldType
      */
     protected function checkValueStructure( BaseValue $value )
     {
-        if ( !is_float( $value->latitude ) )
+        if ( !is_float( $value->latitude ) && !is_int( $value->latitude ) )
         {
             throw new InvalidArgumentType(
                 '$value->latitude',
@@ -106,7 +106,7 @@ class Type extends FieldType
                 $value->latitude
             );
         }
-        if ( !is_float( $value->longitude ) )
+        if ( !is_float( $value->longitude ) && !is_int( $value->longitude ) )
         {
             throw new InvalidArgumentType(
                 '$value->longitude',
@@ -133,7 +133,7 @@ class Type extends FieldType
      */
     protected function getSortInfo( BaseValue $value )
     {
-        return $value->address;
+        return $this->transformationProcessor->transformByGroup( (string)$value, "lowercase" );
     }
 
     /**

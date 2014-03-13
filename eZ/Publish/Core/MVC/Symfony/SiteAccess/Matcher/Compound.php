@@ -2,7 +2,7 @@
 /**
  * File containing the abstract Compound Siteaccess matcher.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -51,14 +51,14 @@ abstract class Compound implements CompoundInterface, URILexer
         $this->matchersMap = array();
     }
 
-    public function setMatcherBuilder( MatcherBuilderInterface $matcherBuidler )
+    public function setMatcherBuilder( MatcherBuilderInterface $matcherBuilder )
     {
-        $this->matcherBuilder = $matcherBuidler;
+        $this->matcherBuilder = $matcherBuilder;
         foreach ( $this->config as $i => $rule )
         {
             foreach ( $rule['matchers'] as $matcherClass => $matchingConfig )
             {
-                $this->matchersMap[$i][$matcherClass] = $matcherBuidler->buildMatcher( $matcherClass, $matchingConfig, $this->request );
+                $this->matchersMap[$i][$matcherClass] = $matcherBuilder->buildMatcher( $matcherClass, $matchingConfig, $this->request );
             }
         }
     }
@@ -119,5 +119,16 @@ abstract class Compound implements CompoundInterface, URILexer
                ', ',
                array_keys( $this->getSubMatchers() )
            ) . ')';
+    }
+
+    /**
+     * Serialization occurs when serializing the siteaccess for subrequests.
+     *
+     * @see \eZ\Bundle\EzPublishCoreBundle\Fragment\FragmentUriGenerator::generateFragmentUri()
+     */
+    public function __sleep()
+    {
+        // We don't need the whole matcher map and the matcher builder once serialized.
+        return array( 'config', 'subMatchers', 'request' );
     }
 }

@@ -2,7 +2,7 @@
 /**
  * File containing the RestTrashItem ValueObjectVisitor class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -42,10 +42,16 @@ class RestTrashItem extends ValueObjectVisitor
         $generator->startValueElement( 'priority', $data->trashItem->priority );
         $generator->endValueElement( 'priority' );
 
-        $generator->startValueElement( 'hidden', $data->trashItem->hidden ? 'true' : 'false' );
+        $generator->startValueElement(
+            'hidden',
+            $this->serializeBool( $generator, $data->trashItem->hidden )
+        );
         $generator->endValueElement( 'hidden' );
 
-        $generator->startValueElement( 'invisible', $data->trashItem->invisible ? 'true' : 'false' );
+        $generator->startValueElement(
+            'invisible',
+            $this->serializeBool( $generator, $data->trashItem->invisible )
+        );
         $generator->endValueElement( 'invisible' );
 
         $pathStringParts = explode( '/', trim( $data->trashItem->pathString, '/' ) );

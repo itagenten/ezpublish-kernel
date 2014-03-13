@@ -2,7 +2,7 @@
 /**
  * File containing the MediaTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -31,7 +31,10 @@ class MediaTest extends BinaryBaseTest
      */
     protected function createFieldTypeUnderTest()
     {
-        return new MediaType();
+        $fieldType = new MediaType();
+        $fieldType->setTransformationProcessor( $this->getTransformationProcessorMock() );
+
+        return $fieldType;
     }
 
     protected function getEmptyValueExpectation()
@@ -547,6 +550,25 @@ class MediaTest extends BinaryBaseTest
                     'mediaType' => 23,
                 )
             ),
+        );
+    }
+
+    protected function provideFieldTypeIdentifier()
+    {
+        return 'ezmedia';
+    }
+
+    public function provideDataForGetName()
+    {
+        return array(
+            array(
+                new MediaValue(),
+                ''
+            ),
+            array(
+                new MediaValue( array( 'fileName' => 'sindelfingen.jpg' ) ),
+                'sindelfingen.jpg'
+            )
         );
     }
 }

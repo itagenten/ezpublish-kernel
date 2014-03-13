@@ -2,7 +2,7 @@
 /**
  * File containing the ViewControllerListener class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -10,14 +10,17 @@
 namespace eZ\Bundle\EzPublishCoreBundle\EventListener;
 
 use eZ\Publish\API\Repository\Repository;
+use eZ\Publish\API\Repository\Values\Content\ContentInfo;
+use eZ\Publish\API\Repository\Values\Content\Location;
+use eZ\Publish\Core\Base\Exceptions\UnauthorizedException;
 use eZ\Publish\Core\MVC\Symfony\Controller\ManagerInterface as ControllerManagerInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Controller\ControllerReference;
 use Symfony\Component\HttpKernel\Controller\ControllerResolverInterface;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class ViewControllerListener implements EventSubscriberInterface
 {
@@ -63,6 +66,8 @@ class ViewControllerListener implements EventSubscriberInterface
      * Detects if there is a custom controller to use to render a Location/Content.
      *
      * @param FilterControllerEvent $event
+     *
+     * @throws \Symfony\Component\Security\Core\Exception\AccessDeniedException
      */
     public function getController( FilterControllerEvent $event )
     {
@@ -72,18 +77,39 @@ class ViewControllerListener implements EventSubscriberInterface
         {
             return;
         }
-
-        if ( $request->attributes->has( 'locationId' ) )
+        try
         {
-            $valueObject = $this->repository->getLocationService()->loadLocation(
-                $request->attributes->get( 'locationId' )
-            );
+            if ( $request->attributes->has( 'locationId' ) )
+            {
+                $valueObject = $this->repository->getLocationService()->loadLocation(
+                    $request->attributes->get( 'locationId' )
+                );
+            }
+            else if ( $request->attributes->get( 'location' ) instanceof Location )
+            {
+                $valueObject = $request->attributes->get( 'location' );
+                $request->attributes->set( 'locationId', $valueObject->id );
+            }
+            else if ( $request->attributes->has( 'contentId' ) )
+            {
+                $valueObject = $this->repository->sudo(
+                    function ( $repository ) use ( $request )
+                    {
+                        return $repository->getContentService()->loadContentInfo(
+                            $request->attributes->get( 'contentId' )
+                        );
+                    }
+                );
+            }
+            else if ( $request->attributes->get( 'contentInfo' ) instanceof ContentInfo )
+            {
+                $valueObject = $request->attributes->get( 'contentInfo' );
+                $request->attributes->set( 'contentId', $valueObject->id );
+            }
         }
-        else if ( $request->attributes->has( 'contentId' ) )
+        catch ( UnauthorizedException $e)
         {
-            $valueObject = $this->repository->getContentService()->loadContentInfo(
-                $request->attributes->get( 'contentId' )
-            );
+            throw new AccessDeniedException();
         }
 
         if ( !isset( $valueObject ) )

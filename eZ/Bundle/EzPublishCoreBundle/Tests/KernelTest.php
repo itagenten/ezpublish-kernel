@@ -2,7 +2,7 @@
 /**
  * File containing the KernelTestTest class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -15,9 +15,6 @@ use eZ\Bundle\EzPublishCoreBundle\Kernel;
 
 class KernelTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::generateUserHash
-     */
     public function testGenerateUserHashAnonymous()
     {
         $request = new Request();
@@ -39,9 +36,6 @@ class KernelTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse( $request->headers->has( 'X-User-Hash' ) );
     }
 
-    /**
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::generateUserHash
-     */
     public function testGenerateUserHashNoCache()
     {
         $request = new Request();
@@ -52,7 +46,7 @@ class KernelTest extends \PHPUnit_Framework_TestCase
                 'X-Something-else' => 'whatever'
             )
         );
-        $request->cookies->set( 'is_logged_in', 'true' );
+        $request->cookies->set( 'eZSESSID', 'some_session_id' );
         $hash = '123abc';
 
         /** @var \PHPUnit_Framework_MockObject_MockObject|Kernel $kernel */
@@ -62,13 +56,10 @@ class KernelTest extends \PHPUnit_Framework_TestCase
             ->setMethods( array( 'handle', 'getCachePool' ) )
             ->getMockForAbstractClass();
 
-        // Set expectactions for cache.
+        // Set expectations for cache.
         // Note that we will call generateUserHash() twice.
         // The first time, cache is being generated, the second time hash is stored in memory.
-        $cacheItem = $this
-            ->getMockBuilder( 'Stash\\Item' )
-            ->disableOriginalConstructor()
-            ->getMock();
+        $cacheItem = $this->getMock( 'Stash\Interfaces\ItemInterface' );
         $cacheItem
             ->expects( $this->once() )
             ->method( 'isMiss' )
@@ -79,7 +70,7 @@ class KernelTest extends \PHPUnit_Framework_TestCase
             ->expects( $this->once() )
             ->method( 'set' )
             ->with( $hash, 600 );
-        $cachePool = $this->getMock( 'Stash\\Pool' );
+        $cachePool = $this->getMock( 'Stash\Interfaces\PoolInterface' );
         $cachePool
             ->expects( $this->once() )
             ->method( 'getItem' )
@@ -100,9 +91,6 @@ class KernelTest extends \PHPUnit_Framework_TestCase
         $this->assertSame( $hash, $kernel->generateUserHash( $request ) );
     }
 
-    /**
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::generateUserHash
-     */
     public function testGenerateUserHashCacheFresh()
     {
         $request = new Request();
@@ -113,7 +101,7 @@ class KernelTest extends \PHPUnit_Framework_TestCase
                 'X-Something-else' => 'whatever'
             )
         );
-        $request->cookies->set( 'is_logged_in', 'true' );
+        $request->cookies->set( 'eZSESSID_foobar', 'some_session_id' );
         $hash = '123abc';
 
         /** @var \PHPUnit_Framework_MockObject_MockObject|Kernel $kernel */
@@ -124,10 +112,7 @@ class KernelTest extends \PHPUnit_Framework_TestCase
             ->getMockForAbstractClass();
 
         // Set expectactions for cache.
-        $cacheItem = $this
-            ->getMockBuilder( 'Stash\\Item' )
-            ->disableOriginalConstructor()
-            ->getMock();
+        $cacheItem = $this->getMock( 'Stash\Interfaces\ItemInterface' );
         $cacheItem
             ->expects( $this->once() )
             ->method( 'isMiss' )
@@ -141,7 +126,7 @@ class KernelTest extends \PHPUnit_Framework_TestCase
             ->expects( $this->once() )
             ->method( 'get' )
             ->will( $this->returnValue( $hash ) );
-        $cachePool = $this->getMock( 'Stash\\Pool' );
+        $cachePool = $this->getMock( 'Stash\Interfaces\PoolInterface' );
         $cachePool
             ->expects( $this->once() )
             ->method( 'getItem' )
@@ -160,10 +145,6 @@ class KernelTest extends \PHPUnit_Framework_TestCase
         $this->assertSame( $hash, $kernel->generateUserHash( $request ) );
     }
 
-    /**
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::getCachePool
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::getCacheDriver
-     */
     public function testGetCachePool()
     {
         /** @var \PHPUnit_Framework_MockObject_MockObject|Kernel $kernel */
@@ -176,18 +157,13 @@ class KernelTest extends \PHPUnit_Framework_TestCase
         $kernel
             ->expects( $this->once() )
             ->method( 'getCacheDriver' )
-            ->will( $this->returnValue( $this->getMock( 'Stash\\Driver\\DriverInterface' ) ) );
+            ->will( $this->returnValue( $this->getMock( 'Stash\\Interfaces\\DriverInterface' ) ) );
 
         $cachePool = $kernel->getCachePool();
-        $this->assertInstanceOf( 'Stash\\Pool', $cachePool );
+        $this->assertInstanceOf( 'Stash\Interfaces\PoolInterface', $cachePool );
         $this->assertSame( $cachePool, $kernel->getCachePool() );
     }
 
-    /**
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::handle
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::isUserHashRequest
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::canGenerateUserHash
-     */
     public function testHandleAuthenticateNotAllowed()
     {
         /** @var \PHPUnit_Framework_MockObject_MockObject|Kernel $kernel */
@@ -209,11 +185,6 @@ class KernelTest extends \PHPUnit_Framework_TestCase
         $this->assertSame( 405, $response->getStatusCode() );
     }
 
-    /**
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::handle
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::isUserHashRequest
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::canGenerateUserHash
-     */
     public function testHandleAuthenticate()
     {
         $hash = '123abc';
@@ -244,10 +215,38 @@ class KernelTest extends \PHPUnit_Framework_TestCase
         $this->assertSame( $hash, $response->headers->get( 'X-User-Hash' ) );
     }
 
-    /**
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::handle
-     * @covers eZ\Bundle\EzPublishCoreBundle\Kernel::isUserHashRequest
-     */
+    public function testHandleAuthenticateWithTrustedProxy()
+    {
+        Request::setTrustedProxies( array( '10.11.12.13' ) );
+
+        $hash = '123abc';
+        $request = new Request();
+        $request->headers->add(
+            array(
+                'X-HTTP-Override' => 'AUTHENTICATE',
+                'Accept' => Kernel::USER_HASH_ACCEPT_HEADER
+            )
+        );
+        $request->server->set( 'REMOTE_ADDR', '10.11.12.13' );
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Kernel $kernel */
+        $kernel = $this
+            ->getMockBuilder( 'eZ\\Bundle\\EzPublishCoreBundle\\Kernel' )
+            ->disableOriginalConstructor()
+            ->setMethods( array( 'generateUserHash' ) )
+            ->getMockForAbstractClass();
+        $kernel
+            ->expects( $this->once() )
+            ->method( 'generateUserHash' )
+            ->with( $request )
+            ->will( $this->returnValue( $hash ) );
+
+        $response = $kernel->handle( $request );
+        $this->assertInstanceOf( 'Symfony\\Component\\HttpFoundation\\Response', $response );
+        $this->assertSame( 200, $response->getStatusCode() );
+        $this->assertSame( $hash, $response->headers->get( 'X-User-Hash' ) );
+    }
+
     public function testHandleRegular()
     {
         $request = new Request();

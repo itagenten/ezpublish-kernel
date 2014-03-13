@@ -4,7 +4,7 @@
  *
  * Setups class loading.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -58,6 +58,7 @@ if ( !empty( $settings['service']['parameters']['legacy_dir'] ) )
     // Exposing in env variables in order be able to use them in test cases.
     $_ENV['legacyKernel'] = $legacyKernel;
     $_ENV['legacyPath'] = $settings['service']['parameters']['legacy_dir'];
+    $_ENV['imagemagickConvertPath'] = $settings['service']['parameters']['imagemagick_convert_path'];
 }
 
 return include 'container.php';

@@ -1,8 +1,8 @@
 <?php
 /**
- * File containing the UserStorage class
+ * File containing the TextLine SearchField class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -14,7 +14,7 @@ use eZ\Publish\SPI\FieldType\Indexable;
 use eZ\Publish\SPI\Persistence\Content\Search;
 
 /**
- * Indexable definition for string field type
+ * Indexable definition for TextLine field type
  */
 class SearchField implements Indexable
 {
@@ -37,7 +37,7 @@ class SearchField implements Indexable
     }
 
     /**
-     * Get index fied types for search backend
+     * Get index field types for search backend
      *
      * @return \eZ\Publish\SPI\Persistence\Content\Search\FieldType[]
      */
@@ -48,4 +48,3 @@ class SearchField implements Indexable
         );
     }
 }
-

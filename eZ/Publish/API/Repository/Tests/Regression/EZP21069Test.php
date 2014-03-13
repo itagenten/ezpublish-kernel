@@ -2,7 +2,7 @@
 /**
  * File containing the EZP21069Test class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -78,7 +78,7 @@ class EZP21069Test extends BaseTest
     public function testSearchOnPreviousAttributeContentGivesNoResult()
     {
         $query = new Query();
-        $query->criterion = new Field( 'name', Operator::EQ, "TheOriginalNews" );
+        $query->filter = new Field( 'name', Operator::EQ, "TheOriginalNews" );
         $results = $this->getRepository()->getSearchService()->findContent( $query );
 
         $this->assertEquals( 0, $results->totalCount );
@@ -88,7 +88,7 @@ class EZP21069Test extends BaseTest
     public function testSearchOnCurrentAttributeContentGivesOnesResult()
     {
         $query = new Query();
-        $query->criterion = new Field( 'name', Operator::EQ, "TheUpdatedNews" );
+        $query->filter = new Field( 'name', Operator::EQ, "TheUpdatedNews" );
         $results = $this->getRepository()->getSearchService()->findContent( $query );
 
         $this->assertEquals( 1, $results->totalCount );
@@ -98,7 +98,7 @@ class EZP21069Test extends BaseTest
     public function testSearchOnDraftAttributeContentGivesNoResult()
     {
         $query = new Query();
-        $query->criterion = new Field( 'name', Operator::EQ, "TheDraftNews" );
+        $query->filter = new Field( 'name', Operator::EQ, "TheDraftNews" );
         $results = $this->getRepository()->getSearchService()->findContent( $query );
 
         $this->assertEquals( 0, $results->totalCount );

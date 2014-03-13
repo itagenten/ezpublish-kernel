@@ -2,7 +2,7 @@
 /**
  * File containing the Float class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -240,8 +240,6 @@ class Type extends FieldType
 
     /**
      * Returns information for FieldValue->$sortKey relevant to the field type.
-     *
-     * @todo Sort seems to not be supported by this FieldType, is this handled correctly?
      *
      * @param \eZ\Publish\Core\FieldType\Float\Value $value
      *

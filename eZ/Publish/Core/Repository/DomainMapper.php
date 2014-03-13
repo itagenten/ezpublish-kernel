@@ -2,7 +2,7 @@
 /**
  * File containing the DomainMapper class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -18,10 +18,11 @@ use eZ\Publish\API\Repository\Values\Content\ContentInfo;
 use eZ\Publish\API\Repository\Values\ContentType\ContentType;
 use eZ\Publish\API\Repository\Values\Content\Field;
 use eZ\Publish\Core\Repository\Values\Content\Relation;
-use eZ\Publish\API\Repository\Values\Content\Location;
-use eZ\Publish\API\Repository\Values\Content\LocationCreateStruct;
+use eZ\Publish\API\Repository\Values\Content\Location as APILocation;
+use eZ\Publish\Core\Repository\Values\Content\Location;
 
 use eZ\Publish\SPI\Persistence\Content as SPIContent;
+use eZ\Publish\SPI\Persistence\Content\Location as SPILocation;
 use eZ\Publish\SPI\Persistence\Content\VersionInfo as SPIVersionInfo;
 use eZ\Publish\SPI\Persistence\Content\ContentInfo as SPIContentInfo;
 use eZ\Publish\SPI\Persistence\Content\Relation as SPIRelation;
@@ -30,6 +31,7 @@ use eZ\Publish\SPI\Persistence\Content\Location\CreateStruct as SPILocationCreat
 use eZ\Publish\API\Repository\Exceptions\NotFoundException;
 use eZ\Publish\Core\Base\Exceptions\InvalidArgumentException;
 use eZ\Publish\Core\Base\Exceptions\InvalidArgumentValue;
+use eZ\Publish\Core\Base\Exceptions\InvalidArgumentType;
 
 use DateTime;
 
@@ -145,7 +147,7 @@ class DomainMapper
                 "modificationDate" => $this->getDateTime( $spiVersionInfo->modificationDate ),
                 "creatorId" => $spiVersionInfo->creatorId,
                 "creationDate" => $this->getDateTime( $spiVersionInfo->creationDate ),
-                "status" => $this->convertVersionStatus( $spiVersionInfo->status ),
+                "status" => $spiVersionInfo->status,
                 "initialLanguageCode" => $spiVersionInfo->initialLanguageCode,
                 "languageCodes" => $languageCodes,
                 "names" => $spiVersionInfo->names,
@@ -224,25 +226,43 @@ class DomainMapper
     }
 
     /**
-     * Converts SPI VersionInfo::STATUS_* constant to the API VersionInfo::STATUS_* constant.
+     * Builds domain location object from provided persistence location
      *
-     * @param mixed $spiStatus
+     * @param \eZ\Publish\SPI\Persistence\Content\Location $spiLocation
      *
-     * @return mixed
+     * @return \eZ\Publish\API\Repository\Values\Content\Location
      */
-    public function convertVersionStatus( $spiStatus )
+    public function buildLocationDomainObject( SPILocation $spiLocation )
     {
-        switch ( $spiStatus )
-        {
-            case SPIVersionInfo::STATUS_DRAFT:
-                return VersionInfo::STATUS_DRAFT;
-            case SPIVersionInfo::STATUS_PUBLISHED:
-                return VersionInfo::STATUS_PUBLISHED;
-            case SPIVersionInfo::STATUS_ARCHIVED:
-                return VersionInfo::STATUS_ARCHIVED;
-        }
+        // TODO: this is hardcoded workaround for missing ContentInfo on root location
+        if ( $spiLocation->id == 1 )
+            $contentInfo = new ContentInfo(
+                array(
+                    'id' => 0,
+                    'name' => 'Top Level Nodes',
+                    'sectionId' => 1,
+                    'mainLocationId' => 1,
+                    'contentTypeId' => 1,
+                )
+            );
+        else
+            $contentInfo = $this->repository->getContentService()->internalLoadContentInfo( $spiLocation->contentId );
 
-        return null;
+        return new Location(
+            array(
+                'contentInfo' => $contentInfo,
+                'id' => $spiLocation->id,
+                'priority' => $spiLocation->priority,
+                'hidden' => $spiLocation->hidden,
+                'invisible' => $spiLocation->invisible,
+                'remoteId' => $spiLocation->remoteId,
+                'parentLocationId' => $spiLocation->parentId,
+                'pathString' => $spiLocation->pathString,
+                'depth' => $spiLocation->depth,
+                'sortField' => $spiLocation->sortField,
+                'sortOrder' => $spiLocation->sortOrder,
+            )
+        );
     }
 
     /**
@@ -260,7 +280,7 @@ class DomainMapper
      */
     public function buildSPILocationCreateStruct(
         $locationCreateStruct,
-        Location $parentLocation,
+        APILocation $parentLocation,
         $mainLocation,
         $contentId,
         $contentVersionNo
@@ -291,18 +311,19 @@ class DomainMapper
             throw new InvalidArgumentValue( "sortOrder", $locationCreateStruct->sortOrder, "LocationCreateStruct" );
         }
 
-        if ( null === $locationCreateStruct->remoteId )
+        $remoteId = $locationCreateStruct->remoteId;
+        if ( null === $remoteId )
         {
-            $locationCreateStruct->remoteId = $this->getUniqueHash( $locationCreateStruct );
+            $remoteId = $this->getUniqueHash( $locationCreateStruct );
         }
         else
         {
             try
             {
-                $this->repository->getLocationService()->loadLocationByRemoteId( $locationCreateStruct->remoteId );
+                $this->repository->getLocationService()->loadLocationByRemoteId( $remoteId );
                 throw new InvalidArgumentException(
                     "\$locationCreateStructs",
-                    "Another Location with remoteId '{$locationCreateStruct->remoteId}' exists"
+                    "Another Location with remoteId '{$remoteId}' exists"
                 );
             }
             catch ( NotFoundException $e )
@@ -317,8 +338,10 @@ class DomainMapper
                 "hidden" => $locationCreateStruct->hidden,
                 // If we declare the new Location as hidden, it is automatically invisible
                 // Otherwise it picks up visibility from parent Location
-                "invisible" => ( $locationCreateStruct->hidden === true || $parentLocation->hidden || $parentLocation->invisible ),
-                "remoteId" => $locationCreateStruct->remoteId,
+                // Note: There is no need to check for hidden status of parent, as hidden Location
+                // is always invisible as well
+                "invisible" => ( $locationCreateStruct->hidden === true || $parentLocation->invisible ),
+                "remoteId" => $remoteId,
                 "contentId" => $contentId,
                 "contentVersion" => $contentVersionNo,
                 // pathIdentificationString will be set in storage
@@ -342,18 +365,18 @@ class DomainMapper
     {
         switch ( $sortField )
         {
-            case Location::SORT_FIELD_PATH:
-            case Location::SORT_FIELD_PUBLISHED:
-            case Location::SORT_FIELD_MODIFIED:
-            case Location::SORT_FIELD_SECTION:
-            case Location::SORT_FIELD_DEPTH:
-            case Location::SORT_FIELD_CLASS_IDENTIFIER:
-            case Location::SORT_FIELD_CLASS_NAME:
-            case Location::SORT_FIELD_PRIORITY:
-            case Location::SORT_FIELD_NAME:
-            case Location::SORT_FIELD_MODIFIED_SUBNODE:
-            case Location::SORT_FIELD_NODE_ID:
-            case Location::SORT_FIELD_CONTENTOBJECT_ID:
+            case APILocation::SORT_FIELD_PATH:
+            case APILocation::SORT_FIELD_PUBLISHED:
+            case APILocation::SORT_FIELD_MODIFIED:
+            case APILocation::SORT_FIELD_SECTION:
+            case APILocation::SORT_FIELD_DEPTH:
+            case APILocation::SORT_FIELD_CLASS_IDENTIFIER:
+            case APILocation::SORT_FIELD_CLASS_NAME:
+            case APILocation::SORT_FIELD_PRIORITY:
+            case APILocation::SORT_FIELD_NAME:
+            case APILocation::SORT_FIELD_MODIFIED_SUBNODE:
+            case APILocation::SORT_FIELD_NODE_ID:
+            case APILocation::SORT_FIELD_CONTENTOBJECT_ID:
                 return true;
         }
 
@@ -371,12 +394,40 @@ class DomainMapper
     {
         switch ( $sortOrder )
         {
-            case Location::SORT_ORDER_DESC:
-            case Location::SORT_ORDER_ASC:
+            case APILocation::SORT_ORDER_DESC:
+            case APILocation::SORT_ORDER_ASC:
                 return true;
         }
 
         return false;
+    }
+
+    /**
+     * Validates given translated list $list, which should be an array of strings with language codes as keys.
+     *
+     * @throws \eZ\Publish\API\Repository\Exceptions\InvalidArgumentException
+     *
+     * @param mixed $list
+     * @param string $argumentName
+     *
+     * @return void
+     */
+    public function validateTranslatedList( $list, $argumentName )
+    {
+        if ( !is_array( $list ) )
+        {
+            throw new InvalidArgumentType( $argumentName, "array", $list );
+        }
+
+        foreach ( $list as $languageCode => $translation )
+        {
+            $this->contentLanguageHandler->loadByLanguageCode( $languageCode );
+
+            if ( !is_string( $translation ) )
+            {
+                throw new InvalidArgumentType( $argumentName . "['$languageCode']", "string", $translation );
+            }
+        }
     }
 
     /**

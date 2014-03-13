@@ -9,6 +9,7 @@ parameters:
     ezpublish_rest.output.value_object_visitor.BadRequestException.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\BadRequestException
     ezpublish_rest.output.value_object_visitor.ForbiddenException.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\ForbiddenException
     ezpublish_rest.output.value_object_visitor.Exception.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\Exception
+    ezpublish_rest.output.value_object_visitor.NotImplementedException.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\NotImplementedException
 
     # Section
     ezpublish_rest.output.value_object_visitor.SectionList.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\SectionList
@@ -111,6 +112,13 @@ parameters:
     ezpublish_rest.output.value_object_visitor.ResourceCreated.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\ResourceCreated
     ezpublish_rest.output.value_object_visitor.PermanentRedirect.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\PermanentRedirect
     ezpublish_rest.output.value_object_visitor.TemporaryRedirect.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\TemporaryRedirect
+    ezpublish_rest.output.value_object_visitor.Options.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\Options
+
+    # Cache
+    ezpublish_rest.output.value_object_visitor.cached_value.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\CachedValue
+
+    # Services
+    ezpublish_rest.output.value_object_visitor.CountryList.class: eZ\Publish\Core\REST\Server\Output\ValueObjectVisitor\CountryList
 
 services:
     ezpublish_rest.output.value_object_visitor.base:
@@ -118,6 +126,7 @@ services:
         calls:
             - [ setRequestParser, [ @ezpublish_rest.request_parser ] ]
             - [ setRouter, [ @router ] ]
+            - [ setTemplateRouter, [ @ezpublish_rest.templated_router] ]
 
     # Errors
     ezpublish_rest.output.value_object_visitor.InvalidArgumentException:
@@ -155,6 +164,7 @@ services:
         arguments: [ true  ]
         tags:
             - { name: ezpublish_rest.output.value_object_visitor, type: eZ\Publish\Core\REST\Server\Exceptions\BadRequestException }
+            - { name: ezpublish_rest.output.value_object_visitor, type: eZ\Publish\Core\REST\Common\Exceptions\Parser }
 
     ezpublish_rest.output.value_object_visitor.ForbiddenException:
         parent: ezpublish_rest.output.value_object_visitor.base
@@ -162,6 +172,13 @@ services:
         arguments: [ true  ]
         tags:
             - { name: ezpublish_rest.output.value_object_visitor, type: eZ\Publish\Core\REST\Server\Exceptions\ForbiddenException }
+
+    ezpublish_rest.output.value_object_visitor.NotImplementedException:
+        parent: ezpublish_rest.output.value_object_visitor.base
+        class: %ezpublish_rest.output.value_object_visitor.NotImplementedException.class%
+        arguments: [ true  ]
+        tags:
+            - { name: ezpublish_rest.output.value_object_visitor, type: eZ\Publish\API\Repository\Exceptions\NotImplementedException }
 
     ezpublish_rest.output.value_object_visitor.Exception:
         parent: ezpublish_rest.output.value_object_visitor.base
@@ -566,6 +583,13 @@ services:
         tags:
             - { name: ezpublish_rest.output.value_object_visitor, type: eZ\Publish\Core\REST\Common\Values\ContentObjectStates }
 
+    # Services
+    ezpublish_rest.output.value_object_visitor.CountryList:
+        parent: ezpublish_rest.output.value_object_visitor.base
+        class: %ezpublish_rest.output.value_object_visitor.CountryList.class%
+        tags:
+            - { name: ezpublish_rest.output.value_object_visitor, type: eZ\Publish\Core\REST\Server\Values\CountryList}
+
     # REST specific
     ezpublish_rest.output.value_object_visitor.TemporaryRedirect:
         parent: ezpublish_rest.output.value_object_visitor.base
@@ -609,3 +633,20 @@ services:
         arguments: [ true  ]
         tags:
             - { name: ezpublish_rest.output.value_object_visitor, type: eZ\Publish\Core\REST\Server\Values\Conflict }
+
+    ezpublish_rest.output.value_object_visitor.Options:
+        parent: ezpublish_rest.output.value_object_visitor.base
+        class: %ezpublish_rest.output.value_object_visitor.Options.class%
+        arguments: [ true  ]
+        tags:
+            - { name: ezpublish_rest.output.value_object_visitor, type: eZ\Publish\Core\REST\Server\Values\Options }
+
+    ezpublish_rest.output.value_object_visitor.cached_value:
+        class: %ezpublish_rest.output.value_object_visitor.cached_value.class%
+        parent: ezpublish_rest.output.value_object_visitor.base
+        arguments:
+            - @ezpublish.config.resolver
+        calls:
+            - [setRequest, [@request=]]
+        tags:
+            - { name: ezpublish_rest.output.value_object_visitor, type: eZ\Publish\Core\REST\Server\Values\CachedValue }

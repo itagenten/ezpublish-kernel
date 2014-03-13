@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\API\Repository\SearchService class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  * @package eZ\Publish\API\Repository
@@ -12,6 +12,7 @@ namespace eZ\Publish\API\Repository;
 
 use eZ\Publish\API\Repository\Values\Content\Query\Criterion;
 use eZ\Publish\API\Repository\Values\Content\Query;
+use eZ\Publish\API\Repository\Values\Content\LocationQuery;
 
 /**
  * Search service
@@ -44,14 +45,14 @@ interface SearchService
      * @throws \eZ\Publish\API\Repository\Exceptions\InvalidArgumentException if there is more than than one result matching the criterions
      *
      * @todo define structs for the field filters
-     * @param \eZ\Publish\API\Repository\Values\Content\Query\Criterion $criterion
+     * @param \eZ\Publish\API\Repository\Values\Content\Query\Criterion $filter
      * @param array $fieldFilters - a map of filters for the returned fields.
      *        Currently supported: <code>array("languages" => array(<language1>,..))</code>.
      * @param boolean $filterOnUserPermissions if true only the objects which is the user allowed to read are returned.
      *
      * @return \eZ\Publish\API\Repository\Values\Content\Content
      */
-    public function findSingle( Criterion $criterion, array $fieldFilters = array(), $filterOnUserPermissions = true );
+    public function findSingle( Criterion $filter, array $fieldFilters = array(), $filterOnUserPermissions = true );
 
     /**
      * Suggests a list of values for the given prefix
@@ -62,4 +63,16 @@ interface SearchService
      * @param \eZ\Publish\API\Repository\Values\Content\Query\Criterion $filter
      */
     public function suggest( $prefix, $fieldPaths = array(), $limit = 10, Criterion $filter = null );
+
+    /**
+     * Finds Locations for the given query.
+     *
+     * @throws \eZ\Publish\API\Repository\Exceptions\InvalidArgumentException if query is not valid
+     *
+     * @param \eZ\Publish\API\Repository\Values\Content\LocationQuery $query
+     * @param boolean $filterOnUserPermissions if true only the objects which is the user allowed to read are returned.
+     *
+     * @return \eZ\Publish\API\Repository\Values\Content\Search\SearchResult
+     */
+    public function findLocations( LocationQuery $query, $filterOnUserPermissions = true );
 }

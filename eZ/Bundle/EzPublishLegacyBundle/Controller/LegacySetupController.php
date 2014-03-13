@@ -2,22 +2,22 @@
 /**
  * File containing the LegacySetupController class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 namespace eZ\Bundle\EzPublishLegacyBundle\Controller;
 
-use Symfony\Component\DependencyInjection\ContainerInterface as Container;
+use eZ\Publish\Core\MVC\Legacy\Kernel\Loader;
+use Symfony\Component\DependencyInjection\ContainerAware;
 use Symfony\Component\HttpFoundation\Response;
-use eZ\Bundle\EzPublishLegacyBundle\LegacyMapper\Configuration;
 use eZ\Publish\Core\MVC\Symfony\ConfigDumperInterface;
 use eZ\Bundle\EzPublishLegacyBundle\DependencyInjection\Configuration\LegacyConfigResolver;
 use eZ\Bundle\EzPublishLegacyBundle\Cache\PersistenceCachePurger;
 use eZINI;
 use eZCache;
 
-class LegacySetupController
+class LegacySetupController extends ContainerAware
 {
     /**
      * The legacy kernel instance (eZ Publish 4)
@@ -44,30 +44,27 @@ class LegacySetupController
     protected $container;
 
     /**
-     * @var \eZ\Bundle\EzPublishLegacyBundle\LegacyMapper\Configuration
+     * @var \eZ\Publish\Core\MVC\Legacy\Kernel\Loader
      */
-    protected $legacyMapper;
+    protected $kernelFactory;
 
     /**
-     * @todo Maybe following dependencies should be mutualized in an abstract controller
-     *       Injection can be done through "parent service" feature for DIC : http://symfony.com/doc/master/components/dependency_injection/parentservices.html
-     *
      * @param \Closure $kernelClosure
      * @param \eZ\Bundle\EzPublishLegacyBundle\DependencyInjection\Configuration\LegacyConfigResolver $legacyConfigResolver
      * @param \eZ\Bundle\EzPublishLegacyBundle\Cache\PersistenceCachePurger $persistenceCachePurger
-     * @param \eZ\Bundle\EzPublishLegacyBundle\LegacyMapper\Configuration $legacyMapper
+     * @param \eZ\Publish\Core\MVC\Legacy\Kernel\Loader $kernelFactory
      */
-    public function __construct( \Closure $kernelClosure, LegacyConfigResolver $legacyConfigResolver, PersistenceCachePurger $persistenceCachePurger, Configuration $legacyMapper )
+    public function __construct(
+        \Closure $kernelClosure,
+        LegacyConfigResolver $legacyConfigResolver,
+        PersistenceCachePurger $persistenceCachePurger,
+        Loader $kernelFactory
+    )
     {
         $this->legacyKernelClosure = $kernelClosure;
         $this->legacyConfigResolver = $legacyConfigResolver;
         $this->persistenceCachePurger = $persistenceCachePurger;
-        $this->legacyMapper = $legacyMapper;
-    }
-
-    public function setContainer( Container $container )
-    {
-        $this->container = $container;
+        $this->kernelFactory = $kernelFactory;
     }
 
     /**
@@ -83,10 +80,10 @@ class LegacySetupController
     {
         // Ensure that persistence cache purger is disabled as legacy cache will be cleared by legacy setup wizard while
         // everything is not ready yet to clear SPI cache (no connection to repository yet).
-        $this->persistenceCachePurger->setIsEnabled( false );
+        $this->persistenceCachePurger->setEnabled( false );
 
         // we disable injection of settings to Legacy Kernel during setup
-        $this->legacyMapper->setIsEnabled( false );
+        $this->kernelFactory->setBuildEventsEnabled( false );
 
         /** @var $request \Symfony\Component\HttpFoundation\ParameterBag */
         $request = $this->container->get( 'request' )->request;

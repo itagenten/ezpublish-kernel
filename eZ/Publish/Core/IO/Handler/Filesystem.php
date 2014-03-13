@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\IO\Handler\Legacy class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -15,9 +15,8 @@ use eZ\Publish\SPI\IO\BinaryFileCreateStruct;
 use eZ\Publish\SPI\IO\BinaryFileUpdateStruct;
 use eZ\Publish\Core\Base\Exceptions\InvalidArgumentException;
 use eZ\Publish\Core\Base\Exceptions\NotFoundException;
-use eZ\Publish\Core\MVC\Legacy\Kernel as LegacyKernel;
-use eZClusterFileHandler;
 use DateTime;
+use RuntimeException;
 use eZ\Publish\Core\IO\MetadataHandler;
 
 /**
@@ -48,11 +47,11 @@ class Filesystem implements IOHandlerInterface
     {
         if ( !file_exists( $storageDirectory ) || !is_dir( $storageDirectory ) )
         {
-            throw new \RuntimeException( "Storage directory $storageDirectory doesn't exist" );
+            throw new RuntimeException( "Storage directory $storageDirectory doesn't exist" );
         }
         if ( !is_writeable( $storageDirectory ) )
         {
-            throw new \RuntimeException( "Storage directory $storageDirectory can not be written to" );
+            throw new RuntimeException( "Storage directory $storageDirectory can not be written to" );
         }
         $this->storageDirectory = realpath( $storageDirectory );
         if ( $storageDirectory[0] !== DIRECTORY_SEPARATOR )
@@ -157,6 +156,7 @@ class Filesystem implements IOHandlerInterface
 
         if ( !isset( $updateFileStruct->id ) || $updateFileStruct->id == $spiBinaryFileId )
         {
+            $returnSpiBinaryFileId = $spiBinaryFileId;
             $destinationStoragePath = $this->getStoragePath( $spiBinaryFileId );
         }
         else
@@ -169,7 +169,16 @@ class Filesystem implements IOHandlerInterface
                 );
             }
 
-            $destinationStoragePath = $this->getStoragePath( $updateFileStruct->id );
+            $returnSpiBinaryFileId = $updateFileStruct->id;
+            $destinationStoragePath = $this->getStoragePath( $returnSpiBinaryFileId );
+        }
+
+        // contents
+        if ( $updateFileStruct->getInputStream() !== null )
+        {
+            $outputStream = fopen( $sourceStoragePath, 'wb' );
+            stream_copy_to_stream( $updateFileStruct->getInputStream(), $outputStream );
+            fclose( $outputStream );
         }
 
         // path
@@ -183,14 +192,10 @@ class Filesystem implements IOHandlerInterface
             rename( $sourceStoragePath, $destinationStoragePath );
         }
 
-        if ( $updateFileStruct->getInputStream() !== null )
-        {
-            $outputStream = fopen( $sourceStoragePath, 'wb' );
-            stream_copy_to_stream( $updateFileStruct->getInputStream(), $outputStream );
-            fclose( $outputStream );
-        }
+        clearstatcache( true, $sourceStoragePath );
+        clearstatcache( true, $destinationStoragePath );
 
-        return $this->load( $sourceStoragePath );
+        return $this->load( $returnSpiBinaryFileId );
     }
 
     /**
@@ -331,6 +336,6 @@ class Filesystem implements IOHandlerInterface
 
     public function getUri( $spiBinaryFileId )
     {
-        return ( $this->prefix ? $this->prefix . '/' : '') . $spiBinaryFileId;
+        return '/' . ( $this->prefix ? $this->prefix . '/' : '') . $spiBinaryFileId;
     }
 }

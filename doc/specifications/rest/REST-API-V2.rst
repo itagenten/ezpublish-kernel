@@ -1,4 +1,3 @@
-
 ==========================
 eZ Publish REST API V2 RFC
 ==========================
@@ -51,7 +50,7 @@ transforms to:
 
 Different schemas which induce different media types one on resource can be used to allow to make specific
 representations optimized for purposes of clients.
-It is possible to make a new schema for mobile devices for retieving e.g. an article.
+It is possible to make a new schema for mobile devices for retrieving e.g. an article.
 
 .. code:: xml
 
@@ -102,16 +101,37 @@ URIs
 The REST api is designed that the client has not to construct any uri's to resources by itself.
 Starting from the root resources (ListRoot_) every response includes further links to related resources.
 The uris should be used directly as identifiers on the client side and the client should not
-contruct an uri by using an id.
+construct an uri by using an id.
 
 URIs prefix
 -----------
 
-In  this document, we condider, for the sake of readability, that no prefix is used in the URIs. In a real life
+In  this document, we consider, for the sake of readability, that no prefix is used in the URIs. In a real life
 situation, the prefix /api/ezp/v2 is used in all REST hrefs.
 
 Remember in any case that URIs to REST resources should never be generated manually, but obtained from earlier REST
  calls.
+
+OPTIONS requests
+----------------
+
+Any resource URI the REST API responds to will respond to an OPTIONS request.
+
+The Response will contain an Allow header, that as specified in chapter 14.7 of RFC 2616 will list the methods
+accepted by the resource.
+
+Example
+~~~~~~~
+
+.. code:: http
+
+    OPTIONS /content/objects/1 HTTP/1.1
+    Host: api.example.net
+
+.. code:: http
+
+    HTTP/1.1 200 OK
+    Allow: PATCH,GET,DELETE,COPY
 
 Authentication
 ==============
@@ -297,17 +317,28 @@ XML Example
 .. code:: xml
 
     <?xml version="1.0" encoding="UTF-8"?>
-    <Root>
-      <content href="/content/objects" media-type=""/>
-      <contentTypes href="/content/types" media-type="application/vnd.ez.api.ContentTypeInfoList+xml"/>
-      <users href="/user/users" media-type="application/vnd.ez.api.UserRefList+xml"/>
-      <roles href="/user/roles" media-type="application/vnd.ez.api.RoleList+xml"/>
-      <rootLocation href="/content/locations/1" media-type="application/vnd.ez.api.Location+xml"/>
-      <rootUserGroup href="/user/groups/1/3" media-type="application/vnd.ez.api.UserGroup+xml"/>
-      <rootMediaFolder href="/content/locations/1/43" media-type="application/vnd.ez.api.Location+xml"/>
-      <trash href="/content/trash" media-type="application/vnd.ez.api.LocationList+xml"/>
-      <sections href="/content/sections" media-type="application/vnd.ez.api.SectionList+xml"/>
-      <views href="/content/views" media-type="application/vnd.ez.api.RefList+xml"/>
+    <Root media-type="application/vnd.ez.api.Root+xml">
+        <content media-type="" href="/api/ezp/v2/content/objects"/>
+        <contentByRemoteId media-type="" href="/api/ezp/v2/content/objects?{&amp;remoteId}"/>
+        <contentTypes media-type="application/vnd.ez.api.ContentTypeInfoList+xml" href="/api/ezp/v2/content/types"/>
+        <contentTypeByIdentifier media-type="" href="/api/ezp/v2/content/types?{&amp;identifier}"/>
+        <contentTypeGroups media-type="application/vnd.ez.api.ContentTypeGroupList+xml" href="/api/ezp/v2/content/typegroups"/>
+        <contentTypeGroupByIdentifier media-type="" href="/api/ezp/v2/content/typegroups?{&amp;identifier}"/>
+        <users media-type="application/vnd.ez.api.UserRefList+xml" href="/api/ezp/v2/user/users"/>
+        <roles media-type="application/vnd.ez.api.RoleList+xml" href="/api/ezp/v2/user/roles"/>
+        <rootLocation media-type="application/vnd.ez.api.Location+xml" href="/api/ezp/v2/content/locations/1/2"/>
+        <rootUserGroup media-type="application/vnd.ez.api.UserGroup+xml" href="/api/ezp/v2/user/groups/1/5"/>
+        <rootMediaFolder media-type="application/vnd.ez.api.Location+xml" href="/api/ezp/v2/content/locations/1/43"/>
+        <locationByRemoteId media-type="" href="/api/ezp/v2/content/locations?{&amp;remoteId}"/>
+        <locationByPath media-type="" href="/api/ezp/v2/content/locations?{&amp;locationPath}"/>
+        <trash media-type="application/vnd.ez.api.Trash+xml" href="/api/ezp/v2/content/trash"/>
+        <sections media-type="application/vnd.ez.api.SectionList+xml" href="/api/ezp/v2/content/sections"/>
+        <views media-type="application/vnd.ez.api.RefList+xml" href="/api/ezp/v2/content/views"/>
+        <objectStateGroups media-type="application/vnd.ez.api.ObjectStateGroupList+xml" href="/api/ezp/v2/content/objectstategroups"/>
+        <objectStates media-type="application/vnd.ez.api.ObjectStateList+xml" href="/api/ezp/v2/content/objectstategroups/{objectStateGroupId}/objectstates"/>
+        <globalUrlAliases media-type="application/vnd.ez.api.UrlAliasRefList+xml" href="/api/ezp/v2/content/urlaliases"/>
+        <urlWildcards media-type="application/vnd.ez.api.UrlWildcardList+xml" href="/api/ezp/v2/content/urlwildcards"/>
+        <createSession media-type="application/vnd.ez.api.UserSession+xml" href="/api/ezp/v2/user/sessions"/>
     </Root>
 
 JSON Example
@@ -328,47 +359,94 @@ JSON Example
 .. code:: javascript
 
     {
-      "Root": {
-        "content": { "_href": "/content/objects" },
-        "contentTypes": {
-          "_href": "/content/types",
-          "_media-type": "application/vnd.ez.api.ContentTypeInfoList+json"
-        },
-        "users": {
-          "_href": "/user/users",
-          "_media-type": "application/vnd.ez.api.UserRefList+json"
-        },
-        "roles": {
-          "_href": "/user/roles",
-          "_media-type": "application/vnd.ez.api.RoleList+json"
-        },
-        "rootLocation": {
-          "_href": "/content/locations/1",
-          "_media-type": "application/vnd.ez.api.Location+json"
-        },
-        "rootUserGroup": {
-          "_href": "/user/groups/1/5",
-          "_media-type": "application/vnd.ez.api.UserGroup+json"
-        },
-        "rootMediaFolder": {
-          "_href": "/content/locations/1/43",
-          "_media-type": "application/vnd.ez.api.Location+json"
+        "Root": {
+            "_media-type": "application/vnd.ez.api.Root+json",
+            "content": {
+                "_href": "/api/ezp/v2/content/objects",
+                "_media-type": ""
+            },
+            "contentByRemoteId": {
+                "_href": "/api/ezp/v2/content/objects?{&remoteId}",
+                "_media-type": ""
+            },
+            "contentTypeByIdentifier": {
+                "_href": "/api/ezp/v2/content/types?{&identifier}",
+                "_media-type": ""
+            },
+            "contentTypeGroupByIdentifier": {
+                "_href": "/api/ezp/v2/content/typegroups?{&identifier}",
+                "_media-type": ""
+            },
+            "contentTypeGroups": {
+                "_href": "/api/ezp/v2/content/typegroups",
+                "_media-type": "application/vnd.ez.api.ContentTypeGroupList+json"
+            },
+            "contentTypes": {
+                "_href": "/api/ezp/v2/content/types",
+                "_media-type": "application/vnd.ez.api.ContentTypeInfoList+json"
+            },
+            "createSession": {
+                "_href": "/api/ezp/v2/user/sessions",
+                "_media-type": "application/vnd.ez.api.UserSession+json"
+            },
+            "globalUrlAliases": {
+                "_href": "/api/ezp/v2/content/urlaliases",
+                "_media-type": "application/vnd.ez.api.UrlAliasRefList+json"
+            },
+            "locationByPath": {
+                "_href": "/api/ezp/v2/content/locations?{&locationPath}",
+                "_media-type": ""
+            },
+            "locationByRemoteId": {
+                "_href": "/api/ezp/v2/content/locations?{&remoteId}",
+                "_media-type": ""
+            },
+            "objectStateGroups": {
+                "_href": "/api/ezp/v2/content/objectstategroups",
+                "_media-type": "application/vnd.ez.api.ObjectStateGroupList+json"
+            },
+            "objectStates": {
+                "_href": "/api/ezp/v2/content/objectstategroups/{objectStateGroupId}/objectstates",
+                "_media-type": "application/vnd.ez.api.ObjectStateList+json"
+            },
+            "roles": {
+                "_href": "/api/ezp/v2/user/roles",
+                "_media-type": "application/vnd.ez.api.RoleList+json"
+            },
+            "rootLocation": {
+                "_href": "/api/ezp/v2/content/locations/1/2",
+                "_media-type": "application/vnd.ez.api.Location+json"
+            },
+            "rootMediaFolder": {
+                "_href": "/api/ezp/v2/content/locations/1/43",
+                "_media-type": "application/vnd.ez.api.Location+json"
+            },
+            "rootUserGroup": {
+                "_href": "/api/ezp/v2/user/groups/1/5",
+                "_media-type": "application/vnd.ez.api.UserGroup+json"
+            },
+            "sections": {
+                "_href": "/api/ezp/v2/content/sections",
+                "_media-type": "application/vnd.ez.api.SectionList+json"
+            },
+            "trash": {
+                "_href": "/api/ezp/v2/content/trash",
+                "_media-type": "application/vnd.ez.api.Trash+json"
+            },
+            "urlWildcards": {
+                "_href": "/api/ezp/v2/content/urlwildcards",
+                "_media-type": "application/vnd.ez.api.UrlWildcardList+json"
+            },
+            "users": {
+                "_href": "/api/ezp/v2/user/users",
+                "_media-type": "application/vnd.ez.api.UserRefList+json"
+            },
+            "views": {
+                "_href": "/api/ezp/v2/content/views",
+                "_media-type": "application/vnd.ez.api.RefList+json"
+            }
         }
-        "trash": {
-          "_href": "/content/trash",
-          "_media-type": "application/vnd.ez.api.LocationList+json"
-        },
-        "sections": {
-          "_href": "/content/sections",
-          "_media-type": "application/vnd.ez.api.SectionList+json"
-        }
-        "sections": {
-          "_href": "/content/views",
-          "_media-type": "application/vnd.ez.api.ViewList+json"
-        }
-      }
     }
-
 
 Managing content
 ~~~~~~~~~~~~~~~~
@@ -559,14 +637,14 @@ JSON Example
             "_href": "/content/locations/1/4/89"
           },
           "priority": "0",
-          "hidden": "false",
+          "hidden": false,
           "sortField": "PATH",
           "sortOrder": "ASC"
         },
         "Section": {
           "_href": "/content/sections/4"
         },
-        "alwaysAvailable": "true",
+        "alwaysAvailable": true,
         "remoteId": "remoteId12345678",
         "fields": {
           "field": [
@@ -698,7 +776,7 @@ JSON Example
         },
         "lastModificationDate": "2012-02-12T12:30:00",
         "mainLanguageCode": "eng-US",
-        "alwaysAvailable": "true"
+        "alwaysAvailable": true
       }
     }
 
@@ -835,7 +913,7 @@ In this example
     - the main language is changed
     - a new section is assigned
     - the main location is changed
-    - the always avalable flag is changed
+    - the always available flag is changed
     - the remoteId is changed
     - the owner of the content object is changed
 
@@ -1646,7 +1724,7 @@ XML Example
     POST /content/objects/23/locations HTTP/1.1
     Accept: application/vnd.ez.api.Location+xml
     Content-Type: application/vnd.ez.api.LocationCreate+xml
-    Contnt-Length: xxx
+    Content-Length: xxx
 
 .. code:: xml
 
@@ -1666,7 +1744,7 @@ XML Example
     ETag: "2345563422"
     Accept-Patch: application/vnd.ez.api.LocationUpdate+xml
     Content-Type: application/vnd.ez.api.Location+xml
-    Contnt-Length: xxx
+    Content-Length: xxx
 
 .. code:: xml
 
@@ -1797,7 +1875,7 @@ XML Example
     ETag: "2345563422"
     Accept-Patch: application/vnd.ez.api.LocationUpdate+xml
     Content-Type: application/vnd.ez.api.Location+xml
-    Contnt-Length: xxx
+    Content-Length: xxx
 
 .. code:: xml
 
@@ -1816,6 +1894,7 @@ XML Example
       <Content href="/content/objects/23" media-type="application/vnd.ez.api.Content+xml"/>
       <sortField>PATH</sortField>
       <sortOrder>ASC</sortOrder>
+      <UrlAliases media-type="application/vnd.ez.api.UrlAliasRefList+xml" href="/api/ezp/v2/content/locations/1/4/73/133/urlaliases"/>
     </Location>
 
 
@@ -2039,10 +2118,10 @@ Create View
 :Headers:
     :Accept:
         :application/vnd.ez.api.View+xml: the view in xml format (see View_)
-        :application/vnd.ez.api.View+json: the view in xml format (see View_)
+        :application/vnd.ez.api.View+json: the view in json format (see View_)
     :Content-Type:
         :application/vnd.ez.api.ViewInput+xml: the view input in xml format (see View_)
-        :application/vnd.ez.api.ViewInput+json: the view input in xml format (see View_)
+        :application/vnd.ez.api.ViewInput+json: the view input in json format (see View_)
 :Response:
 
 .. code:: http
@@ -2060,7 +2139,7 @@ Create View
 XML Example
 '''''''''''
 
-Perform a query on articles with a specific title.
+Perform a query on images withing the media section, sorted by name, limiting results to 10.
 
 .. code:: http
 
@@ -2076,7 +2155,8 @@ Perform a query on articles with a specific title.
       <identifier>TitleView</identifier>
       <Query>
         <Criteria>
-          <FullTextCritierion>Title</FieldCritierion>
+          <ContentTypeIdentifierCriterion>image</ContentTypeIdentifierCriterion>
+          <SectionIdentifierCriterion>media</SectionIdentifierCriterion>
         </Criteria>
         <limit>10</limit>
         <offset>0</offset>
@@ -2107,7 +2187,7 @@ Perform a query on articles with a specific title.
       <public>false</public>
       <Query>
         <Criteria>
-          <FullTextCritierion>Title</FieldCritierion>
+          <FullTextCritierion>Title</FullTextCritierion>
         </Criteria>
         <limit>10</limit>
         <offset>0</offset>
@@ -2355,7 +2435,7 @@ XML Example
     <Section href="/content/sections/5" media-type="application/vnd.ez.api.Section+xml">
       <sectionId>5</sectionId>
       <identifier>restricted</identifier>
-      <name>Restriced</name>
+      <name>Restricted</name>
     </Section>
 
 
@@ -2591,7 +2671,7 @@ Untrash Item
 :Method: MOVE or POST with header X-HTTP-Method-Override: MOVE
 :Description: Restores a trashItem
 :Headers:
-        :Destination: if given the trash item is restored under this location otherwise under its orifinal parent location
+        :Destination: if given the trash item is restored under this location otherwise under its original parent location
 :Response:
 
 .. code:: http
@@ -2989,7 +3069,7 @@ List UrlAliases for location
 :Method: GET
 :Description: Returns the list of url aliases for a location
 :Parameters:
-    :custom: (default true) this flag indicates wether autogenerated (false) or manual url aliases (true) should be returned.
+    :custom: (default true) this flag indicates whether autogenerated (false) or manual url aliases (true) should be returned.
 :Headers:
     :Accept:
          :application/vnd.ez.api.UrlAliasRefList+xml:  if set the url alias list contains only references and is returned in xml format (see UrlAlias_)
@@ -3209,7 +3289,7 @@ Create Content Type Group
 .. code:: http
 
           HTTP/1.1 201 Created
-          Loction: /content/typegroups/<newId>
+          Location: /content/typegroups/<newId>
           Accept-Patch:  application/vnd.ez.api.ContentTypeGroupInput+(json|xml)
           ETag: "<newEtag>"
           Content-Type: <depending on accept header>
@@ -3707,7 +3787,7 @@ List Content Types
 :Description: Returns a list of content types
 :Parameters:
     :identifier: retrieves the content type for the given identifer
-    :remoteId: retieves the content type for the given remoteId
+    :remoteId: retrieves the content type for the given remoteId
     :limit:    only <limit> items will be returned started by offset
     :offset:   offset of the result set
     :orderby:   one of (name | lastmodified)
@@ -3762,7 +3842,7 @@ Create Draft
 ````````````
 :Resource: /content/types/<ID>
 :Method: POST
-:Description: Cretes a draft and updates it with the given data
+:Description: Creates a draft and updates it with the given data
 :Headers:
     :Accept:
          :application/vnd.ez.api.ContentTypeInfo+xml:  if set the new content type draft is returned in xml format (see ContentType_)
@@ -4061,7 +4141,7 @@ XML Example
 
     HTTP/1.1 200 OK
     Content-Type: application/vnd.ez.api.ContentTypeGroupRefList+xml
-    Gontent-Length: xxx
+    Content-Length: xxx
 
 .. code:: xml
 
@@ -4107,7 +4187,7 @@ XML Example
 
     HTTP/1.1 200 OK
     Content-Type: application/vnd.ez.api.ContentTypeGroupRefList+xml
-    Gontent-Length: xxx
+    Content-Length: xxx
 
 .. code:: xml
 
@@ -4157,7 +4237,7 @@ XML Example
 
     HTTP/1.1 200 OK
     Content-Type: application/vnd.ez.api.ContentTypeGroupRefList+xml
-    Gontent-Length: xxx
+    Content-Length: xxx
 
 .. code:: xml
 
@@ -4250,8 +4330,8 @@ Load User Groups
 :Description: Load user groups for either an id or remoteId or role.
 :Parameters:
     :roleId: lists user groups assigned to the given role
-    :id: retieves the user group for the given Id
-    :remoteId: retieves the user group for the given remoteId
+    :id: retrieves the user group for the given Id
+    :remoteId: retrieves the user group for the given remoteId
 :Headers:
     :Accept:
          :application/vnd.ez.api.UserGroupList+xml:  if set the user group list returned in xml format (see UserGroup_)
@@ -4621,7 +4701,7 @@ Move user Group
 
 :Error Codes:
     :401: If the user is not authorized to update the user group
-    :403: If the new parenbt does not exist
+    :403: If the new parent does not exist
     :404: If the user group does not exist
 
 Load Subgroups
@@ -4779,7 +4859,7 @@ List Users
 :Description: Load users either for a given remoteId or role
 :Parameters:
     :roleId: lists users assigned to the given role
-    :remoteId: retieves the user for the given remoteId
+    :remoteId: retrieves the user for the given remoteId
 :Headers:
     :Accept:
          :application/vnd.ez.api.UserList+xml:  if set the user list returned in xml format (see User_)
@@ -5401,6 +5481,7 @@ Assign Role to User or User Group
           Role_
 
 :Error Codes:
+    :400: If validation of limitation in RoleAssignInput_ fails
     :401: If the user is not authorized to assign this role
 
 XML Example
@@ -5681,9 +5762,9 @@ XML Example
 
 Create Policy
 `````````````
-:Resource: /user/roles/<ID>/policies/<ID>
-:Method: PATCH or POST with header X-HTTP-Method-Override: PATCH
-:Description: updates a policy
+:Resource: /user/roles/<ID>/policies
+:Method: POST
+:Description: creates a policy
 :Headers:
     :Accept:
          :application/vnd.ez.api.Policy+xml:  if set the updated policy is returned in xml format (see Policy_)
@@ -5706,7 +5787,8 @@ Create Policy
           Policy_
 
 :Error Codes:
-    :400: If the Input does not match the input schema definition, In this case the response contains an ErrorMessage_
+    :400: - If the Input does not match the input schema definition, In this case the response contains an ErrorMessage_
+          - If validation of limitation in PolicyCreate fails (see Policy_)
     :401: If the user is not authorized to create the policy
     :404: If the role does not exist
 
@@ -5796,7 +5878,8 @@ Update Policy
           Policy_
 
 :Error Codes:
-    :400: If the Input does not match the input schema definition, In this case the response contains an ErrorMessage_
+    :400: - If the Input does not match the input schema definition, In this case the response contains an ErrorMessage_
+          - If validation of limitation in PolicyUpdate fails (see Policy_)
     :401: If the user is not authorized to update the policy
     :404: If the role does not exist
     :412: If the current ETag does not match with the provided one in the If-Match header
@@ -7302,7 +7385,7 @@ Location XML Schema
               <xsd:element name="childCount" type="xsd:int">
                 <xsd:annotation>
                   <xsd:documentation>
-                    the number of chidren visible to the
+                    the number of children visible to the
                     authenticated user which has
                     loaded this instance.
                   </xsd:documentation>
@@ -7411,7 +7494,7 @@ Trash XML Schema
               <xsd:element name="childCount" type="xsd:int">
                 <xsd:annotation>
                   <xsd:documentation>
-                    the number of chidren visible to the
+                    the number of children visible to the
                     authenticated user which has
                     loaded this instance.
                   </xsd:documentation>
@@ -8050,7 +8133,7 @@ ContentType XML Schema
               <xsd:element name="Modifier" type="ref">
                 <xsd:annotation>
                   <xsd:documentation>
-                    The userwhich last modified the content
+                    The user which last modified the content
                     type
                   </xsd:documentation>
                 </xsd:annotation>
@@ -8112,7 +8195,7 @@ ContentType XML Schema
                 default="true">
                 <xsd:annotation>
                   <xsd:documentation>
-                    if an instance of acontent type is
+                    if an instance of a content type is
                     created the always available
                     flag is set by default this
                     this value.
@@ -8192,8 +8275,7 @@ ContentTypeCreate XML Schema
 
       <xsd:complexType name="vnd.ez.api.ContentTypeCreate">
         <xsd:all>
-          <xsd:element name="identifier" type="xsd:string"
-            minOccurs="0" maxOccurs="1">
+          <xsd:element name="identifier" type="xsd:string">
             <xsd:annotation>
               <xsd:documentation>
                 String identifier of a content type
@@ -8215,7 +8297,7 @@ ContentTypeCreate XML Schema
               <xsd:documentation>
                 The user under which this creation should
                 be done
-                  </xsd:documentation>
+              </xsd:documentation>
             </xsd:annotation>
           </xsd:element>
           <xsd:element name="remoteId" type="xsd:string"
@@ -8234,7 +8316,7 @@ ContentTypeCreate XML Schema
                 If nothing is provided,
                 nameSchema will be used
                 instead.
-                  </xsd:documentation>
+              </xsd:documentation>
             </xsd:annotation>
           </xsd:element>
           <xsd:element name="nameSchema" type="xsd:string">
@@ -8256,7 +8338,7 @@ ContentTypeCreate XML Schema
                 field_def will be used if available. If not,
                 other_field_def
                 will be used for content name generation
-                  </xsd:documentation>
+              </xsd:documentation>
             </xsd:annotation>
           </xsd:element>
           <xsd:element name="isContainer" type="xsd:boolean">
@@ -8270,14 +8352,14 @@ ContentTypeCreate XML Schema
             <xsd:annotation>
               <xsd:documentation>
                 Main language
-                  </xsd:documentation>
+              </xsd:documentation>
             </xsd:annotation>
           </xsd:element>
           <xsd:element name="defaultAlwaysAvailable" type="xsd:boolean"
             default="true">
             <xsd:annotation>
               <xsd:documentation>
-                if an instance of acontent type is
+                if an instance of a content type is
                 created
                 the always available
                 flag is set by default this
@@ -8421,7 +8503,7 @@ ContentTypeUpdate XML Schema
             minOccurs="0">
             <xsd:annotation>
               <xsd:documentation>
-                if an instance of acontent type is
+                if an instance of a content type is
                 created
                 the always available
                 flag is set by default this
@@ -8497,7 +8579,7 @@ FieldDefinition XML Schema
                 <xsd:annotation>
                   <xsd:documentation>
                     the position of the field definition in
-                    the content typr
+                    the content type
                     </xsd:documentation>
                 </xsd:annotation>
               </xsd:element>
@@ -8620,7 +8702,7 @@ FieldDefinitionCreate XML Schema
             <xsd:annotation>
               <xsd:documentation>
                 the position of the field definition in
-                the content typr
+                the content type
               </xsd:documentation>
             </xsd:annotation>
           </xsd:element>
@@ -8715,7 +8797,7 @@ FieldDefinitionUpdate XML Schema
             <xsd:annotation>
               <xsd:documentation>
                 If set the the position of the field definition in
-                the content typr is changed
+                the content type is changed
               </xsd:documentation>
             </xsd:annotation>
           </xsd:element>
@@ -8866,7 +8948,7 @@ UserGroup XML Schema
         <xsd:complexContent>
           <xsd:extension base="ref">
             <xsd:all>
-              <xsd:eleemnt name="User" type="vnd.ez.api.UserGroup"
+              <xsd:element name="User" type="vnd.ez.api.UserGroup"
                 maxOccurs="unbounded" />
             </xsd:all>
           </xsd:extension>
@@ -8876,13 +8958,13 @@ UserGroup XML Schema
         <xsd:complexContent>
           <xsd:extension base="ref">
             <xsd:all>
-              <xsd:eleemnt name="UserGroup" minOccurs="1" maxOccurs="unbounded">
+              <xsd:element name="UserGroup" minOccurs="1" maxOccurs="unbounded">
                 <xsd:complexType>
                   <xsd:all>
                     <xsd:element name="unassign" type="controllerRef" minOccurs="0"/>
                   </xsd:all>
                 </xsd:complexType>
-              </xsd:eleemnt>
+              </xsd:element>
             </xsd:all>
           </xsd:extension>
         </xsd:complexContent>
@@ -8994,7 +9076,7 @@ User XML Schema
         <xsd:complexContent>
           <xsd:extension base="ref">
             <xsd:all>
-              <xsd:eleemnt name="User" type="vnd.ez.api.User"
+              <xsd:element name="User" type="vnd.ez.api.User"
                 maxOccurs="unbounded" />
             </xsd:all>
           </xsd:extension>
@@ -9004,7 +9086,7 @@ User XML Schema
         <xsd:complexContent>
           <xsd:extension base="ref">
             <xsd:all>
-              <xsd:eleemnt name="User" type="ref"
+              <xsd:element name="User" type="ref"
                 maxOccurs="unbounded" />
             </xsd:all>
           </xsd:extension>
@@ -9108,7 +9190,7 @@ Policy XML Schema
         </xsd:complexContent>
       </xsd:complexType>
 
-      <xsd:complexType name="vnd.ez.api.PolityCreate">
+      <xsd:complexType name="vnd.ez.api.PolicyCreate">
         <xsd:all>
           <xsd:element name="module" type="xsd:string" />
           <xsd:element name="function" type="xsd:string" />
@@ -9116,7 +9198,7 @@ Policy XML Schema
         </xsd:all>
       </xsd:complexType>
 
-      <xsd:complexType name="vnd.ez.api.PolityUpdate">
+      <xsd:complexType name="vnd.ez.api.PolicyUpdate">
         <xsd:all>
           <xsd:element name="limitations" type="limitationListType"></xsd:element>
         </xsd:all>
@@ -9134,8 +9216,8 @@ Policy XML Schema
       </xsd:complexType>
       <xsd:element name="Policy" type="vnd.ez.api.Policy"/>
       <xsd:element name="PolicyList" type="vnd.ez.api.PolicyList"/>
-      <xsd:element name="PolicyCreate" type="vnd.ez.api.PolityCreate"/>
-      <xsd:element name="PolicyUpdate" type="vnd.ez.api.PolityUpdate"/>
+      <xsd:element name="PolicyCreate" type="vnd.ez.api.PolicyCreate"/>
+      <xsd:element name="PolicyUpdate" type="vnd.ez.api.PolicyUpdate"/>
     </xsd:schema>
 
 

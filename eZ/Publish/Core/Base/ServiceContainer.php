@@ -2,7 +2,7 @@
 /**
  * Service Container class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -211,18 +211,24 @@ class ServiceContainer implements Container
             $serviceObject = $reflectionObj->newInstanceArgs( $arguments );
         }
 
-        if ( $settings['shared'] )
-            $this->dependencies["@{$serviceName}"] = $serviceObject;
-
         if ( !empty( $settings['method'] ) )
         {
             $list = $this->recursivelyLookupArguments( $settings['method'] );
             foreach ( $list as $methodName => $arguments )
             {
-                foreach ( $arguments as $argumentKey => $argumentValue )
-                    $serviceObject->$methodName( $argumentValue, $argumentKey );
+                if ( !is_array( $arguments ) )
+                {
+                    throw new BadConfiguration(
+                        "service\\[{$serviceName}]\\method\\[{$methodName}]",
+                        "setter method must be configured with an array of arguments"
+                    );
+                }
+                call_user_func_array( array( $serviceObject, $methodName ), $arguments );
             }
         }
+
+        if ( $settings['shared'] )
+            $this->dependencies["@{$serviceName}"] = $serviceObject;
 
         return $serviceObject;
     }
@@ -294,6 +300,10 @@ class ServiceContainer implements Container
             else if ( is_array( $argument ) )
             {
                 $builtArguments[$key] = $this->recursivelyLookupArguments( $argument );
+            }
+            else if ( $argument === "null" )
+            {
+                $builtArguments[$key] = null;
             }
             // Scalar values
             else

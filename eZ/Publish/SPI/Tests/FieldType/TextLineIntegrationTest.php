@@ -2,7 +2,7 @@
 /**
  * File contains: eZ\Publish\SPI\Tests\FieldType\TextLineIntegrationTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -54,10 +54,9 @@ class TextLineIntegrationTest extends BaseIntegrationTest
     {
         $handler = $this->getHandler();
 
-        $handler->getFieldTypeRegistry()->register(
-            'ezstring',
-            new FieldType\TextLine\Type()
-        );
+        $fieldType = new FieldType\TextLine\Type();
+        $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
+        $handler->getFieldTypeRegistry()->register( 'ezstring', $fieldType );
         $handler->getStorageRegistry()->register(
             'ezstring',
             new FieldType\NullStorage()

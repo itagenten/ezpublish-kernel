@@ -38,12 +38,12 @@ class IOFactory
     /**
      * Returns a new IOService instance with the config string in $prefixSetting as a prefix
      *
-     * @param IOHandlerInterface $IOHandler
+     * @param IoHandlerInterface $IOHandler
      * @param bool|string $prefixSetting
      *
      * @return \eZ\Publish\Core\IO\IOService
      */
-    public function getService( IOHandlerInterface $IOHandler, $prefixSetting = false )
+    public function getService( IoHandlerInterface $IOHandler, $prefixSetting = false )
     {
         $settings = array();
 
@@ -76,7 +76,7 @@ class IOFactory
             {
                 $storageDirectoryParts[] = $this->configResolver->getParameter( $setting );
             }
-            $storageDirectory = implode( DIRECTORY_SEPARATOR, $storageDirectoryParts );
+            $storageDirectory = implode( '/', $storageDirectoryParts );
         }
         return new $handlerClass( $storageDirectory );
     }

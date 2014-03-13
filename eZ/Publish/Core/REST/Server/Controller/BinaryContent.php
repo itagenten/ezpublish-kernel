@@ -2,22 +2,19 @@
 /**
  * File containing the BinaryContent controller class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\REST\Server\Controller;
 
-use eZ\Publish\Core\REST\Common\RequestParser;
-use eZ\Publish\Core\REST\Common\Message;
-use eZ\Publish\Core\REST\Common\Input;
 use eZ\Publish\Core\REST\Common\Exceptions;
-use eZ\Publish\Core\REST\Server\Values;
 use eZ\Publish\Core\REST\Server\Controller as RestController;
 
-use eZ\Publish\API\Repository\Exceptions\NotFoundException;
+use eZ\Publish\Core\REST\Server\Values\CachedValue;
 use eZ\Publish\SPI\Variation\VariationHandler;
+use eZ\Publish\API\Repository\Exceptions\InvalidVariationException;
 
 /**
  * Binary content controller
@@ -71,17 +68,35 @@ class BinaryContent extends RestController
             throw new Exceptions\NotFoundException( "No image field with ID $fieldId could be found" );
         }
 
+        // check the field's value
+        if ( $field->value->uri === null )
+        {
+            throw new Exceptions\NotFoundException( "Image file {$field->value->id} doesn't exist" );
+        }
+
         $versionInfo = $this->repository->getContentService()->loadVersionInfo( $content->contentInfo );
 
         try
         {
-            return $this->imageVariationHandler->getVariation(
+            $variation = $this->imageVariationHandler->getVariation(
                 $field, $versionInfo, $variationIdentifier
             );
+
+            if ( $content->contentInfo->mainLocationId === null )
+            {
+                return $variation;
+            }
+            else
+            {
+                return new CachedValue(
+                    $variation,
+                    array( 'locationId' => $content->contentInfo->mainLocationId )
+                );
+            }
         }
         catch ( InvalidVariationException $e )
         {
-            throw new Exceptions\NotFoundException( "Invalid image variation $variationIdentifier", 0, $e );
+            throw new Exceptions\NotFoundException( "Invalid image variation $variationIdentifier" );
         }
     }
 

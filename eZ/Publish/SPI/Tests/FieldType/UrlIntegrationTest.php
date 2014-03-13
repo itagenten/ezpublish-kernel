@@ -2,7 +2,7 @@
 /**
  * File contains: eZ\Publish\SPI\Tests\FieldType\UrlIntegrationTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -55,10 +55,9 @@ class UrlIntegrationTest extends BaseIntegrationTest
     {
         $handler = $this->getHandler();
 
-        $handler->getFieldTypeRegistry()->register(
-            'ezurl',
-            new FieldType\Url\Type()
-        );
+        $fieldType = new FieldType\Url\Type();
+        $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
+        $handler->getFieldTypeRegistry()->register( 'ezurl', $fieldType );
         $handler->getStorageRegistry()->register(
             'ezurl',
             new FieldType\Url\UrlStorage(

@@ -2,7 +2,7 @@
 /**
  * File containing the ScriptHandler class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -55,5 +55,25 @@ class ScriptHandler extends DistributionBundleScriptHandler
         }
 
         static::executeCommand( $event, $appDir, 'ezpublish:legacy:assets_install ' . $symlink . escapeshellarg( $webDir ) );
+    }
+
+    public static function installLegacyBundlesExtensions( CommandEvent $event )
+    {
+        $options = self::getOptions( $event );
+        $appDir = $options['symfony-app-dir'];
+
+        $symlink = '';
+        if ( $options['symfony-assets-install'] === 'relative' )
+        {
+            $symlink = '--relative ';
+        }
+
+        if ( !is_dir( $appDir ) )
+        {
+            echo 'The symfony-app-dir (' . $appDir . ') specified in composer.json was not found in ' . getcwd() . ', can not install assets.' . PHP_EOL;
+            return;
+        }
+
+        static::executeCommand( $event, $appDir, 'ezpublish:legacybundles:install_extensions ' . $symlink );
     }
 }

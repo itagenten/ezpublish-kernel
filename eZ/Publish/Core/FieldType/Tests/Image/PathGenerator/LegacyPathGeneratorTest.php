@@ -2,7 +2,7 @@
 /**
  * File containing the LegacyPathGeneratorTest class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -36,8 +36,7 @@ class LegacyPathGeneratorTest extends PHPUnit_Framework_TestCase
             $pathGenerator->getStoragePathForField(
                 $data['fieldId'],
                 $data['versionNo'],
-                $data['languageCode'],
-                $data['nodePathString']
+                $data['languageCode']
             )
         );
     }
@@ -47,30 +46,27 @@ class LegacyPathGeneratorTest extends PHPUnit_Framework_TestCase
         return array(
             array(
                 array(
-                    'fieldId' => 23,
+                    'fieldId' => 42,
                     'versionNo' => 1,
-                    'languageCode' => 'eng-US',
-                    'nodePathString' => 'sindelfingen/bielefeld/',
+                    'languageCode' => 'eng-US'
                 ),
-                'sindelfingen/bielefeld/23-1-eng-US',
+                '2/4/0/0/42-1-eng-US',
             ),
             array(
                 array(
                     'fieldId' => 23,
                     'versionNo' => 42,
-                    'languageCode' => 'ger-DE',
-                    'nodePathString' => 'sindelfingen/',
+                    'languageCode' => 'ger-DE'
                 ),
-                'sindelfingen/23-42-ger-DE',
+                '3/2/0/0/23-42-ger-DE',
             ),
             array(
                 array(
-                    'fieldId' => 23,
+                    'fieldId' => 123456,
                     'versionNo' => 2,
-                    'languageCode' => 'eng-GB',
-                    'nodePathString' => null,
+                    'languageCode' => 'eng-GB'
                 ),
-                '23-2-eng-GB',
+                '6/5/4/3/123456-2-eng-GB',
             ),
         );
     }

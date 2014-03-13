@@ -2,7 +2,7 @@
 /**
  * File containing the ContentExtensionIntegrationTest class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -10,6 +10,7 @@
 namespace eZ\Publish\Core\MVC\Symfony\Templating\Tests\Twig\Extension;
 
 use eZ\Publish\Core\MVC\Symfony\Templating\Twig\Extension\ContentExtension;
+use eZ\Publish\Core\Helper\TranslationHelper;
 use eZ\Publish\Core\Repository\Values\ContentType\FieldDefinition;
 use eZ\Publish\Core\Repository\Values\ContentType\ContentType;
 use eZ\Publish\Core\Repository\Values\Content\Content;
@@ -24,13 +25,28 @@ use Twig_Loader_Array;
 
 class ContentExtensionIntegrationTest extends Twig_Test_IntegrationTestCase
 {
+    /**
+     * @var \eZ\Publish\API\Repository\ContentTypeService|\PHPUnit_Framework_MockObject_MockObject
+     */
+    private $fieldHelperMock;
 
     public function getExtensions()
     {
+        $configResolver = $this->getConfigResolverMock();
+        $this->fieldHelperMock = $this->getMockBuilder( 'eZ\\Publish\\Core\\Helper\\FieldHelper' )
+            ->disableOriginalConstructor()->getMock();
+
         return array(
             new ContentExtension(
-                $this->getContainerMock(),
-                $this->getConfigResolverMock()
+                $this->getRepositoryMock(),
+                $configResolver,
+                $this->getMock( 'eZ\\Publish\\Core\\MVC\\Symfony\\FieldType\\View\\ParameterProviderRegistryInterface' ),
+                $this->getMockBuilder( 'eZ\Publish\Core\FieldType\XmlText\Converter\Html5' )->disableOriginalConstructor()->getMock(),
+                $this->getMockBuilder( 'eZ\\Publish\\Core\\FieldType\\RichText\\Converter' )->disableOriginalConstructor()->getMock(),
+                $this->getMockBuilder( 'eZ\\Publish\\Core\\FieldType\\RichText\\Converter' )->disableOriginalConstructor()->getMock(),
+                $this->getMock( 'eZ\Publish\SPI\Variation\VariationHandler' ),
+                new TranslationHelper( $configResolver, $this->getMock( 'eZ\\Publish\\API\\Repository\\ContentService' ) ),
+                $this->fieldHelperMock
             )
         );
     }
@@ -226,6 +242,18 @@ class ContentExtensionIntegrationTest extends Twig_Test_IntegrationTestCase
 
         return $content;
 
+    }
+
+    protected function getField( $isEmpty )
+    {
+        $field = new Field( array( 'fieldDefIdentifier' => 'testfield', 'value' => null ) );
+
+        $this->fieldHelperMock
+            ->expects( $this->once() )
+            ->method( 'isFieldEmpty' )
+            ->will( $this->returnValue( $isEmpty ) );
+
+        return $field;
     }
 
     private function getTemplatePath( $tpl )

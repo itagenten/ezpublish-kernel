@@ -2,7 +2,7 @@
 /**
  * File containing the RouterMapURITest class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -51,6 +51,8 @@ class RouterMapURITest extends PHPUnit_Framework_TestCase
     {
         return array(
             array( '/my_siteaccess/foo/bar', '/foo/bar' ),
+            array( '/foo/foo/bar', '/foo/bar' ),
+            array( '/foo/foo/bar?something=foo&bar=toto', '/foo/bar?something=foo&bar=toto' ),
             array( '/vive/le/sucre', '/le/sucre' ),
             array( '/ezdemo_site/some/thing?foo=ezdemo_site&bar=toto', '/some/thing?foo=ezdemo_site&bar=toto' )
         );

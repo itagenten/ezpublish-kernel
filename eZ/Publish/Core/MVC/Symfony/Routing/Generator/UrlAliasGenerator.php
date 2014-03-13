@@ -2,13 +2,14 @@
 /**
  * File containing the UrlAliasGenerator class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\MVC\Symfony\Routing\Generator;
 
+use eZ\Publish\API\Repository\Repository;
 use Psr\Log\LoggerInterface;
 use eZ\Publish\Core\MVC\Symfony\Routing\Generator;
 use Symfony\Component\Routing\RouterInterface;
@@ -25,7 +26,10 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
 {
     const INTERNAL_LOCATION_ROUTE = '_ezpublishLocation';
 
-    private $lazyRepository;
+    /**
+     * @var \eZ\Publish\Core\Repository\Repository
+     */
+    private $repository;
 
     /**
      * The default router (that works with declared routes).
@@ -59,9 +63,9 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
      */
     private $siteAccess;
 
-    public function __construct( \Closure $lazyRepository, RouterInterface $defaultRouter, LoggerInterface $logger = null )
+    public function __construct( Repository $repository, RouterInterface $defaultRouter, LoggerInterface $logger = null )
     {
-        $this->lazyRepository = $lazyRepository;
+        $this->repository = $repository;
         $this->defaultRouter = $defaultRouter;
         $this->logger = $logger;
     }
@@ -75,15 +79,6 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
     }
 
     /**
-     * @return \eZ\Publish\Core\Repository\Repository
-     */
-    protected function getRepository()
-    {
-        $lazyRepository = $this->lazyRepository;
-        return $lazyRepository();
-    }
-
-    /**
      * Generates the URL from $urlResource and $parameters.
      * Entries in $parameters will be added in the query string.
      *
@@ -94,7 +89,7 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
      */
     public function doGenerate( $location, array $parameters )
     {
-        $urlAliases = $this->getRepository()->getURLAliasService()->listLocationAliases( $location, false );
+        $urlAliases = $this->repository->getURLAliasService()->listLocationAliases( $location, false );
 
         $queryString = '';
         if ( !empty( $parameters ) )
@@ -109,13 +104,14 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
             if ( $this->rootLocationId !== null )
             {
                 $pathPrefix = $this->getPathPrefixByRootLocationId( $this->rootLocationId );
-                if ( mb_stripos( $path, $pathPrefix ) === 0 )
+                // "/" cannot be considered as a path prefix since it's root, so we ignore it.
+                if ( $pathPrefix !== '/' && mb_stripos( $path, $pathPrefix ) === 0 )
                 {
                     $path = mb_substr( $path, mb_strlen( $pathPrefix ) );
                 }
                 // Location path is outside configured content tree and doesn't have an excluded prefix.
                 // This is most likely an error (from content edition or link generation logic).
-                else if ( !$this->isUriPrefixExcluded( $path ) && $this->logger !== null )
+                else if ( $pathPrefix !== '/' && !$this->isUriPrefixExcluded( $path ) && $this->logger !== null )
                 {
                     $this->logger->warning( "Generating a link to a location outside root content tree: '$path' is outside tree starting to location #$this->rootLocationId" );
                 }
@@ -169,8 +165,7 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
             return $this->pathPrefixMap[$rootLocationId];
         }
 
-        $repository = $this->getRepository();
-        $this->pathPrefixMap[$rootLocationId] = $repository
+        $this->pathPrefixMap[$rootLocationId] = $this->repository
             ->getURLAliasService()
             ->reverseLookup( $this->loadLocation( $rootLocationId ) )
             ->path;
@@ -207,7 +202,7 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
      */
     public function loadLocation( $locationId )
     {
-        return $this->getRepository()->sudo(
+        return $this->repository->sudo(
             function ( $repository ) use ( $locationId )
             {
                 /** @var $repository \eZ\Publish\Core\Repository\Repository */

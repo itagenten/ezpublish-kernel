@@ -2,14 +2,14 @@
 /**
  * File contains: eZ\Publish\Core\Persistence\Legacy\Tests\Content\SearchHandlerSortTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\Persistence\Legacy\Tests\Content;
 
-use eZ\Publish\Core\Persistence\Legacy\Content\Gateway\EzcDatabase\QueryBuilder;
+use eZ\Publish\Core\Persistence\Legacy\Content\Gateway\DoctrineDatabase\QueryBuilder;
 use eZ\Publish\Core\Persistence\Legacy\Content;
 use eZ\Publish\SPI\Persistence\Content as ContentObject;
 use eZ\Publish\API\Repository\Values\Content\Query\Criterion;
@@ -28,7 +28,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
     /**
      * Field registry mock
      *
-     * @var \eZ\Publish\SPI\Persistence\Content\FieldValue\ConverterRegistry
+     * @var \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\ConverterRegistry
      */
     protected $fieldRegistry;
 
@@ -69,24 +69,26 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
     {
         $db = $this->getDatabaseHandler();
         return new Content\Search\Handler(
-            new Content\Search\Gateway\EzcDatabase(
+            new Content\Search\Gateway\DoctrineDatabase(
                 $this->getDatabaseHandler(),
-                new Content\Search\Gateway\CriteriaConverter(
+                new Content\Search\Common\Gateway\CriteriaConverter(
                     array(
-                        new Content\Search\Gateway\CriterionHandler\SectionId( $db ),
+                        new Content\Search\Common\Gateway\CriterionHandler\MatchAll( $db ),
+                        new Content\Search\Common\Gateway\CriterionHandler\LogicalAnd( $db ),
+                        new Content\Search\Common\Gateway\CriterionHandler\SectionId( $db ),
                     )
                 ),
-                new Content\Search\Gateway\SortClauseConverter(
+                new Content\Search\Common\Gateway\SortClauseConverter(
                     array(
                         new Content\Search\Gateway\SortClauseHandler\LocationPathString( $db ),
                         new Content\Search\Gateway\SortClauseHandler\LocationDepth( $db ),
                         new Content\Search\Gateway\SortClauseHandler\LocationPriority( $db ),
-                        new Content\Search\Gateway\SortClauseHandler\DateModified( $db ),
-                        new Content\Search\Gateway\SortClauseHandler\DatePublished( $db ),
-                        new Content\Search\Gateway\SortClauseHandler\SectionIdentifier( $db ),
-                        new Content\Search\Gateway\SortClauseHandler\SectionName( $db ),
-                        new Content\Search\Gateway\SortClauseHandler\ContentName( $db ),
-                        new Content\Search\Gateway\SortClauseHandler\Field( $db ),
+                        new Content\Search\Common\Gateway\SortClauseHandler\DateModified( $db ),
+                        new Content\Search\Common\Gateway\SortClauseHandler\DatePublished( $db ),
+                        new Content\Search\Common\Gateway\SortClauseHandler\SectionIdentifier( $db ),
+                        new Content\Search\Common\Gateway\SortClauseHandler\SectionName( $db ),
+                        new Content\Search\Common\Gateway\SortClauseHandler\ContentName( $db ),
+                        new Content\Search\Common\Gateway\SortClauseHandler\Field( $db, $this->getLanguageHandler() ),
                     )
                 ),
                 new QueryBuilder( $this->getDatabaseHandler() ),
@@ -180,7 +182,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 2 ) ),
+                    'filter'      => new Criterion\SectionId( array( 2 ) ),
                     'offset'      => 0,
                     'limit'       => 10,
                     'sortClauses' => array()
@@ -209,7 +211,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 2 ) ),
+                    'filter'      => new Criterion\SectionId( array( 2 ) ),
                     'offset'      => 0,
                     'limit'       => 10,
                     'sortClauses' => array( new SortClause\LocationPathString( Query::SORT_DESC ) )
@@ -236,7 +238,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 2 ) ),
+                    'filter'      => new Criterion\SectionId( array( 2 ) ),
                     'offset'      => 0,
                     'limit'       => 10,
                     'sortClauses' => array( new SortClause\LocationDepth( Query::SORT_ASC ) )
@@ -279,7 +281,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 2 ) ),
+                    'filter'      => new Criterion\SectionId( array( 2 ) ),
                     'offset'      => 0,
                     'limit'       => 10,
                     'sortClauses' => array(
@@ -310,7 +312,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 2 ) ),
+                    'filter'      => new Criterion\SectionId( array( 2 ) ),
                     'offset'      => 0,
                     'limit'       => 10,
                     'sortClauses' => array(
@@ -341,7 +343,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 2 ) ),
+                    'filter'      => new Criterion\SectionId( array( 2 ) ),
                     'offset'      => 0,
                     'limit'       => 10,
                     'sortClauses' => array(
@@ -370,7 +372,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 2 ) ),
+                    'filter'      => new Criterion\SectionId( array( 2 ) ),
                     'offset'      => 0,
                     'limit'       => 10,
                     'sortClauses' => array(
@@ -399,7 +401,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 4, 2, 6, 3 ) ),
+                    'filter'      => new Criterion\SectionId( array( 4, 2, 6, 3 ) ),
                     'offset'      => 0,
                     'limit'       => null,
                     'sortClauses' => array(
@@ -447,7 +449,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 4, 2, 6, 3 ) ),
+                    'filter'      => new Criterion\SectionId( array( 4, 2, 6, 3 ) ),
                     'offset'      => 0,
                     'limit'       => null,
                     'sortClauses' => array(
@@ -496,7 +498,7 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 2, 3 ) ),
+                    'filter'      => new Criterion\SectionId( array( 2, 3 ) ),
                     'offset'      => 0,
                     'limit'       => null,
                     'sortClauses' => array(
@@ -525,11 +527,11 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 1 ) ),
+                    'filter'      => new Criterion\SectionId( array( 1 ) ),
                     'offset'      => 0,
                     'limit'       => null,
                     'sortClauses' => array(
-                        new SortClause\Field( "article", "title" ),
+                        new SortClause\Field( "article", "title", Query::SORT_ASC, "eng-US" ),
                     )
                 )
             )
@@ -592,11 +594,11 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
         $result = $locator->findContent(
             new Query(
                 array(
-                    'criterion'   => new Criterion\SectionId( array( 1 ) ),
+                    'filter'      => new Criterion\SectionId( array( 1 ) ),
                     'offset'      => 0,
                     'limit'       => null,
                     'sortClauses' => array(
-                        new SortClause\Field( "product", "price" ),
+                        new SortClause\Field( "product", "price", Query::SORT_ASC, "eng-US" ),
                     )
                 )
             )

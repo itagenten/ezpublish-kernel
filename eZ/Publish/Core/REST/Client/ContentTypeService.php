@@ -2,7 +2,7 @@
 /**
  * File containing the ContentTypeService class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -673,7 +673,7 @@ class ContentTypeService implements APIContentTypeService, Sessionable
      * Creates a draft from an existing content type.
      *
      * This is a complete copy of the content
-     * type wiich has the state STATUS_DRAFT.
+     * type which has the state STATUS_DRAFT.
      *
      * @throws \eZ\Publish\API\Repository\Exceptions\UnauthorizedException if the user is not allowed to edit a content type
      * @throws \eZ\Publish\API\Repository\Exceptions\BadStateException If there is already a draft assigned to another user

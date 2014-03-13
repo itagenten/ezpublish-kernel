@@ -2,7 +2,7 @@
 /**
  * File containing the LegacyEvents class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -32,4 +32,11 @@ final class LegacyEvents
      * \eZ\Publish\Core\MVC\Legacy\Event\PreBuildKernelEvent
      */
     const PRE_BUILD_LEGACY_KERNEL = 'ezpublish_legacy.build_kernel';
+
+    /**
+     * The POST_BUILD_LEGACY_KERNEL event occurs after legacy kernel has been built (whatever handler is used).
+     *
+     * The event listener method receives a \eZ\Publish\Core\MVC\Legacy\Event\PostBuildKernelEvent
+     */
+    const POST_BUILD_LEGACY_KERNEL = 'ezpublish_legacy.post_build_kernel';
 }

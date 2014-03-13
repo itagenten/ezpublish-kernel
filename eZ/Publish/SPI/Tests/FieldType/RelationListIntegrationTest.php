@@ -2,7 +2,7 @@
 /**
  * File contains: eZ\Publish\Core\Persistence\Legacy\Tests\HandlerTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -13,7 +13,6 @@ use eZ\Publish\Core\Persistence\Legacy;
 use eZ\Publish\Core\FieldType;
 use eZ\Publish\SPI\Persistence\Content;
 use eZ\Publish\SPI\Persistence\Content\Field;
-use eZ\Publish\SPI\Persistence\Content\FieldTypeConstraints;
 
 /**
  * Integration test for legacy storage field types
@@ -56,10 +55,9 @@ class RelationListIntegrationTest extends BaseIntegrationTest
     {
         $handler = $this->getHandler();
 
-        $handler->getFieldTypeRegistry()->register(
-            'ezobjectrelationlist',
-            new FieldType\RelationList\Type()
-        );
+        $fieldType = new FieldType\RelationList\Type();
+        $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
+        $handler->getFieldTypeRegistry()->register( 'ezobjectrelationlist', $fieldType );
         $handler->getStorageRegistry()->register(
             'ezobjectrelationlist',
             new FieldType\NullStorage()

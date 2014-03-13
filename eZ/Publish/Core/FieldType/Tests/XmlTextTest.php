@@ -2,7 +2,7 @@
 /**
  * File containing the FieldType\XmlTextTypeTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -36,9 +36,24 @@ class XmlTextTest extends PHPUnit_Framework_TestCase
      */
     protected function getFieldType()
     {
-        return new XmlTextType(
-            $this->getValidatorServiceMock(),
-            $this->getFieldTypeToolsMock()
+        $fieldType = new XmlTextType();
+        $fieldType->setTransformationProcessor( $this->getTransformationProcessorMock() );
+
+        return $fieldType;
+    }
+
+    /**
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function getTransformationProcessorMock()
+    {
+        return $this->getMockForAbstractClass(
+            "eZ\\Publish\\Core\\Persistence\\TransformationProcessor",
+            array(),
+            '',
+            false,
+            true,
+            true
         );
     }
 
@@ -91,7 +106,7 @@ class XmlTextTest extends PHPUnit_Framework_TestCase
      */
     public function testAcceptValueValidFormat( $input )
     {
-        $fieldType = new XmlTextType( $this->getValidatorServiceMock(), $this->getFieldTypeToolsMock() );
+        $fieldType = $this->getFieldType();
         $fieldType->acceptValue( $input );
     }
 
@@ -103,7 +118,7 @@ class XmlTextTest extends PHPUnit_Framework_TestCase
     {
         try
         {
-            $fieldType = new XmlTextType( $this->getValidatorServiceMock(), $this->getFieldTypeToolsMock() );
+            $fieldType = $this->getFieldType();
             $fieldType->acceptValue( $input );
             $this->fail( "An InvalidArgumentException was expected! None thrown." );
         }
@@ -339,5 +354,15 @@ EOT;
             ),
             $ft->getRelations( $ft->acceptValue( $xml ) )
         );
+    }
+
+    protected function provideFieldTypeIdentifier()
+    {
+        return 'ezxmltext';
+    }
+
+    public function provideDataForGetName()
+    {
+        return array();
     }
 }

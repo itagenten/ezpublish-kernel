@@ -2,7 +2,7 @@
 /**
  * File containing the UrlStorage Converter class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -47,6 +47,9 @@ class UrlStorage extends GatewayBasedStorage
     }
 
     /**
+     * Deletes field data for all $fieldIds in the version identified by
+     * $versionInfo.
+     *
      * @param VersionInfo $versionInfo
      * @param array $fieldIds
      * @param array $context
@@ -55,6 +58,11 @@ class UrlStorage extends GatewayBasedStorage
      */
     public function deleteFieldData( VersionInfo $versionInfo, array $fieldIds, array $context )
     {
+        $gateway = $this->getGateway( $context );
+        foreach ( $fieldIds as $fieldId )
+        {
+            $gateway->deleteFieldData( $fieldId, $versionInfo->versionNo );
+        }
     }
 
     /**
@@ -68,8 +76,11 @@ class UrlStorage extends GatewayBasedStorage
     }
 
     /**
+     * @param \eZ\Publish\SPI\Persistence\Content\VersionInfo $versionInfo
      * @param \eZ\Publish\SPI\Persistence\Content\Field $field
      * @param array $context
+     *
+     * @return \eZ\Publish\SPI\Persistence\Content\Search\Field[]
      */
     public function getIndexData( VersionInfo $versionInfo, Field $field, array $context )
     {

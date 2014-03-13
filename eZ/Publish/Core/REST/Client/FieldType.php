@@ -2,7 +2,7 @@
 /**
  * File containing the FieldType class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -104,12 +104,12 @@ class FieldType implements APIFieldType
      */
     public function getValidatorConfigurationSchema()
     {
-        return $third->innerFieldType->getValidatorConfigurationSchema();
+        return $this->innerFieldType->getValidatorConfigurationSchema();
     }
 
     public function getName( $value )
     {
-        return $third->innerFieldType->getName( $value );
+        return $this->innerFieldType->getName( $value );
     }
 
     /**

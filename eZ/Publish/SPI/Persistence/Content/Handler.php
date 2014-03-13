@@ -2,7 +2,7 @@
 /**
  * File containing the Content Handler interface
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -76,6 +76,15 @@ interface Handler
      * @return \eZ\Publish\SPI\Persistence\Content\ContentInfo
      */
     public function loadContentInfo( $contentId );
+
+    /**
+     * Returns the metadata object for a content identified by $remoteId.
+     *
+     * @param mixed $remoteId
+     *
+     * @return \eZ\Publish\SPI\Persistence\Content\ContentInfo
+     */
+    public function loadContentInfoByRemoteId( $remoteId );
 
     /**
      * Returns the version object for a content/version identified by $contentId and $versionNo

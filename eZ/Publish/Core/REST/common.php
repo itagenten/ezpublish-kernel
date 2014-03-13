@@ -2,7 +2,7 @@
 /**
  * File containing the configuration of the REST SDK client
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -10,8 +10,6 @@
 namespace eZ\Publish\Core\REST;
 
 use eZ\Publish\Core\FieldType;
-use eZ\Publish\API\Repository\Values\User\User;
-use eZ\Publish\API\Repository\Values\Content\Content;
 
 if ( !defined( 'HTTP_BASE_URL' ) )
 {

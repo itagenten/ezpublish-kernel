@@ -2,30 +2,45 @@
 /**
  * File containing the LocationMatcherFactory class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\Matcher;
 
+use eZ\Publish\API\Repository\Repository;
+use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\Core\MVC\Symfony\Matcher\LocationMatcherFactory as BaseMatcherFactory;
+use eZ\Publish\Core\MVC\Symfony\SiteAccess\SiteAccessAware;
+use eZ\Publish\Core\MVC\Symfony\SiteAccess;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class LocationMatcherFactory extends BaseMatcherFactory
+class LocationMatcherFactory extends BaseMatcherFactory implements SiteAccessAware, ContainerAwareInterface
 {
     /**
      * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
     private $container;
 
-    public function __construct( ContainerInterface $container )
+    /**
+     * @var \eZ\Publish\Core\MVC\ConfigResolverInterface;
+     */
+    private $configResolver;
+
+    public function __construct( ConfigResolverInterface $configResolver, Repository $repository )
+    {
+        $this->configResolver = $configResolver;
+        parent::__construct(
+            $repository,
+            $this->configResolver->getParameter( 'location_view' )
+        );
+    }
+
+    public function setContainer( ContainerInterface $container = null )
     {
         $this->container = $container;
-        parent::__construct(
-            $this->container->get( 'ezpublish.api.repository' ),
-            $this->container->get( 'ezpublish.config.resolver' )->getParameter( 'location_view' )
-        );
     }
 
     /**
@@ -39,5 +54,20 @@ class LocationMatcherFactory extends BaseMatcherFactory
             return $this->container->get( $matcherIdentifier );
 
         return parent::getMatcher( $matcherIdentifier );
+    }
+
+    /**
+     * Changes internal configuration to use the one for passed SiteAccess.
+     *
+     * @param SiteAccess $siteAccess
+     */
+    public function setSiteAccess( SiteAccess $siteAccess = null )
+    {
+        if ( $siteAccess === null )
+        {
+            return;
+        }
+
+        $this->matchConfig = $this->configResolver->getParameter( 'location_view', 'ezsettings', $siteAccess->name );
     }
 }

@@ -2,7 +2,7 @@
 /**
  * File containing a test class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -73,6 +73,11 @@ class RestContentTest extends ValueObjectVisitorBaseTest
             'ezpublish_rest_loadUser',
             array( 'userId' => $restContent->contentInfo->ownerId ),
             "/user/users/{$restContent->contentInfo->ownerId}"
+        );
+        $this->addRouteExpectation(
+            'ezpublish_rest_getObjectStatesForContent',
+            array( 'contentId' => $restContent->contentInfo->id ),
+            "/content/objects/{$restContent->contentInfo->id}/objectstates"
         );
 
         $visitor->visit(

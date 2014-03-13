@@ -2,7 +2,7 @@
 /**
  * File containing the UrlAlias Handler
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -10,7 +10,6 @@
 namespace eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias;
 
 use eZ\Publish\SPI\Persistence\Content\UrlAlias\Handler as UrlAliasHandlerInterface;
-use eZ\Publish\Core\Persistence\Legacy\Content\UrlAlias\SlugConverter;
 use eZ\Publish\SPI\Persistence\Content\Language\Handler as LanguageHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\Location\Gateway as LocationGateway;
 use eZ\Publish\Core\Base\Exceptions\NotFoundException;
@@ -356,7 +355,7 @@ class Handler implements UrlAliasHandlerInterface
         if ( $isPathNew || empty( $row ) )
         {
             $data["lang_mask"] = $languageId | (int)$alwaysAvailable;
-            $this->gateway->insertRow( $data );
+            $id = $this->gateway->insertRow( $data );
         }
         // Row exists, check if it is reusable. There are 2 cases when this is possible:
         // 1. NOP entry
@@ -365,7 +364,7 @@ class Handler implements UrlAliasHandlerInterface
         {
             $data["lang_mask"] = $languageId | (int)$alwaysAvailable;
             // If history is reused move link to id
-            $data["link"] = $row["id"];
+            $data["link"] = $id = $row["id"];
             $this->gateway->updateRow(
                 $parentId,
                 $topElementMD5,
@@ -377,6 +376,7 @@ class Handler implements UrlAliasHandlerInterface
             throw new ForbiddenException( "Path '$path' already exists for the given language" );
         }
 
+        $data["raw_path_data"] = $this->gateway->loadPathData( $id );
         return $this->mapper->extractUrlAliasFromData( $data );
     }
 

@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\API\Repository\Values\Content\Query\FacetBuilder\SubtreeFacetBuilder class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  *
@@ -22,6 +22,8 @@ use eZ\Publish\API\Repository\Values\Content\Query\FacetBuilder;
  * @todo: check hierarchical facets
  *
  * @package eZ\Publish\API\Repository\Values\Content\Query
+ *
+ * @deprecated Since 5.3, use Location search instead
  */
 class LocationFacetBuilder extends FacetBuilder
 {

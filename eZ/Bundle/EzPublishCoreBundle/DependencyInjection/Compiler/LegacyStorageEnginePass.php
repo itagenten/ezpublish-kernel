@@ -2,7 +2,7 @@
 /**
  * File containing the LegacyStorageEnginePass class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -19,7 +19,6 @@ use Symfony\Component\DependencyInjection\Reference;
  */
 class LegacyStorageEnginePass implements CompilerPassInterface
 {
-
     /**
      * @param \Symfony\Component\DependencyInjection\ContainerBuilder $container
      */
@@ -55,7 +54,7 @@ class LegacyStorageEnginePass implements CompilerPassInterface
             foreach ( $attributes as $attribute )
             {
                 if ( !isset( $attribute['alias'] ) )
-                    throw new \LogicException( 'ezpublish.storageEngine.legacy.converter service tag needs an "alias" attribute to identify the field type. None given.' );
+                    throw new LogicException( 'ezpublish.storageEngine.legacy.converter service tag needs an "alias" attribute to identify the field type. None given.' );
 
                 if ( isset( $attribute['lazy'] ) && $attribute['lazy'] === true )
                 {

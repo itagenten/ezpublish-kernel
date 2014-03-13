@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\API\Repository\Values\ContentType\FieldDefinitionCreateStruct class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -58,7 +58,7 @@ class FieldDefinitionCreateStruct extends ValueObject
     public $fieldGroup;
 
     /**
-     * the position of the field definition in the content typr
+     * The position of the field definition in the content type
      * if not set the field is added at the end
      *
      * @var int

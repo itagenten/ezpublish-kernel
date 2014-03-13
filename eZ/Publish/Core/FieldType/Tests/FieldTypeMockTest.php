@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\Core\FieldType\Tests\FieldTypeMockTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -19,7 +19,12 @@ class FieldTypeMockTest extends PHPUnit_Framework_TestCase
     public function testApplyDefaultSettingsThrowsInvalidArgumentException()
     {
         /** @var \eZ\Publish\Core\FieldType\FieldType|\PHPUnit_Framework_MockObject_MockObject $stub */
-        $stub = $this->getMockForAbstractClass( "\\eZ\\Publish\\Core\\FieldType\\FieldType" );
+        $stub = $this->getMockForAbstractClass(
+            "\\eZ\\Publish\\Core\\FieldType\\FieldType",
+            array(),
+            "",
+            false
+        );
 
         $stub->applyDefaultSettings( new \DateTime );
     }
@@ -36,7 +41,7 @@ class FieldTypeMockTest extends PHPUnit_Framework_TestCase
             "\\eZ\\Publish\\Core\\FieldType\\FieldType",
             array(),
             "",
-            true,
+            false,
             true,
             true,
             array( "getSettingsSchema" )
@@ -161,7 +166,12 @@ class FieldTypeMockTest extends PHPUnit_Framework_TestCase
     public function testApplyDefaultValidatorConfigurationEmptyThrowsInvalidArgumentException()
     {
         /** @var \eZ\Publish\Core\FieldType\FieldType|\PHPUnit_Framework_MockObject_MockObject $stub */
-        $stub = $this->getMockForAbstractClass( "\\eZ\\Publish\\Core\\FieldType\\FieldType" );
+        $stub = $this->getMockForAbstractClass(
+            "\\eZ\\Publish\\Core\\FieldType\\FieldType",
+            array(),
+            "",
+            false
+        );
 
         $stub->applyDefaultValidatorConfiguration( new \DateTime );
     }
@@ -173,7 +183,7 @@ class FieldTypeMockTest extends PHPUnit_Framework_TestCase
             "\\eZ\\Publish\\Core\\FieldType\\FieldType",
             array(),
             "",
-            true,
+            false,
             true,
             true,
             array( "getValidatorConfigurationSchema" )
@@ -204,7 +214,7 @@ class FieldTypeMockTest extends PHPUnit_Framework_TestCase
             "\\eZ\\Publish\\Core\\FieldType\\FieldType",
             array(),
             "",
-            true,
+            false,
             true,
             true,
             array( "getValidatorConfigurationSchema" )

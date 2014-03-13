@@ -2,17 +2,18 @@
 /**
  * File containing the ConfigResolver class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration;
 
-use eZ\Publish\Core\MVC\ConfigResolverInterface;
+use eZ\Publish\Core\MVC\Symfony\Configuration\VersatileScopeInterface;
 use eZ\Publish\Core\MVC\Symfony\SiteAccess;
+use eZ\Publish\Core\MVC\Symfony\SiteAccess\SiteAccessAware;
 use eZ\Publish\Core\MVC\Exception\ParameterNotFoundException;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerAware;
 
 /**
  * This class will help you get settings for a specific scope.
@@ -31,7 +32,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * 2. SiteAccess name
  * 3. "default"
  */
-class ConfigResolver implements ConfigResolverInterface
+class ConfigResolver extends ContainerAware implements VersatileScopeInterface, SiteAccessAware
 {
     const SCOPE_GLOBAL = 'global',
           SCOPE_DEFAULT = 'default';
@@ -50,14 +51,14 @@ class ConfigResolver implements ConfigResolverInterface
     protected $groupsBySiteAccess;
 
     /**
-     * @var \Symfony\Component\DependencyInjection\ContainerInterface
+     * @var string
      */
-    protected $container;
+    protected $defaultNamespace;
 
     /**
      * @var string
      */
-    protected $defaultNamespace;
+    protected $defaultScope;
 
     /**
      * @var int
@@ -65,9 +66,7 @@ class ConfigResolver implements ConfigResolverInterface
     protected $undefinedStrategy;
 
     /**
-     * @param \eZ\Publish\Core\MVC\Symfony\SiteAccess $siteAccess
      * @param array $groupsBySiteAccess SiteAccess groups, indexed by siteaccess.
-     * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
      * @param string $defaultNamespace The default namespace
      * @param int $undefinedStrategy Strategy to use when encountering undefined parameters.
      *                               Must be one of
@@ -75,18 +74,20 @@ class ConfigResolver implements ConfigResolverInterface
      *                                  - ConfigResolver::UNDEFINED_STRATEGY_NULL (return null)
      */
     public function __construct(
-        SiteAccess $siteAccess,
         array $groupsBySiteAccess,
-        ContainerInterface $container,
         $defaultNamespace,
         $undefinedStrategy = self::UNDEFINED_STRATEGY_EXCEPTION
     )
     {
-        $this->siteAccess = $siteAccess;
         $this->groupsBySiteAccess = $groupsBySiteAccess;
-        $this->container = $container;
         $this->defaultNamespace = $defaultNamespace;
         $this->undefinedStrategy = $undefinedStrategy;
+    }
+
+    public function setSiteAccess( SiteAccess $siteAccess = null )
+    {
+        $this->siteAccess = $siteAccess;
+        $this->defaultScope = $siteAccess->name;
     }
 
     /**
@@ -125,7 +126,7 @@ class ConfigResolver implements ConfigResolverInterface
     public function hasParameter( $paramName, $namespace = null, $scope = null )
     {
         $namespace = $namespace ?: $this->defaultNamespace;
-        $scope = $scope ?: $this->siteAccess->name;
+        $scope = $scope ?: $this->defaultScope;
 
         $defaultScopeParamName = "$namespace." . self::SCOPE_DEFAULT . ".$paramName";
         $globalScopeParamName = "$namespace." . self::SCOPE_GLOBAL . ".$paramName";
@@ -151,7 +152,7 @@ class ConfigResolver implements ConfigResolverInterface
     public function getParameter( $paramName, $namespace = null, $scope = null )
     {
         $namespace = $namespace ?: $this->defaultNamespace;
-        $scope = $scope ?: $this->siteAccess->name;
+        $scope = $scope ?: $this->defaultScope;
         $triedScopes = array();
 
         // Global scope
@@ -169,7 +170,7 @@ class ConfigResolver implements ConfigResolverInterface
         {
             return $this->container->getParameter( $relativeScopeParamName );
         }
-        $triedScopes[] = $this->siteAccess->name;
+        $triedScopes[] = $this->defaultScope;
         unset( $relativeScopeParamName );
 
         // Relative scope, siteacces group wise
@@ -222,5 +223,15 @@ class ConfigResolver implements ConfigResolverInterface
     public function getDefaultNamespace()
     {
         return $this->defaultNamespace;
+    }
+
+    public function getDefaultScope()
+    {
+        return $this->defaultScope;
+    }
+
+    public function setDefaultScope( $scope )
+    {
+        $this->defaultScope = $scope;
     }
 }

@@ -2,7 +2,7 @@
 /**
  * File containing the PageController class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -24,7 +24,7 @@ class PageController extends Controller
     /**
      * @var \eZ\Publish\Core\FieldType\Page\PageService
      */
-    private $pageService;
+    protected $pageService;
 
     public function __construct( ViewManager $viewManager, PageService $pageService )
     {
@@ -67,7 +67,11 @@ class PageController extends Controller
         $response->setContent(
             $this->viewManager->renderBlock(
                 $block,
-                $params + array( 'pageService' => $this->pageService )
+                $params + array(
+                    // @deprecated pageService injection will be removed in 6.0.
+                    'pageService' => $this->pageService,
+                    'valid_items' => $this->pageService->getValidBlockItems( $block )
+                )
             )
         );
         return $response;

@@ -2,7 +2,7 @@
 /**
  * File containing the Content Search Gateway class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -33,11 +33,11 @@ abstract class Gateway
     /**
      * Indexes a content object
      *
-     * @param \eZ\Publish\SPI\Persistence\Content\Search\Field[] $document
+     * @param \eZ\Publish\SPI\Persistence\Content\Search\Field[][] $documents
      *
      * @return void
      */
-    abstract public function indexContent( array $document );
+    abstract public function bulkIndexContent( array $documents );
 
     /**
      * Deletes a content object from the index
@@ -64,5 +64,14 @@ abstract class Gateway
      * @return void
      */
     abstract public function purgeIndex();
+
+    /**
+     * Set if index/delete actions should commit or if several actions is to be expected
+     *
+     * This should be set to false before group of actions and true before the last one
+     *
+     * @param bool $commit
+     */
+    abstract public function setCommit( $commit );
 }
 

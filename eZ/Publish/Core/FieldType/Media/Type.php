@@ -2,7 +2,7 @@
 /**
  * File containing the Media Type class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -15,7 +15,6 @@ use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\Core\FieldType\ValidationError;
 use eZ\Publish\Core\FieldType\Value as BaseValue;
 use eZ\Publish\SPI\fieldType\Value as SPIValue;
-use eZ\Publish\Core\FieldType\BinaryBase\Value as BinaryBaseValue;
 
 /**
  * The TextLine field type.
@@ -196,32 +195,32 @@ class Type extends BaseType
     /**
      * Attempts to complete the data in $value
      *
-     * @param mixed $value
+     * @param \eZ\Publish\Core\FieldType\Media\Value|\eZ\Publish\Core\FieldType\Value $value
      *
      * @return void
      */
-    protected function completeValue( $value )
+    protected function completeValue( BaseValue $value )
     {
         parent::completeValue( $value );
 
-        if ( !isset( $value->hasController ) )
+        if ( isset( $value->hasController ) && $value->hasController === null )
         {
             $value->hasController = false;
         }
-        if ( !isset( $value->autoplay ) )
+        if ( isset( $value->autoplay ) && $value->autoplay === null )
         {
             $value->autoplay = false;
         }
-        if ( !isset( $value->loop ) )
+        if ( isset( $value->loop ) && $value->loop === null )
         {
             $value->loop = false;
         }
 
-        if ( !isset( $value->height ) )
+        if ( isset( $value->height ) && $value->height === null )
         {
             $value->height = 0;
         }
-        if ( !isset( $value->width ) )
+        if ( isset( $value->width ) && $value->width === null )
         {
             $value->width = 0;
         }

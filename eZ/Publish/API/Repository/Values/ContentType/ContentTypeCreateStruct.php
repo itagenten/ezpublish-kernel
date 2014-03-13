@@ -2,7 +2,7 @@
 /**
  * File containing the eZ\Publish\API\Repository\Values\ContentType\ContentTypeCreateStruct class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -92,7 +92,7 @@ abstract class ContentTypeCreateStruct extends ValueObject
     public $defaultAlwaysAvailable = true;
 
     /**
-     * AN array of names with languageCode keys
+     * An array of names with languageCode keys
      *
      * @required - at least one name in the main language is required
      *

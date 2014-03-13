@@ -2,7 +2,7 @@
 /**
  * File containing the ContentTypeServiceTest class
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
  * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
  * @version //autogentag//
  */
@@ -1071,6 +1071,8 @@ class ContentTypeServiceTest extends BaseContentTypeServiceTest
         $contentTypeService = $repository->getContentTypeService();
 
         $typeCreate = $contentTypeService->newContentTypeCreateStruct( 'blog-post' );
+        $typeCreate->mainLanguageCode = "eng-GB";
+        $typeCreate->names = array( "eng-GB" => "Blog post" );
 
         $fieldCreate = $contentTypeService->newFieldDefinitionCreateStruct(
             'temperature', 'ezfloat'
