@@ -2,8 +2,8 @@
 /**
  * Contains Not Found Exception implementation
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -29,10 +29,9 @@ class NotFoundException extends APINotFoundException implements Httpable
      */
     public function __construct( $what, $identifier, Exception $previous = null )
     {
+        $identifierStr = is_string( $identifier ) ? $identifier : var_export( $identifier, true );
         parent::__construct(
-            "Could not find '{$what}' with identifier '" .
-            ( is_array( $identifier ) ? var_export( $identifier, true ) : $identifier ) .
-            "'",
+            "Could not find '{$what}' with identifier '{$identifierStr}'",
             self::NOT_FOUND,
             $previous
         );

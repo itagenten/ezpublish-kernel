@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\API\Repository\Values\Content\Query\Criterion\LocationRemoteId class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -19,8 +19,6 @@ use eZ\Publish\API\Repository\Values\Content\Query\CriterionInterface;
  * Supported operators:
  * - IN: will match from a list of location remote IDs
  * - EQ: will match against one location remote ID
- *
- * @deprecated Since 5.3, use Location search instead
  */
 class LocationRemoteId extends Criterion implements CriterionInterface
 {
@@ -31,8 +29,6 @@ class LocationRemoteId extends Criterion implements CriterionInterface
      *
      * @throws \InvalidArgumentException if a non numeric id is given
      * @throws \InvalidArgumentException if the value type doesn't match the operator
-     *
-     * @deprecated Since 5.3, use Location search instead
      */
     public function __construct( $value  )
     {

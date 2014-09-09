@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\SPI\Tests\FieldType\XmlTextIntegrationTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -16,6 +16,7 @@ use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\SPI\Persistence\Content\FieldTypeConstraints;
 use DOMDocument;
 use eZ\Publish\Core\FieldType\XmlText\XmlTextStorage\Gateway\LegacyStorage;
+use eZ\Publish\Core\FieldType\Url\UrlStorage\Gateway\LegacyStorage as UrlGateway;
 
 /**
  * Integration test for legacy storage field types
@@ -56,25 +57,19 @@ class XmlTextIntegrationTest extends BaseIntegrationTest
      */
     public function getCustomHandler()
     {
-        $handler = $this->getHandler();
-
         $fieldType = new FieldType\XmlText\Type();
         $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
-        $handler->getFieldTypeRegistry()->register( 'ezxmltext', $fieldType );
-        $handler->getStorageRegistry()->register(
+
+        return $this->getHandler(
             'ezxmltext',
+            $fieldType,
+            new XmlTextConverter(),
             new FieldType\XmlText\XmlTextStorage(
                 array(
-                    'LegacyStorage' => new LegacyStorage()
+                    'LegacyStorage' => new LegacyStorage( new UrlGateway() )
                 )
             )
         );
-        $handler->getFieldValueConverterRegistry()->register(
-            'ezxmltext',
-            new XmlTextConverter()
-        );
-
-        return $handler;
     }
 
     /**

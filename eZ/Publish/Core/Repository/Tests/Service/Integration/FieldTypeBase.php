@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\Core\Repository\Tests\Service\Integration\FieldTypeBase class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -97,7 +97,7 @@ abstract class FieldTypeBase extends BaseServiceTest
      * Test for the getFieldType() method.
      *
      * @covers \eZ\Publish\Core\Repository\FieldTypeService::getFieldType
-     * @expectedException \eZ\Publish\API\Repository\Exceptions\NotFoundException
+     * @expectedException \eZ\Publish\Core\Base\Exceptions\NotFound\FieldTypeNotFoundException
      * @dataProvider providerForTestGetFieldTypeThrowsNotFoundException
      */
     public function testGetFieldTypeThrowsNotFoundException( $identifier )
@@ -179,7 +179,7 @@ abstract class FieldTypeBase extends BaseServiceTest
      * Test for the buildFieldType() method.
      *
      * @covers \eZ\Publish\Core\Repository\FieldTypeService::buildFieldType
-     * @expectedException \eZ\Publish\API\Repository\Exceptions\NotFoundException
+     * @expectedException \eZ\Publish\Core\Base\Exceptions\NotFound\FieldTypeNotFoundException
      * @dataProvider providerForTestBuildFieldTypeThrowsNotFoundException
      */
     public function testBuildFieldTypeThrowsNotFoundException( $identifier )

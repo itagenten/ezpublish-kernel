@@ -2,8 +2,8 @@
 /**
  * File containing the ConfigResolver class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -131,8 +131,25 @@ class ConfigResolver extends ContainerAware implements VersatileScopeInterface, 
         $defaultScopeParamName = "$namespace." . self::SCOPE_DEFAULT . ".$paramName";
         $globalScopeParamName = "$namespace." . self::SCOPE_GLOBAL . ".$paramName";
         $relativeScopeParamName = "$namespace.$scope.$paramName";
+
+        // Relative scope, siteaccess group wise
+        $groupScopeHasParam = false;
+        if ( isset( $this->groupsBySiteAccess[$scope] ) )
+        {
+            foreach ( $this->groupsBySiteAccess[$scope] as $groupName )
+            {
+                $groupScopeParamName = "$namespace.$groupName.$paramName";
+                if ( $this->container->hasParameter( $groupScopeParamName ) )
+                {
+                    $groupScopeHasParam = true;
+                    break;
+                }
+            }
+        }
+
         return
             $this->container->hasParameter( $defaultScopeParamName )
+            || $groupScopeHasParam
             || $this->container->hasParameter( $relativeScopeParamName )
             || $this->container->hasParameter( $globalScopeParamName );
     }
@@ -173,7 +190,7 @@ class ConfigResolver extends ContainerAware implements VersatileScopeInterface, 
         $triedScopes[] = $this->defaultScope;
         unset( $relativeScopeParamName );
 
-        // Relative scope, siteacces group wise
+        // Relative scope, siteaccess group wise
         if ( isset( $this->groupsBySiteAccess[$scope] ) )
         {
             foreach ( $this->groupsBySiteAccess[$scope] as $groupName )

@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\API\Repository\Values\Content\ContentUpdateStruct class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -26,6 +26,19 @@ abstract class ContentUpdateStruct extends ValueObject
      * @var string
      */
     public $initialLanguageCode;
+
+    /**
+     * Creator user ID.
+     *
+     * Creator of the version, in the search API this is referred to as the modifier of the published content.
+     *
+     * WARNING: Standard permission rules applies, only the user set here will be able to change the draft after being
+     *          set as modifier, and only if (s)he has access to edit the draft in the first place.
+     *
+     * @since 5.4
+     * @var mixed Optional creator of version, current user will be used if null
+     */
+    public $creatorId;
 
     /**
      * Adds a field to the field collection.

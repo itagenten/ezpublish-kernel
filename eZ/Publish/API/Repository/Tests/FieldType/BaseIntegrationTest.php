@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\API\Repository\Tests\FieldType\BaseIntegrationTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -683,13 +683,24 @@ abstract class BaseIntegrationTest extends Tests\BaseTest
     }
 
     /**
+     * Tests creeating a new version keeps the existing value
+     * @dep_ends eZ\Publish\API\Repository\Tests\ContentServiceTest::testUpdateContent
+     * @depends testLoadFieldType
+     */
+    public function testUpdateFieldNoNewContent()
+    {
+        return $this->updateContent( null, false );
+    }
+
+    /**
      * Updates the standard published content object with $fieldData
      *
      * @param mixed $fieldData
+     * @param boolean $setField If false the update struct will be empty (field value will not be set)
      *
      * @return \eZ\Publish\API\Repository\Values\Content\Content
      */
-    public function updateContent( $fieldData )
+    public function updateContent( $fieldData, $setField = true )
     {
         $content = $this->testPublishContent();
 
@@ -699,10 +710,13 @@ abstract class BaseIntegrationTest extends Tests\BaseTest
         $draft = $contentService->createContentDraft( $content->contentInfo );
 
         $updateStruct = $contentService->newContentUpdateStruct();
-        $updateStruct->setField(
-            $this->customFieldIdentifier,
-            $fieldData
-        );
+        if ( $setField )
+        {
+            $updateStruct->setField(
+                $this->customFieldIdentifier,
+                $fieldData
+            );
+        }
 
         return $contentService->updateContent( $draft->versionInfo, $updateStruct );
     }
@@ -724,11 +738,35 @@ abstract class BaseIntegrationTest extends Tests\BaseTest
     }
 
     /**
+     * @depends testUpdateFieldNoNewContent
+     */
+    public function testUpdateNoNewContentTypeFieldStillAvailable( $content )
+    {
+        foreach ( $content->getFields() as $field )
+        {
+            if ( $field->fieldDefIdentifier === $this->customFieldIdentifier )
+            {
+                return $field;
+            }
+        }
+
+        $this->fail( "Custom field not found." );
+    }
+
+    /**
      * @depends testUpdateTypeFieldStillAvailable
      */
     public function testUpdatedDataCorrect( Field $field )
     {
         $this->assertUpdatedFieldDataLoadedCorrect( $field );
+    }
+
+    /**
+     * @depends testUpdateNoNewContentTypeFieldStillAvailable
+     */
+    public function testUpdatedNoNewContentDataCorrect( Field $field )
+    {
+        $this->assertFieldDataLoadedCorrect( $field );
     }
 
     /**

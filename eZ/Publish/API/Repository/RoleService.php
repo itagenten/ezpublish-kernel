@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\API\Repository\RoleService class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -281,7 +281,7 @@ interface RoleService
      *
      * @return \eZ\Publish\SPI\Limitation\Type
      *
-     * @throws \eZ\Publish\API\Repository\Exceptions\NotFoundException if there is no LimitationType with $identifier
+     * @throws \RuntimeException On missing Limitation
      */
     public function getLimitationType( $identifier );
 

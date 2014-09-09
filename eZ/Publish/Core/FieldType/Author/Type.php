@@ -2,8 +2,8 @@
 /**
  * File containing the Author class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -56,20 +56,6 @@ class Type extends FieldType
     public function getEmptyValue()
     {
         return new Value();
-    }
-
-    /**
-     * Returns if the given $value is considered empty by the field type
-     *
-     * @param mixed $value
-     *
-     * @return boolean
-     */
-    public function isEmptyValue( SPIValue $value )
-    {
-        // @todo workaround for a bug in PHP 5.3.3 {@link https://bugs.php.net/bug.php?id=61326},
-        // when support for it ends this implementation should be removed for overridden method
-        return (array)$value->authors == (array)$this->getEmptyValue()->authors;
     }
 
     /**

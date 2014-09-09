@@ -2,8 +2,8 @@
 /**
  * File containing the ContentPreviewHelper class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -91,7 +91,7 @@ class ContentPreviewHelper implements SiteAccessAware
      *
      * @param mixed $contentId
      *
-     * @return \eZ\Publish\API\Repository\Values\Content\Location|Location
+     * @return \eZ\Publish\API\Repository\Values\Content\Location|null Null when content does not have location
      */
     public function getPreviewLocation( $contentId )
     {
@@ -105,7 +105,15 @@ class ContentPreviewHelper implements SiteAccessAware
         // New Content, never published, create a virtual location object.
         else
         {
-            $location = new Location( array( 'contentInfo' => $contentInfo ) );
+            // @todo In future releases this will be a full draft location when this feature
+            // is implemented. Or it might return null when content does not have location,
+            // but for now we can't detect that so we return a virtual draft location
+            $location = new Location(
+                array(
+                    'contentInfo' => $contentInfo,
+                    'status' => Location::STATUS_DRAFT
+                )
+            );
         }
 
         return $location;

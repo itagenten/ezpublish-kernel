@@ -2,8 +2,8 @@
 /**
  * File containing a Io Handler test
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -12,7 +12,7 @@ namespace eZ\Publish\Core\IO\Tests\Handler;
 use eZ\Publish\Core\IO\Handler\Legacy as Legacy;
 use eZ\Publish\Core\IO\Tests\Handler\Base as BaseHandlerTest;
 use eZ\Publish\Core\MVC\Legacy\Kernel;
-use ezcBaseFile;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Handler test
@@ -49,7 +49,8 @@ class LegacyTest extends BaseHandlerTest
         chdir( $this->legacyPath );
         if ( file_exists( 'var/test' ) )
         {
-            ezcBaseFile::removeRecursive( 'var/test' );
+            $fs = new Filesystem();
+            $fs->remove( 'var/test' );
         }
         /** @var $legacyKernel Kernel */
         $legacyKernel = $_ENV['legacyKernel'];
@@ -57,7 +58,9 @@ class LegacyTest extends BaseHandlerTest
             function ()
             {
                 \eZClusterFileHandler::instance()->fileDelete( 'var/test', true );
-            }
+            },
+            false,
+            false
         );
 
         chdir( $this->originalDir );

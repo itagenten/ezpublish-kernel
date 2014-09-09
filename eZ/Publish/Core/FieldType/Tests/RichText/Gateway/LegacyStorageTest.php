@@ -2,14 +2,15 @@
 /**
  * File containing the LegacyStorageTest for RichText FieldType
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
-namespace eZ\Publish\Core\Repository\Tests\FieldType\RichText\Gateway;
+namespace eZ\Publish\Core\FieldType\Tests\RichText\Gateway;
 
 use eZ\Publish\Core\FieldType\RichText\RichTextStorage\Gateway\LegacyStorage;
+use eZ\Publish\Core\FieldType\Url\UrlStorage\Gateway\LegacyStorage as UrlStorage;
 use eZ\Publish\Core\Persistence\Legacy\Tests\TestCase;
 
 /**
@@ -18,42 +19,21 @@ use eZ\Publish\Core\Persistence\Legacy\Tests\TestCase;
  */
 class LegacyStorageTest extends TestCase
 {
-    public function testGetLinkUrls()
+    public function testSetConnection()
     {
-        $this->insertDatabaseFixture( __DIR__ . "/_fixtures/urls.php" );
-
         $gateway = $this->getStorageGateway();
 
-        $this->assertEquals(
-            array(
-                23 => "/content/view/sitemap/2",
-                24 => "/content/view/tagcloud/2"
-            ),
-            $gateway->getLinkUrls(
-                array( 23, 24, "fake" )
-            )
-        );
+        $gateway->setConnection( $this->getMock( "eZ\\Publish\\Core\\Persistence\\Database\\DatabaseHandler" ) );
     }
 
-    public function testGetLinkIds()
+    /**
+     * @expectedException \RuntimeException
+     */
+    public function testSetConnectionThrowsRuntimeException()
     {
-        $this->insertDatabaseFixture( __DIR__ . "/_fixtures/urls.php" );
-
         $gateway = $this->getStorageGateway();
 
-        $this->assertEquals(
-            array(
-                "/content/view/sitemap/2" => 23,
-                "/content/view/tagcloud/2" => 24
-            ),
-            $gateway->getLinkIds(
-                array(
-                    "/content/view/sitemap/2",
-                    "/content/view/tagcloud/2",
-                    "fake"
-                )
-            )
-        );
+        $gateway->setConnection( new \DateTime() );
     }
 
     public function testGetContentIds()
@@ -77,50 +57,6 @@ class LegacyStorageTest extends TestCase
         );
     }
 
-    public function testInsertLink()
-    {
-        $this->insertDatabaseFixture( __DIR__ . "/_fixtures/urls.php" );
-
-        $gateway = $this->getStorageGateway();
-
-        $url = "one/two/three";
-        $time = time();
-        $id = $gateway->insertLink( $url );
-
-        $query = $this->getDatabaseHandler()->createSelectQuery();
-        $query
-            ->select( "*" )
-            ->from( 'ezurl' )
-            ->where(
-                $query->expr->eq(
-                    $this->handler->quoteColumn( 'id' ),
-                    $query->bindValue( $id )
-                )
-            );
-        $statement = $query->prepare();
-        $statement->execute();
-
-        $result = $statement->fetchAll( \PDO::FETCH_ASSOC );
-
-        $expected = array(
-            array(
-                'id' => $id,
-                'is_valid' => "1",
-                'last_checked' => "0",
-                'original_url_md5' => md5( $url ),
-                'url' => $url
-            )
-        );
-
-        $this->assertGreaterThanOrEqual( $time, $result[0]["created"] );
-        $this->assertGreaterThanOrEqual( $time, $result[0]["modified"] );
-
-        unset( $result[0]["created"] );
-        unset( $result[0]["modified"] );
-
-        $this->assertEquals( $expected, $result );
-    }
-
     /**
      * @var \eZ\Publish\Core\FieldType\RichText\RichTextStorage\Gateway\LegacyStorage
      */
@@ -135,7 +71,9 @@ class LegacyStorageTest extends TestCase
     {
         if ( !isset( $this->storageGateway ) )
         {
-            $this->storageGateway = new LegacyStorage();
+            $this->storageGateway = new LegacyStorage(
+                new UrlStorage()
+            );
             $this->storageGateway->setConnection( $this->getDatabaseHandler() );
         }
         return $this->storageGateway;

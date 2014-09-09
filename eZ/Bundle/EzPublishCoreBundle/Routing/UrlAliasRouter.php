@@ -2,8 +2,8 @@
 /**
  * File containing the UrlAliasRouter class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -50,6 +50,9 @@ class UrlAliasRouter extends BaseUrlAliasRouter
      * Will return the right UrlAlias in regards to configured root location.
      *
      * @param string $pathinfo
+     *
+     * @throws \eZ\Publish\API\Repository\Exceptions\NotFoundException if the path does not exist or is not valid for the given language
+     *
      * @return \eZ\Publish\API\Repository\Values\Content\URLAlias
      */
     protected function getUrlAlias( $pathinfo )

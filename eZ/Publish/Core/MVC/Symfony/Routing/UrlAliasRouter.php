@@ -2,8 +2,8 @@
 /**
  * File containing the UrlAliasRouter class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -95,7 +95,7 @@ class UrlAliasRouter implements ChainedRouterInterface, RequestMatcherInterface
         try
         {
             $urlAlias = $this->getUrlAlias(
-                $request->attributes->get( 'semanticPathinfo', $request->getPathInfo() )
+                rawurldecode( $request->attributes->get( 'semanticPathinfo', $request->getPathInfo() ) )
             );
 
             $params = array(
@@ -157,6 +157,9 @@ class UrlAliasRouter implements ChainedRouterInterface, RequestMatcherInterface
      * Returns the UrlAlias object to use, starting from the request.
      *
      * @param $pathinfo
+     *
+     * @throws \eZ\Publish\API\Repository\Exceptions\NotFoundException if the path does not exist or is not valid for the given language
+     *
      * @return URLAlias
      */
     protected function getUrlAlias( $pathinfo )
@@ -227,7 +230,7 @@ class UrlAliasRouter implements ChainedRouterInterface, RequestMatcherInterface
             }
 
             $location = isset( $parameters['location'] ) ? $parameters['location'] : $this->locationService->loadLocation( $parameters['locationId'] );
-            unset( $parameters['location'], $parameters['locationId'] );
+            unset( $parameters['location'], $parameters['locationId'], $parameters['viewType'], $parameters['layout'] );
             return $this->generator->generate( $location, $parameters, $absolute );
         }
 

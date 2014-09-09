@@ -2,8 +2,8 @@
 /**
  * File containing the Repository class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -110,23 +110,6 @@ class Repository implements APIRepository
      * @var \eZ\Publish\SPI\FieldType\FieldType[]
      */
     private $fieldTypes;
-
-    /**
-     * Array of arrays of commit events indexed by the transaction count.
-     *
-     * @var array
-     */
-    protected $commitEventsQueue = array();
-
-    /**
-     * @var int
-     */
-    protected $transactionDepth = 0;
-
-    /**
-     * @var int
-     */
-    private $transactionCount = 0;
 
     /**
      * Instantiates the REST Client repository.
@@ -412,7 +395,7 @@ class Repository implements APIRepository
      *
      * @return \eZ\Publish\API\Repository\URLAliasService
      */
-    public function getUrlAliasService()
+    public function getURLAliasService()
     {
         if ( null === $this->urlAliasService )
         {
@@ -477,8 +460,7 @@ class Repository implements APIRepository
      */
     public function beginTransaction()
     {
-        ++$this->transactionDepth;
-        $this->commitEventsQueue[++$this->transactionCount] = array();
+        // @todo: Implement / discuss
     }
 
     /**
@@ -491,21 +473,6 @@ class Repository implements APIRepository
     public function commit()
     {
         // @todo: Implement / discuss
-
-        --$this->transactionDepth;
-
-        if ( $this->transactionDepth === 0 )
-        {
-            foreach ( $this->commitEventsQueue as $eventsQueue )
-            {
-                foreach ( $eventsQueue as $event )
-                {
-                    $event();
-                }
-            }
-
-            $this->commitEventsQueue = array();
-        }
     }
 
     /**
@@ -518,25 +485,16 @@ class Repository implements APIRepository
     public function rollback()
     {
         // @todo: Implement / discuss
-
-        --$this->transactionDepth;
-        unset( $this->commitEventsQueue[$this->transactionCount] );
     }
 
     /**
      * Enqueue an event to be triggered at commit or directly if no transaction has started
      *
+     * @deprecated In 5.3.3, to be removed. Signals are emitted after transaction instead of being required to use this.
      * @param Callable $event
      */
     public function commitEvent( $event )
     {
-        if ( $this->transactionDepth !== 0 )
-        {
-            $this->commitEventsQueue[$this->transactionCount][] = $event;
-        }
-        else
-        {
-            $event();
-        }
+        $event();
     }
 }

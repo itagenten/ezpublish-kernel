@@ -2,8 +2,8 @@
 /**
  * File containing the ConfigurationConverter class.
  *
- * @copyright Copyright (C) 2012 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 namespace eZ\Bundle\EzPublishLegacyBundle\SetupWizard;
@@ -246,7 +246,7 @@ class ConfigurationConverter
         return array(
             'caches' => array(
                 'default' => array(
-                    'handlers' => $handlers,
+                    'drivers' => $handlers,
                     // inMemory will enable/disable "Ephemeral", not allowed as separate handler in stash-bundle
                     'inMemory' => $inMemory,
                     'registerDoctrineAdapter' => false
@@ -424,7 +424,9 @@ class ConfigurationConverter
                 // and make sure to restore the previous injected settings
                 eZINI::injectSettings( array() );
                 return eZSiteAccess::getIni( $siteaccess, $file )->group( $groupName );
-            }
+            },
+            false,
+            false
         );
     }
 
@@ -456,7 +458,9 @@ class ConfigurationConverter
                 eZINI::injectSettings( array() );
                 return eZSiteAccess::getIni( $siteaccess, $file )
                     ->variable( $groupName, $parameterName );
-            }
+            },
+            false,
+            false
         );
     }
 

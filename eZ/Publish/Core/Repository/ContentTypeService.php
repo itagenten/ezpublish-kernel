@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\Core\Repository\ContentTypeService class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  * @package eZ\Publish\Core\Repository
  */
@@ -1361,10 +1361,11 @@ class ContentTypeService implements ContentTypeServiceInterface
      * @throws \eZ\Publish\API\Repository\Exceptions\BadStateException If there is already a draft assigned to another user
      *
      * @param \eZ\Publish\API\Repository\Values\ContentType\ContentType $contentType
+     * @param \eZ\Publish\API\Repository\Values\User\User $modifier If null the current-user is used instead {@since 5.4}
      *
      * @return \eZ\Publish\API\Repository\Values\ContentType\ContentTypeDraft
      */
-    public function createContentTypeDraft( APIContentType $contentType )
+    public function createContentTypeDraft( APIContentType $contentType, User $modifier = null )
     {
         if ( $this->repository->hasAccess( 'class', 'create' ) !== true )
             throw new UnauthorizedException( 'ContentType', 'create' );
@@ -1387,7 +1388,7 @@ class ContentTypeService implements ContentTypeServiceInterface
             try
             {
                 $spiContentType = $this->contentTypeHandler->createDraft(
-                    $this->repository->getCurrentUser()->id,
+                    $modifier !== null ? $modifier->id : $this->repository->getCurrentUser()->id,
                     $contentType->id
                 );
                 $this->repository->commit();

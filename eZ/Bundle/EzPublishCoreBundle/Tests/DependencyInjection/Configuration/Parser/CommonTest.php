@@ -2,8 +2,8 @@
 /**
  * File containing the CommonTest class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -11,11 +11,9 @@ namespace eZ\Bundle\EzPublishCoreBundle\Tests\DependencyInjection\Configuration\
 
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Parser\Common;
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\EzPublishCoreExtension;
-use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
-use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\Yaml\Yaml;
 
-class CommonTest extends AbstractExtensionTestCase
+class CommonTest extends AbstractParserTestCase
 {
     private $minimalConfig;
 
@@ -24,12 +22,6 @@ class CommonTest extends AbstractExtensionTestCase
      */
     private $suggestionCollector;
 
-    /**
-     * Return an array of container extensions you need to be registered for each test (usually just the container
-     * extension you are testing.
-     *
-     * @return ExtensionInterface[]
-     */
     protected function getContainerExtensions()
     {
         $this->suggestionCollector = $this->getMock( 'eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\ConfigSuggestion\SuggestionCollectorInterface' );
@@ -38,7 +30,7 @@ class CommonTest extends AbstractExtensionTestCase
 
     protected function getMinimalConfiguration()
     {
-        return $this->minimalConfig = Yaml::parse( __DIR__ . '/../../Fixtures/ezpublish_minimal.yml' );
+        return $this->minimalConfig = Yaml::parse( file_get_contents( __DIR__ . '/../../Fixtures/ezpublish_minimal.yml' ) );
     }
 
     public function testIndexPage()
@@ -53,53 +45,24 @@ class CommonTest extends AbstractExtensionTestCase
         );
         $this->load( $config );
 
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.index_page' ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site_admin.index_page' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.global.index_page' ) );
-        $this->assertSame( $indexPage1, $this->container->getParameter( 'ezsettings.ezdemo_site.index_page' ) );
-        $this->assertSame( $indexPage2, $this->container->getParameter( 'ezsettings.ezdemo_site_admin.index_page' ) );
+        $this->assertConfigResolverParameterValue( 'index_page', $indexPage1, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'index_page', $indexPage2, 'ezdemo_site_admin' );
     }
 
-    public function testLanguagesSingleSiteaccess()
+    public function testDefaultPage()
     {
-        $langDemoSite = array( 'eng-GB' );
-        $langFre = array( 'fre-FR', 'eng-GB' );
+        $defaultPage1 = '/Getting-Started';
+        $defaultPage2 = '/Foo/bar';
         $config = array(
             'system' => array(
-                'ezdemo_site' => array( 'languages' => $langDemoSite ),
-                'fre' => array( 'languages' => $langFre ),
+                'ezdemo_site' => array( 'default_page' => $defaultPage1 ),
+                'ezdemo_site_admin' => array( 'default_page' => $defaultPage2 ),
             )
         );
         $this->load( $config );
 
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.languages' ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.fre.languages' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.global.languages' ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site_admin.languages' ) );
-        $this->assertSame( $langDemoSite, $this->container->getParameter( 'ezsettings.ezdemo_site.languages' ) );
-        $this->assertSame( $langFre, $this->container->getParameter( 'ezsettings.fre.languages' ) );
-        // languages for ezdemo_site_admin will take default value (empty array)
-        $this->assertEmpty( $this->container->getParameter( 'ezsettings.ezdemo_site_admin.languages' ) );
-    }
-
-    public function testLanguagesSiteaccessGroup()
-    {
-        $langDemoSite = array( 'eng-US', 'eng-GB' );
-        $config = array(
-            'system' => array(
-                'ezdemo_frontend_group' => array( 'languages' => $langDemoSite ),
-            )
-        );
-        $this->load( $config );
-
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.languages' ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.fre.languages' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.global.languages' ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site_admin.languages' ) );
-        $this->assertSame( $langDemoSite, $this->container->getParameter( 'ezsettings.ezdemo_site.languages' ) );
-        $this->assertSame( $langDemoSite, $this->container->getParameter( 'ezsettings.fre.languages' ) );
-        // languages for ezdemo_site_admin will take default value (empty array)
-        $this->assertEmpty( $this->container->getParameter( 'ezsettings.ezdemo_site_admin.languages' ) );
+        $this->assertConfigResolverParameterValue( 'default_page', $defaultPage1, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'default_page', $defaultPage2, 'ezdemo_site_admin' );
     }
 
     /**
@@ -149,34 +112,30 @@ class CommonTest extends AbstractExtensionTestCase
     public function testLegacyMode()
     {
         $this->load( array( 'system' => array( 'ezdemo_site' => array( 'legacy_mode' => true ) ) ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.legacy_mode' ) );
-        $this->assertTrue( $this->container->getParameter( 'ezsettings.ezdemo_site.legacy_mode' ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.url_alias_router' ) );
-        $this->assertFalse( $this->container->getParameter( 'ezsettings.ezdemo_site.url_alias_router' ) );
+        $this->assertConfigResolverParameterValue( 'legacy_mode', true, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'url_alias_router', false, 'ezdemo_site' );
     }
 
     public function testNotLegacyMode()
     {
         $this->load( array( 'system' => array( 'ezdemo_site' => array( 'legacy_mode' => false ) ) ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.legacy_mode' ) );
-        $this->assertFalse( $this->container->getParameter( 'ezsettings.ezdemo_site.legacy_mode' ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.url_alias_router' ) );
-        $this->assertTrue( $this->container->getParameter( 'ezsettings.ezdemo_site.url_alias_router' ) );
+        $this->assertConfigResolverParameterValue( 'legacy_mode', false, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'url_alias_router', true, 'ezdemo_site' );
     }
 
     public function testNonExistentSettings()
     {
         $this->load();
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.legacy_mode' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.url_alias_router' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.cache_pool_name' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.var_dir' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.storage_dir' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.binary_dir' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.session_name' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.http_cache.purge_servers' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.anonymous_user_id' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.index_page' ) );
+        $this->assertConfigResolverParameterValue( 'legacy_mode', false, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'url_alias_router', true, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'cache_pool_name', 'default', 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'var_dir', 'var', 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'storage_dir', 'storage', 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'binary_dir', 'original', 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'session_name', '%ezpublish.session_name.default%', 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'http_cache.purge_servers', array( 'http://localhost/' ), 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'anonymous_user_id', 10, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'index_page', null, 'ezdemo_site' );
     }
 
     public function testMiscSettings()
@@ -212,14 +171,14 @@ class CommonTest extends AbstractExtensionTestCase
             )
         );
 
-        $this->assertSame( $cachePoolName, $this->container->getParameter( 'ezsettings.ezdemo_site.cache_pool_name' ) );
-        $this->assertSame( $varDir, $this->container->getParameter( 'ezsettings.ezdemo_site.var_dir' ) );
-        $this->assertSame( $storageDir, $this->container->getParameter( 'ezsettings.ezdemo_site.storage_dir' ) );
-        $this->assertSame( $binaryDir, $this->container->getParameter( 'ezsettings.ezdemo_site.binary_dir' ) );
-        $this->assertSame( $sessionName, $this->container->getParameter( 'ezsettings.ezdemo_site.session_name' ) );
-        $this->assertSame( $indexPage, $this->container->getParameter( 'ezsettings.ezdemo_site.index_page' ) );
-        $this->assertSame( $cachePurgeServers, $this->container->getParameter( 'ezsettings.ezdemo_site.http_cache.purge_servers' ) );
-        $this->assertSame( $anonymousUserId, $this->container->getParameter( 'ezsettings.ezdemo_site.anonymous_user_id' ) );
+        $this->assertConfigResolverParameterValue( 'cache_pool_name', $cachePoolName, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'var_dir', $varDir, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'storage_dir', $storageDir, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'binary_dir', $binaryDir, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'session_name', $sessionName, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'index_page', $indexPage, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'http_cache.purge_servers', $cachePurgeServers, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'anonymous_user_id', $anonymousUserId, 'ezdemo_site' );
     }
 
     public function testUserSettings()
@@ -238,17 +197,24 @@ class CommonTest extends AbstractExtensionTestCase
                 )
             )
         );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.security.base_layout' ) );
-        $this->assertSame( $layout, $this->container->getParameter( 'ezsettings.ezdemo_site.security.base_layout' ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.security.login_template' ) );
-        $this->assertSame( $loginTemplate, $this->container->getParameter( 'ezsettings.ezdemo_site.security.login_template' ) );
+
+        $this->assertConfigResolverParameterValue( 'security.base_layout', $layout, 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'security.login_template', $loginTemplate, 'ezdemo_site' );
     }
 
     public function testNoUserSettings()
     {
         $this->load();
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.security.base_layout' ) );
-        $this->assertFalse( $this->container->hasParameter( 'ezsettings.ezdemo_site.security.login_template' ) );
+        $this->assertConfigResolverParameterValue(
+            'security.base_layout',
+            '%ezpublish.content_view.viewbase_layout%',
+            'ezdemo_site'
+        );
+        $this->assertConfigResolverParameterValue(
+            'security.login_template',
+            'EzPublishCoreBundle:Security:login.html.twig',
+            'ezdemo_site'
+        );
     }
 
     /**
@@ -264,10 +230,8 @@ class CommonTest extends AbstractExtensionTestCase
             )
         );
 
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.session' ) );
-        $this->assertTrue( $this->container->hasParameter( 'ezsettings.ezdemo_site.session_name' ) );
-        $this->assertEquals( $expected['session'], $this->container->getParameter( 'ezsettings.ezdemo_site.session' ) );
-        $this->assertEquals( $expected['session_name'], $this->container->getParameter( 'ezsettings.ezdemo_site.session_name' ) );
+        $this->assertConfigResolverParameterValue( 'session', $expected['session'], 'ezdemo_site' );
+        $this->assertConfigResolverParameterValue( 'session_name', $expected['session_name'], 'ezdemo_site' );
     }
 
     public function sessionSettingsProvider()

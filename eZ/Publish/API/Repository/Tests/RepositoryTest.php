@@ -2,8 +2,8 @@
 /**
  * File containing the RepositoryTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -154,11 +154,11 @@ class RepositoryTest extends BaseTest
     }
 
     /**
-     * Test for the getUrlAliasService() method.
+     * Test for the getURLAliasService() method.
      *
      * @return void
      * @group url-alias
-     * @see \eZ\Publish\API\Repository\Repository::getUrlAliasService()
+     * @see \eZ\Publish\API\Repository\Repository::getURLAliasService()
      */
     public function testGetURLAliasService()
     {
@@ -731,7 +731,7 @@ class RepositoryTest extends BaseTest
         // This call will throw "InvalidArgumentException" because $userGroupContentType
         // is an instance of \eZ\Publish\API\Repository\Values\ContentType\ContentType,
         // which can not be checked for user access
-        $canUser = $repository->canUser( "content", "remove", $userGroupContentType );
+        $canUser = $repository->canUser( "content", "create", $userGroupContentType );
         /* END: Use Case */
     }
 

@@ -2,8 +2,8 @@
 /**
  * File containing the DebugKernel class.
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -11,6 +11,7 @@ namespace eZ\Bundle\EzPublishDebugBundle\Collector;
 
 use eZ\Publish\Core\MVC\Legacy\Kernel as LegacyKernel;
 use eZTemplate;
+use ezxFormToken;
 use RuntimeException;
 
 /**
@@ -84,7 +85,9 @@ class TemplateDebugInfo
                 function ()
                 {
                     return eZTemplate::templatesUsageStatistics();
-                }
+                },
+                false,
+                false
             );
         }
         catch ( RuntimeException $e )
@@ -113,6 +116,14 @@ class TemplateDebugInfo
                 $templateList["compact"][$actualTpl]++;
             }
         }
+
+        // Re-activate ezxFormToken if it was before, as we might be inside an inline sub-request.
+        // See https://jira.ez.no/browse/EZP-22643
+        if ( $formTokenWasEnabled )
+        {
+            ezxFormToken::setIsEnabled( true );
+        }
+
         return $templateList;
     }
 }

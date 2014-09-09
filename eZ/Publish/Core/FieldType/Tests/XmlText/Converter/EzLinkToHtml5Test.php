@@ -2,12 +2,12 @@
 /**
  * File containing the EzLinkToHtml5 EzXml test
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
-namespace eZ\Publish\Core\Repository\Tests\FieldType\XmlText\Converter;
+namespace eZ\Publish\Core\FieldType\Tests\XmlText\Converter;
 
 use eZ\Publish\Core\FieldType\XmlText\Converter\EzLinkToHtml5;
 use PHPUnit_Framework_TestCase;
@@ -161,7 +161,7 @@ class EzLinkToHtml5Test extends PHPUnit_Framework_TestCase
     /**
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
-    protected function getMockUrlAliasService()
+    protected function getMockURLAliasService()
     {
         return $this->getMockBuilder( 'eZ\Publish\Core\Repository\URLAliasService' )
             ->disableOriginalConstructor()

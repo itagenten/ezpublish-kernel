@@ -2,8 +2,8 @@
 /**
  * File containing the Solr\Slot abstract class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -32,60 +32,5 @@ abstract class Slot extends BaseSlot
     {
         $this->repository = $repository;
         $this->persistenceHandler = $handler;
-    }
-
-    /**
-     * Enqueue the indexing of content
-     *
-     * @param \eZ\Publish\SPI\Persistence\Content $content
-     */
-    protected function enqueueIndexing( $content )
-    {
-        $searchHandler = $this->persistenceHandler->searchHandler();
-
-        $this->repository->commitEvent(
-            function ( $lastEvent ) use ( $searchHandler, $content )
-            {
-                $searchHandler->setCommit( $lastEvent );
-                $searchHandler->indexContent( $content );
-            }
-        );
-    }
-
-    /**
-     * Enqueue the deletion of content
-     *
-     * @param mixed $contentId
-     * @param int|null $versionNo
-     */
-    protected function enqueueDeletion( $contentId, $versionNo = null )
-    {
-        $searchHandler = $this->persistenceHandler->searchHandler();
-
-        $this->repository->commitEvent(
-            function ( $lastEvent ) use ( $searchHandler, $contentId, $versionNo )
-            {
-                $searchHandler->setCommit( $lastEvent );
-                $searchHandler->deleteContent( $contentId, $versionNo );
-            }
-        );
-    }
-
-    /**
-     * Enqueue the deletion of location
-     *
-     * @param mixed $locationId
-     */
-    protected function enqueueDeletionLocation( $locationId )
-    {
-        $searchHandler = $this->persistenceHandler->searchHandler();
-
-        $this->repository->commitEvent(
-            function ( $lastEvent ) use ( $searchHandler, $locationId )
-            {
-                $searchHandler->setCommit( $lastEvent );
-                $searchHandler->deleteLocation( $locationId );
-            }
-        );
     }
 }

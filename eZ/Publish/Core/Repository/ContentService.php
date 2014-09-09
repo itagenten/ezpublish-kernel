@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\Core\Repository\ContentService class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  * @package eZ\Publish\Core\Repository
  */
@@ -43,6 +43,7 @@ use eZ\Publish\SPI\Persistence\Content\UpdateStruct as SPIContentUpdateStruct;
 use eZ\Publish\SPI\Persistence\Content\Field as SPIField;
 use eZ\Publish\SPI\Persistence\Content\Relation\CreateStruct as SPIRelationCreateStruct;
 use Exception;
+use eZ\Publish\API\Repository\Exceptions\NotImplementedException;
 
 /**
  * This class provides service methods for managing content
@@ -1168,7 +1169,7 @@ class ContentService implements ContentServiceInterface
      */
     public function translateVersion( TranslationInfo $translationInfo, APITranslationValues $translationValues, User $modifier = null )
     {
-
+        throw new NotImplementedException( __METHOD__ );
     }
 
     /**
@@ -1327,7 +1328,7 @@ class ContentService implements ContentServiceInterface
                     $languageCodes,
                     $contentType
                 ),
-                "creatorId" => $this->repository->getCurrentUser()->id,
+                "creatorId" => $contentUpdateStruct->creatorId ?: $this->repository->getCurrentUser()->id,
                 "fields" => $spiFields,
                 "modificationDate" => time(),
                 "initialLanguageId" => $this->persistenceHandler->contentLanguageHandler()->loadByLanguageCode(
@@ -1900,7 +1901,7 @@ class ContentService implements ContentServiceInterface
      */
     public function addTranslationInfo( TranslationInfo $translationInfo )
     {
-
+        throw new NotImplementedException( __METHOD__ );
     }
 
     /**

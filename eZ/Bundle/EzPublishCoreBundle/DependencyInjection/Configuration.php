@@ -2,34 +2,35 @@
 /**
  * File containing the Configuration class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\DependencyInjection;
 
+use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\ParserInterface;
+use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\SiteAccessAware\Configuration as SiteAccessConfiguration;
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\Collector\SuggestionCollectorInterface;
-use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
-class Configuration implements ConfigurationInterface
+class Configuration extends SiteAccessConfiguration
 {
     /**
-     * @var \eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Parser[]
+     * @var \eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\ParserInterface
      */
-    private $configParsers;
+    private $mainConfigParser;
 
     /**
      * @var Configuration\Suggestion\Collector\SuggestionCollectorInterface
      */
     private $suggestionCollector;
 
-    public function __construct( array $configParsers, SuggestionCollectorInterface $suggestionCollector )
+    public function __construct( ParserInterface $mainConfigParser, SuggestionCollectorInterface $suggestionCollector )
     {
         $this->suggestionCollector = $suggestionCollector;
-        $this->configParsers = $configParsers;
+        $this->mainConfigParser = $mainConfigParser;
     }
 
     /**
@@ -46,9 +47,11 @@ class Configuration implements ConfigurationInterface
         $this->addSiteaccessSection( $rootNode );
         $this->addImageMagickSection( $rootNode );
         $this->addHttpCacheSection( $rootNode );
-        $this->addSystemSection( $rootNode );
         $this->addPageSection( $rootNode );
         $this->addRouterSection( $rootNode );
+
+        // Delegate SiteAccess config to configuration parsers
+        $this->mainConfigParser->addSemanticConfig( $this->generateScopeBaseNode( $rootNode ) );
 
         return $treeBuilder;
     }
@@ -76,15 +79,14 @@ class Configuration implements ConfigurationInterface
                             ->then(
                                 function ()
                                 {
-                                    return array( 'engine' => '%ezpublish.api.storage_engine.default%', 'connection' => 'default' );
+                                    return array( 'engine' => '%ezpublish.api.storage_engine.default%', 'connection' => null );
                                 }
                             )
                         ->end()
                         ->children()
                             ->scalarNode( 'engine' )->isRequired()->info( 'The storage engine to use' )->end()
                             ->scalarNode( 'connection' )
-                                ->defaultValue( 'default' )
-                                ->info( 'The connection name, if applicable (e.g. Doctrine connection name). Defaults to "default"' )
+                                ->info( 'The connection name, if applicable (e.g. Doctrine connection name). If not set, the default connection will be used.' )
                             ->end()
                             ->arrayNode( 'config' )
                                 ->info( 'Arbitrary configuration options, supported by your storage engine' )
@@ -189,47 +191,6 @@ class Configuration implements ConfigurationInterface
                     ->prototype( 'scalar' )->end()
                 ->end()
             ->end();
-    }
-
-    private function addSystemSection( ArrayNodeDefinition $rootNode )
-    {
-        $systemNodeBuilder = $rootNode
-            ->children()
-                ->arrayNode( 'system' )
-                    ->info( 'System configuration. First key is always a siteaccess or siteaccess group name' )
-                    ->example(
-                        array(
-                            'ezdemo_site'      => array(
-                                'languages'        => array( 'eng-GB', 'fre-FR' ),
-                                'content'          => array(
-                                    'view_cache'   => true,
-                                    'ttl_cache'    => true,
-                                    'default_ttl'  => 30
-                                )
-                            ),
-                            'ezdemo_group'     => array(
-                                'database' => array(
-                                    'type'             => 'mysql',
-                                    'server'           => 'localhost',
-                                    'port'             => 3306,
-                                    'user'             => 'root',
-                                    'password'         => 'root',
-                                    'database_name'    => 'ezdemo'
-                                )
-                            )
-                        )
-                    )
-                    ->useAttributeAsKey( 'key' )
-                    ->requiresAtLeastOneElement()
-                    ->normalizeKeys( false )
-                    ->prototype( 'array' )
-                        ->children();
-
-        // Delegate to configuration parsers
-        foreach ( $this->configParsers as $parser )
-        {
-            $parser->addSemanticConfig( $systemNodeBuilder );
-        }
     }
 
     private function addImageMagickSection( ArrayNodeDefinition $rootNode )

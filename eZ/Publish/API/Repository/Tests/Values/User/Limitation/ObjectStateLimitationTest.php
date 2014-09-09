@@ -2,8 +2,8 @@
 /**
  * File containing the ObjectStateLimitationTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -32,6 +32,7 @@ class ObjectStateLimitationTest extends BaseLimitationTest
     public function testObjectStateLimitationAllow()
     {
         $repository = $this->getRepository();
+        $notLockedState = $this->generateId( 'objectstate', 2 );
 
         $contentService = $repository->getContentService();
         /* BEGIN: Use Case */
@@ -63,8 +64,7 @@ class ObjectStateLimitationTest extends BaseLimitationTest
             new ObjectStateLimitation(
                 array(
                     'limitationValues' => array(
-                        // 'not_locked' state
-                        2
+                        $notLockedState
                     )
                 )
             )
@@ -99,6 +99,7 @@ class ObjectStateLimitationTest extends BaseLimitationTest
     public function testObjectStateLimitationForbid()
     {
         $repository = $this->getRepository();
+        $lockedState = $this->generateId( 'objectstate', 1 );
 
         $contentService = $repository->getContentService();
         /* BEGIN: Use Case */
@@ -130,8 +131,7 @@ class ObjectStateLimitationTest extends BaseLimitationTest
             new ObjectStateLimitation(
                 array(
                     'limitationValues' => array(
-                        // 'locked' state
-                        1
+                        $lockedState
                     )
                 )
             )

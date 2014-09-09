@@ -2,8 +2,8 @@
 /**
  * File containing the Relation converter
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -40,6 +40,7 @@ class Relation implements Converter
         $storageFieldValue->dataInt = !empty( $value->data['destinationContentId'] )
             ? $value->data['destinationContentId']
             : null;
+        $storageFieldValue->sortKeyInt = (int)$value->sortKey;
     }
 
     /**
@@ -53,7 +54,7 @@ class Relation implements Converter
         $fieldValue->data = array(
             "destinationContentId" => $value->dataInt ?: null,
         );
-        $fieldValue->sortKey = false;
+        $fieldValue->sortKey = (int)$value->sortKeyInt;
     }
 
     /**

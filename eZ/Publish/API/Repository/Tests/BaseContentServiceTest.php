@@ -2,8 +2,8 @@
 /**
  * File containing the BaseContentServiceTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -170,6 +170,7 @@ abstract class BaseContentServiceTest extends BaseTest
         // Create an update struct and modify some fields
         $contentUpdate = $contentService->newContentUpdateStruct();
         $contentUpdate->initialLanguageCode = 'eng-US';
+        $contentUpdate->creatorId = $this->generateId( 'user', 10 );
         $contentUpdate->setField( 'name', 'An awesome forum²' );
         $contentUpdate->setField( 'name', 'An awesome forum²³', 'eng-GB' );
 

@@ -2,14 +2,14 @@
 /**
  * File containing a test class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\REST\Server\Tests\Input\Parser;
 
-use eZ\Publish\Core\REST\Server\Input\Parser;
+use eZ\Publish\Core\REST\Common\Input\Parser;
 
 class ContentObjectStatesTest extends BaseTest
 {
@@ -97,7 +97,7 @@ class ContentObjectStatesTest extends BaseTest
     /**
      * Gets the ContentObjectStates parser
      *
-     * @return \eZ\Publish\Core\REST\Server\Input\Parser\ContentObjectStates;
+     * @return \eZ\Publish\Core\REST\Common\Input\Parser\ContentObjectStates;
      */
     protected function internalGetParser()
     {

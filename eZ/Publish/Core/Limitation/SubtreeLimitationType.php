@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\API\Repository\Values\User\Limitation\SubtreeLimitation class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -26,6 +26,7 @@ use eZ\Publish\API\Repository\Values\Content\Query\Criterion;
 use eZ\Publish\SPI\Limitation\Type as SPILimitationTypeInterface;
 use eZ\Publish\Core\FieldType\ValidationError;
 use eZ\Publish\SPI\Persistence\Content\Location as SPILocation;
+use eZ\Publish\Core\Repository\Values\Content\Query\Criterion\PermissionSubtree;
 
 /**
  * SubtreeLimitation is a Content Limitation & a Role Limitation
@@ -148,10 +149,8 @@ class SubtreeLimitationType extends AbstractPersistenceLimitationType implements
         }
         else if ( !$object instanceof ContentInfo )
         {
-            throw new InvalidArgumentException(
-                '$object',
-                'Must be of type: ContentCreateStruct, Content, VersionInfo or ContentInfo'
-            );
+            // As this is Role limitation we need to signal abstain on unsupported $object
+            return self::ACCESS_ABSTAIN;
         }
 
         // Load locations if no specific placement was provided
@@ -167,8 +166,8 @@ class SubtreeLimitationType extends AbstractPersistenceLimitationType implements
         {
             if ( !$target instanceof Location && !$target instanceof SPILocation )
             {
-                // Since this limitation is used as role limitation, "wrong" $target simply returns false
-                return false;
+                // As this is Role limitation we need to signal abstain on unsupported $targets
+                return self::ACCESS_ABSTAIN;
             }
 
             foreach ( $value->limitationValues as $limitationPathString )
@@ -252,10 +251,10 @@ class SubtreeLimitationType extends AbstractPersistenceLimitationType implements
             throw new \RuntimeException( "\$value->limitationValues is empty, it should not have been stored in the first place" );
 
         if ( !isset( $value->limitationValues[1] ) )// 1 limitation value: EQ operation
-            return new Criterion\Subtree( $value->limitationValues[0] );
+            return new PermissionSubtree( $value->limitationValues[0] );
 
         // several limitation values: IN operation
-        return new Criterion\Subtree( $value->limitationValues );
+        return new PermissionSubtree( $value->limitationValues );
     }
 
     /**

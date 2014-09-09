@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\SPI\Tests\FieldType\SelectionIntegrationTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -38,21 +38,15 @@ class SelectionIntegrationTest extends BaseIntegrationTest
      */
     public function getCustomHandler()
     {
-        $handler = $this->getHandler();
-
         $fieldType = new FieldType\Selection\Type();
         $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
-        $handler->getFieldTypeRegistry()->register( 'ezselection', $fieldType );
-        $handler->getStorageRegistry()->register(
+
+        return $this->getHandler(
             'ezselection',
+            $fieldType,
+            new Legacy\Content\FieldValue\Converter\Selection(),
             new FieldType\NullStorage()
         );
-        $handler->getFieldValueConverterRegistry()->register(
-            'ezselection',
-            new Legacy\Content\FieldValue\Converter\Selection()
-        );
-
-        return $handler;
     }
 
     /**

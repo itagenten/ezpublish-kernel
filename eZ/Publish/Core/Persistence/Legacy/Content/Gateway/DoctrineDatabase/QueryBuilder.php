@@ -2,8 +2,8 @@
 /**
  * File containing the DoctrineDatabase query builder class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -110,15 +110,9 @@ class QueryBuilder
             )
         )->leftJoin(
             $this->dbHandler->quoteTable( 'ezcontentobject_tree' ),
-            $query->expr->lAnd(
-                $query->expr->eq(
-                    $this->dbHandler->quoteColumn( 'contentobject_id', 'ezcontentobject_tree' ),
-                    $this->dbHandler->quoteColumn( 'contentobject_id', 'ezcontentobject_version' )
-                ),
-                $query->expr->eq(
-                    $this->dbHandler->quoteColumn( 'contentobject_version', 'ezcontentobject_tree' ),
-                    $this->dbHandler->quoteColumn( 'version', 'ezcontentobject_version' )
-                )
+            $query->expr->eq(
+                $this->dbHandler->quoteColumn( 'contentobject_id', 'ezcontentobject_tree' ),
+                $this->dbHandler->quoteColumn( 'contentobject_id', 'ezcontentobject_version' )
             )
         )
         // @todo: Joining with ezcontentobject_name is probably a VERY bad way to gather that information
@@ -231,10 +225,6 @@ class QueryBuilder
                 $query->expr->eq(
                     $this->dbHandler->quoteColumn( 'contentobject_id', 'ezcontentobject_tree' ),
                     $this->dbHandler->quoteColumn( 'contentobject_id', 'ezcontentobject_version' )
-                ),
-                $query->expr->eq(
-                    $this->dbHandler->quoteColumn( 'contentobject_version', 'ezcontentobject_tree' ),
-                    $this->dbHandler->quoteColumn( 'version', 'ezcontentobject_version' )
                 ),
                 $query->expr->eq(
                     $this->dbHandler->quoteColumn( 'main_node_id', 'ezcontentobject_tree' ),

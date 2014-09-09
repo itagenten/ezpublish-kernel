@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\Core\Repository\RoleService class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -36,7 +36,7 @@ use eZ\Publish\API\Repository\Repository as RepositoryInterface;
 use eZ\Publish\SPI\Persistence\User\Handler;
 use eZ\Publish\Core\Base\Exceptions\InvalidArgumentValue;
 use eZ\Publish\Core\Base\Exceptions\InvalidArgumentException;
-use eZ\Publish\Core\Base\Exceptions\NotFoundException;
+use eZ\Publish\Core\Base\Exceptions\NotFound\LimitationNotFoundException;
 use eZ\Publish\Core\Base\Exceptions\UnauthorizedException;
 use eZ\Publish\Core\Base\Exceptions\BadStateException;
 use eZ\Publish\API\Repository\Exceptions\NotFoundException as APINotFoundException;
@@ -98,7 +98,6 @@ class RoleService implements RoleServiceInterface
                     'assign' => array( 'Class' => true, 'Section' => true, 'Owner' => true, 'NewSection' => true ),
                 ),
                 'state' => array(
-                    // @todo 'NewState' Limitation and Limitation type is missing (like 'NewSection')
                     'assign' => array( 'Class' => true, 'Section' => true, 'Owner' => true, 'Group' => true, 'Node' => true, 'Subtree' => true, 'State' => true, 'NewState' => true ),
                 ),
                 'user' => array(
@@ -915,6 +914,7 @@ class RoleService implements RoleServiceInterface
     /**
      * Maps provided SPI Policy value object to API Policy value object
      *
+     * @uses getLimitationType
      * @access private Only accessible for other services and the internals of the repository
      * @param \eZ\Publish\SPI\Persistence\User\Policy $policy
      * @param \eZ\Publish\SPI\Persistence\User\Role|null $role
@@ -1020,7 +1020,7 @@ class RoleService implements RoleServiceInterface
     public function getLimitationType( $identifier )
     {
         if ( !isset( $this->settings['limitationTypes'][$identifier] ) )
-            throw new NotFoundException( 'Limitation', $identifier );
+            throw new LimitationNotFoundException( $identifier );
 
         return $this->settings['limitationTypes'][$identifier];
     }

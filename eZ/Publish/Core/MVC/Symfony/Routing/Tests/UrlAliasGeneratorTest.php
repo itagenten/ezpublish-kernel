@@ -2,8 +2,8 @@
 /**
  * File containing the UrlAliasGeneratorTest class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -47,11 +47,23 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
      */
     private $urlAliasGenerator;
 
+    /**
+     * @var \PHPUnit_Framework_MockObject_MockObject
+     */
+    private $siteAccessRouter;
+
+    /**
+     * @var \PHPUnit_Framework_MockObject_MockObject
+     */
+    private $configResolver;
+
     protected function setUp()
     {
         parent::setUp();
         $this->router = $this->getMock( 'Symfony\\Component\\Routing\\RouterInterface' );
         $this->logger = $this->getMock( 'Psr\\Log\\LoggerInterface' );
+        $this->siteAccessRouter = $this->getMock( 'eZ\Publish\Core\MVC\Symfony\SiteAccess\SiteAccessRouterInterface' );
+        $this->configResolver = $this->getMock( 'eZ\Publish\Core\MVC\ConfigResolverInterface' );
         $repositoryClass = 'eZ\\Publish\\Core\\Repository\\Repository';
         $this->repository = $repository = $this
             ->getMockBuilder( $repositoryClass )
@@ -67,7 +79,7 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
         $this->locationService = $this->getMock( 'eZ\\Publish\\API\\Repository\\LocationService' );
         $this->repository
             ->expects( $this->any() )
-            ->method( 'getUrlAliasService' )
+            ->method( 'getURLAliasService' )
             ->will( $this->returnValue( $this->urlAliasService ) );
         $this->repository
             ->expects( $this->any() )
@@ -77,8 +89,10 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
         $this->urlAliasGenerator = new UrlAliasGenerator(
             $this->repository,
             $this->router,
-            $this->logger
+            $this->configResolver
         );
+        $this->urlAliasGenerator->setLogger( $this->logger );
+        $this->urlAliasGenerator->setSiteAccessRouter( $this->siteAccessRouter );
     }
 
     public function testGetPathPrefixByRootLocationId()
@@ -146,10 +160,6 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider providerTestDoGenerate
-     *
-     * @param \eZ\Publish\API\Repository\Values\Content\URLAlias $urlAlias
-     * @param array $parameters
-     * @param $expected
      */
     public function testDoGenerate( URLAlias $urlAlias, array $parameters, $expected )
     {
@@ -160,13 +170,39 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
             ->with( $location, false )
             ->will( $this->returnValue( array( $urlAlias ) ) );
 
-        $siteAccessMatcher = $this->getMock( 'eZ\\Publish\\Core\\MVC\\Symfony\\SiteAccess\\URILexer' );
-        $siteAccessMatcher
+        $this->urlAliasGenerator->setSiteAccess( new SiteAccess( 'test', 'fake', $this->getMock( 'eZ\\Publish\\Core\\MVC\\Symfony\\SiteAccess\\URILexer' ) ) );
+
+        $this->assertSame( $expected, $this->urlAliasGenerator->doGenerate( $location, $parameters ) );
+    }
+
+    /**
+     * @dataProvider providerTestDoGenerate
+     */
+    public function testDoGenerateWithSiteAccessParam( URLAlias $urlAlias, array $parameters, $expected )
+    {
+        $siteaccessName = 'foo';
+        $parameters += array( 'siteaccess' => $siteaccessName );
+        $languages = array( 'esl-ES', 'fre-FR', 'eng-GB' );
+        $this->configResolver
             ->expects( $this->once() )
-            ->method( 'analyseLink' )
-            ->with( $urlAlias->path )
-            ->will( $this->returnArgument( 0 ) );
-        $this->urlAliasGenerator->setSiteAccess( new SiteAccess( 'test', 'fake', $siteAccessMatcher ) );
+            ->method( 'getParameter' )
+            ->with( 'languages', null, $siteaccessName )
+            ->will( $this->returnValue( $languages ) );
+
+        $location = new Location( array( 'id' => 123 ) );
+        $this->urlAliasService
+            ->expects( $this->exactly( 2 ) )
+            ->method( 'listLocationAliases' )
+            ->will(
+                $this->returnValueMap(
+                    array(
+                        array( $location, false, 'esl-ES', null, $languages, array() ),
+                        array( $location, false, 'fre-FR', null, $languages, array( $urlAlias ) ),
+                    )
+                )
+            );
+
+        $this->urlAliasGenerator->setSiteAccess( new SiteAccess( 'test', 'fake', $this->getMock( 'eZ\\Publish\\Core\\MVC\\Symfony\\SiteAccess\\URILexer' ) ) );
 
         $this->assertSame( $expected, $this->urlAliasGenerator->doGenerate( $location, $parameters ) );
     }
@@ -215,11 +251,6 @@ class UrlAliasGeneratorTest extends PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider providerTestDoGenerateRootLocation
-     *
-     * @param URLAlias $urlAlias
-     * @param $isOutsideAndNotExcluded
-     * @param $expected
-     * @param $pathPrefix
      */
     public function testDoGenerateRootLocation( URLAlias $urlAlias, $isOutsideAndNotExcluded, $expected, $pathPrefix )
     {

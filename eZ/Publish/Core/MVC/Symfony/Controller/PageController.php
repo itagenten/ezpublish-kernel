@@ -2,8 +2,8 @@
 /**
  * File containing the PageController class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -75,5 +75,30 @@ class PageController extends Controller
             )
         );
         return $response;
+    }
+
+    /**
+     * Renders the block with given $id.
+     *
+     * This method can be used with ESI rendering strategy.
+     *
+     * @uses self::viewBlock()
+     *
+     * @throws \eZ\Publish\API\Repository\Exceptions\NotFoundException If block could not be found.
+     *
+     * @param mixed $id Block id
+     * @param array $params
+     * @param array $cacheSettings settings for the HTTP cache, 'smax-age' and
+     *              'max-age' are checked.
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function viewBlockById( $id, array $params = array(), array $cacheSettings = array() )
+    {
+        return $this->viewBlock(
+            $this->pageService->loadBlock( $id ),
+            $params,
+            $cacheSettings
+        );
     }
 }

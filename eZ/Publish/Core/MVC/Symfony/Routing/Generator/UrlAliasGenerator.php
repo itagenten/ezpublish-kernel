@@ -2,27 +2,24 @@
 /**
  * File containing the UrlAliasGenerator class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\MVC\Symfony\Routing\Generator;
 
 use eZ\Publish\API\Repository\Repository;
-use Psr\Log\LoggerInterface;
+use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\Core\MVC\Symfony\Routing\Generator;
 use Symfony\Component\Routing\RouterInterface;
-use eZ\Publish\Core\MVC\Symfony\SiteAccess;
-use eZ\Publish\Core\MVC\Symfony\SiteAccess\SiteAccessAware;
-use eZ\Publish\Core\MVC\Symfony\SiteAccess\URILexer;
 
 /**
  * URL generator for UrlAlias based links
  *
  * @see \eZ\Publish\Core\MVC\Symfony\Routing\UrlAliasRouter
  */
-class UrlAliasGenerator extends Generator implements SiteAccessAware
+class UrlAliasGenerator extends Generator
 {
     const INTERNAL_LOCATION_ROUTE = '_ezpublishLocation';
 
@@ -37,11 +34,6 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
      * @var \Symfony\Component\Routing\RouterInterface
      */
     private $defaultRouter;
-
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
-    private $logger;
 
     /**
      * @var int
@@ -59,23 +51,15 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
     private $pathPrefixMap = array();
 
     /**
-     * @var \eZ\Publish\Core\MVC\Symfony\SiteAccess
+     * @var \eZ\Publish\Core\MVC\ConfigResolverInterface
      */
-    private $siteAccess;
+    private $configResolver;
 
-    public function __construct( Repository $repository, RouterInterface $defaultRouter, LoggerInterface $logger = null )
+    public function __construct( Repository $repository, RouterInterface $defaultRouter, ConfigResolverInterface $configResolver )
     {
         $this->repository = $repository;
         $this->defaultRouter = $defaultRouter;
-        $this->logger = $logger;
-    }
-
-    /**
-     * @param SiteAccess $siteAccess
-     */
-    public function setSiteAccess( SiteAccess $siteAccess = null )
-    {
-        $this->siteAccess = $siteAccess;
+        $this->configResolver = $configResolver;
     }
 
     /**
@@ -89,7 +73,26 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
      */
     public function doGenerate( $location, array $parameters )
     {
-        $urlAliases = $this->repository->getURLAliasService()->listLocationAliases( $location, false );
+        $urlAliasService = $this->repository->getURLAliasService();
+        if ( isset( $parameters['siteaccess'] ) )
+        {
+            // We generate for a different SiteAccess, so potentially in a different language.
+            // We then loop against configured languages until we find a valid URLAlias.
+            $languages = $this->configResolver->getParameter( 'languages', null, $parameters['siteaccess'] );
+            foreach ( $languages as $lang )
+            {
+                if ( $urlAliases = $urlAliasService->listLocationAliases( $location, false, $lang, null, $languages ) )
+                {
+                    break;
+                }
+            }
+
+            unset( $parameters['siteaccess'] );
+        }
+        else
+        {
+            $urlAliases = $urlAliasService->listLocationAliases( $location, false );
+        }
 
         $queryString = '';
         if ( !empty( $parameters ) )
@@ -123,11 +126,6 @@ class UrlAliasGenerator extends Generator implements SiteAccessAware
                 self::INTERNAL_LOCATION_ROUTE,
                 array( 'locationId' => $location->id )
             );
-        }
-
-        if ( isset( $this->siteAccess ) && $this->siteAccess->matcher instanceof URILexer )
-        {
-            $path = $this->siteAccess->matcher->analyseLink( $path );
         }
 
         $path = $path ?: '/';

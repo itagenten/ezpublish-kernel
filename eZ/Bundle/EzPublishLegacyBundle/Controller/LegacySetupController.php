@@ -2,8 +2,8 @@
 /**
  * File containing the LegacySetupController class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 namespace eZ\Bundle\EzPublishLegacyBundle\Controller;
@@ -132,6 +132,13 @@ class LegacySetupController extends ContainerAware
         // Check that eZ Publish Legacy was actually installed, since one step can run several steps
         if ( $this->legacyConfigResolver->getParameter( 'SiteAccessSettings.CheckValidity' ) == 'false' )
         {
+            // If using kickstart.ini, legacy wizard will artificially create entries in $_POST
+            // and in this case Symfony Request is not aware of them.
+            // We then add them manually to the ParameterBag.
+            if ( !$request->has( 'P_chosen_site_package-0' ) )
+            {
+                $request->add( $_POST );
+            }
             $chosenSitePackage = $request->get( 'P_chosen_site_package-0' );
 
             // match mode (host, url or port)

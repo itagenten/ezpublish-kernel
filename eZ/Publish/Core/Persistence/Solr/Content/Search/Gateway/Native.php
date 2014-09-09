@@ -2,8 +2,8 @@
 /**
  * File containing the Content Search Gateway class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -202,7 +202,7 @@ class Native extends Gateway
         $updates   = $this->createUpdates( $documents );
         $result   = $this->client->request(
             'POST',
-            '/solr/update?' . ( $this->commit ? "commit=true&" : "" ) . 'wt=json',
+            '/solr/update?' . ( $this->commit ? "softCommit=true&" : "" ) . 'wt=json',
             new Message(
                 array(
                     'Content-Type' => 'text/xml',
@@ -229,7 +229,7 @@ class Native extends Gateway
     {
         $this->client->request(
             'POST',
-            '/solr/update?' . ( $this->commit ? "commit=true&" : "" ) . 'wt=json',
+            '/solr/update?' . ( $this->commit ? "softCommit=true&" : "" ) . 'wt=json',
             new Message(
                 array(
                     'Content-Type' => 'text/xml',
@@ -280,7 +280,7 @@ class Native extends Gateway
         {
             $this->client->request(
                 "POST",
-                "/solr/update?" . ( $this->commit ? "commit=true&" : "" ) . "wt=json",
+                "/solr/update?" . ( $this->commit ? "softCommit=true&" : "" ) . "wt=json",
                 new Message(
                     array(
                         "Content-Type" => "text/xml",
@@ -332,7 +332,7 @@ class Native extends Gateway
 
             $this->client->request(
                 "POST",
-                "/solr/update/json?" . ( $this->commit ? "commit=true&" : "" ) . "wt=json",
+                "/solr/update/json?" . ( $this->commit ? "softCommit=true&" : "" ) . "wt=json",
                 new Message(
                     array(
                         "Content-Type: application/json",
@@ -352,7 +352,7 @@ class Native extends Gateway
     {
         $this->client->request(
             'POST',
-            '/solr/update?' . ( $this->commit ? "commit=true&" : "" ) . 'wt=json',
+            '/solr/update?' . ( $this->commit ? "softCommit=true&" : "" ) . 'wt=json',
             new Message(
                 array(
                     'Content-Type' => 'text/xml',

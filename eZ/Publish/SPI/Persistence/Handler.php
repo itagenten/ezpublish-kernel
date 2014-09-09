@@ -2,8 +2,8 @@
 /**
  * File containing the Persistence Handler interface
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -75,10 +75,17 @@ interface Handler
     public function urlWildcardHandler();
 
     /**
+     * @return \eZ\Publish\SPI\Persistence\TransactionHandler
+     */
+    public function transactionHandler();
+
+    /**
      * Begin transaction
      *
      * Begins an transaction, make sure you'll call commit or rollback when done,
      * otherwise work will be lost.
+     *
+     * @deprecated Since 5.3 {@use transactionHandler()->beginTransaction()}
      */
     public function beginTransaction();
 
@@ -88,6 +95,8 @@ interface Handler
      * Commit transaction, or throw exceptions if no transactions has been started.
      *
      * @throws \RuntimeException If no transaction has been started
+     *
+     * @deprecated Since 5.3 {@use transactionHandler()->commit()}
      */
     public function commit();
 
@@ -97,6 +106,8 @@ interface Handler
      * Rollback transaction, or throw exceptions if no transactions has been started.
      *
      * @throws \RuntimeException If no transaction has been started
+     *
+     * @deprecated Since 5.3 {@use transactionHandler()->rollback()}
      */
     public function rollback();
 }

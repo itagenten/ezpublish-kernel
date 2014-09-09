@@ -2,8 +2,8 @@
 /**
  * File containing a Test Case for LimitationType class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -21,6 +21,7 @@ use eZ\Publish\Core\Limitation\SubtreeLimitationType;
 use eZ\Publish\Core\Repository\Values\Content\Location;
 use eZ\Publish\Core\Repository\Values\Content\ContentCreateStruct;
 use eZ\Publish\SPI\Persistence\Content\Location as SPILocation;
+use eZ\Publish\SPI\Limitation\Type as LimitationType;
 
 /**
  * Test Case for LimitationType
@@ -58,7 +59,6 @@ class SubtreeLimitationTypeTest extends Base
     }
 
     /**
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::__construct
      *
      * @return \eZ\Publish\Core\Limitation\SubtreeLimitationType
      */
@@ -82,7 +82,6 @@ class SubtreeLimitationTypeTest extends Base
     /**
      * @dataProvider providerForTestAcceptValue
      * @depends testConstruct
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::acceptValue
      *
      * @param \eZ\Publish\API\Repository\Values\User\Limitation\SubtreeLimitation $limitation
      * @param \eZ\Publish\Core\Limitation\SubtreeLimitationType $limitationType
@@ -102,13 +101,13 @@ class SubtreeLimitationTypeTest extends Base
             array( new SubtreeLimitation( array( 'limitationValues' => array( true ) ) ) ),
             array( new SubtreeLimitation( array( 'limitationValues' => array( 1 ) ) ) ),
             array( new SubtreeLimitation( array( 'limitationValues' => array( 0 ) ) ) ),
+            array( new SubtreeLimitation( array( 'limitationValues' => '/1/2/' ) ) ),
         );
     }
 
     /**
      * @dataProvider providerForTestAcceptValueException
      * @depends testConstruct
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::acceptValue
      * @expectedException \eZ\Publish\API\Repository\Exceptions\InvalidArgumentException
      *
      * @param \eZ\Publish\API\Repository\Values\User\Limitation $limitation
@@ -133,7 +132,6 @@ class SubtreeLimitationTypeTest extends Base
 
     /**
      * @dataProvider providerForTestValidatePass
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::validate
      *
      * @param \eZ\Publish\API\Repository\Values\User\Limitation\SubtreeLimitation $limitation
      */
@@ -182,7 +180,6 @@ class SubtreeLimitationTypeTest extends Base
 
     /**
      * @dataProvider providerForTestValidateError
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::validate
      *
      * @param \eZ\Publish\API\Repository\Values\User\Limitation\SubtreeLimitation $limitation
      * @param int $errorCount
@@ -221,7 +218,6 @@ class SubtreeLimitationTypeTest extends Base
     }
 
     /**
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::validate
      */
     public function testValidateErrorWrongPath()
     {
@@ -255,7 +251,6 @@ class SubtreeLimitationTypeTest extends Base
 
     /**
      * @depends testConstruct
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::buildValue
      *
      * @param \eZ\Publish\Core\Limitation\SubtreeLimitationType $limitationType
      */
@@ -321,7 +316,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentInfo( array( 'published' => true ) ),
                 'targets' => array( new Location() ),
                 'persistence' => array(),
-                'expected' => false
+                'expected' => LimitationType::ACCESS_DENIED
             ),
             // ContentInfo, with targets, no access
             array(
@@ -329,7 +324,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentInfo( array( 'published' => true ) ),
                 'targets' => array( new Location( array( 'pathString' => '/1/55/' ) ) ),
                 'persistence' => array(),
-                'expected' => false
+                'expected' => LimitationType::ACCESS_DENIED
             ),
             // ContentInfo, with targets, with access
             array(
@@ -337,7 +332,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentInfo( array( 'published' => true ) ),
                 'targets' => array( new Location( array( 'pathString' => '/1/2/' ) ) ),
                 'persistence' => array(),
-                'expected' => true
+                'expected' => LimitationType::ACCESS_GRANTED
             ),
             // ContentInfo, no targets, with access
             array(
@@ -345,7 +340,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentInfo( array( 'published' => true ) ),
                 'targets' => null,
                 'persistence' => array( new Location( array( 'pathString' => '/1/2/' ) ) ),
-                'expected' => true
+                'expected' => LimitationType::ACCESS_GRANTED
             ),
             // ContentInfo, no targets, no access
             array(
@@ -353,7 +348,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentInfo( array( 'published' => true ) ),
                 'targets' => null,
                 'persistence' => array( new Location( array( 'pathString' => '/1/55/' ) ) ),
-                'expected' => false
+                'expected' => LimitationType::ACCESS_DENIED
             ),
             // ContentInfo, no targets, un-published, with access
             array(
@@ -361,7 +356,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentInfo( array( 'published' => false ) ),
                 'targets' => null,
                 'persistence' => array( new Location( array( 'pathString' => '/1/2/' ) ) ),
-                'expected' => true
+                'expected' => LimitationType::ACCESS_GRANTED
             ),
             // ContentInfo, no targets, un-published, no access
             array(
@@ -369,7 +364,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentInfo( array( 'published' => false ) ),
                 'targets' => null,
                 'persistence' => array( new Location( array( 'pathString' => '/1/55/' ) ) ),
-                'expected' => false
+                'expected' => LimitationType::ACCESS_DENIED
             ),
             // Content, with targets, with access
             array(
@@ -377,7 +372,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => $contentMock,
                 'targets' => array( new Location( array( 'pathString' => '/1/2/' ) ) ),
                 'persistence' => array(),
-                'expected' => true
+                'expected' => LimitationType::ACCESS_GRANTED
             ),
             // VersionInfo, with targets, with access
             array(
@@ -385,7 +380,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => $versionInfoMock2,
                 'targets' => array( new Location( array( 'pathString' => '/1/2/' ) ) ),
                 'persistence' => array(),
-                'expected' => true
+                'expected' => LimitationType::ACCESS_GRANTED
             ),
             // ContentCreateStruct, no targets, no access
             array(
@@ -393,7 +388,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentCreateStruct(),
                 'targets' => array(),
                 'persistence' => array(),
-                'expected' => false
+                'expected' => LimitationType::ACCESS_DENIED
             ),
             // ContentCreateStruct, with targets, no access
             array(
@@ -401,7 +396,7 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentCreateStruct(),
                 'targets' => array( new LocationCreateStruct( array( 'parentLocationId' => 55 ) ) ),
                 'persistence' => array( new Location( array( 'pathString' => '/1/55/' ) ) ),
-                'expected' => false
+                'expected' => LimitationType::ACCESS_DENIED
             ),
             // ContentCreateStruct, with targets, with access
             array(
@@ -409,7 +404,15 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentCreateStruct(),
                 'targets' => array( new LocationCreateStruct( array( 'parentLocationId' => 43 ) ) ),
                 'persistence' => array( new Location( array( 'pathString' => '/1/43/' ) ) ),
-                'expected' => true
+                'expected' => LimitationType::ACCESS_GRANTED
+            ),
+            // invalid object
+            array(
+                'limitation' => new SubtreeLimitation(),
+                'object' => new ObjectStateLimitation(),
+                'targets' => array( new LocationCreateStruct( array( 'parentLocationId' => 43 ) ) ),
+                'persistence' => array(),
+                'expected' => LimitationType::ACCESS_ABSTAIN
             ),
             // invalid target
             array(
@@ -417,14 +420,13 @@ class SubtreeLimitationTypeTest extends Base
                 'object' => new ContentInfo( array( 'published' => true ) ),
                 'targets' => array( new ObjectStateLimitation() ),
                 'persistence' => array(),
-                'expected' => false
+                'expected' => LimitationType::ACCESS_ABSTAIN
             ),
         );
     }
 
     /**
      * @dataProvider providerForTestEvaluate
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::evaluate
      */
     public function testEvaluate(
         SubtreeLimitation $limitation,
@@ -486,7 +488,6 @@ class SubtreeLimitationTypeTest extends Base
             $targets
         );
 
-        self::assertInternalType( 'boolean', $value );
         self::assertEquals( $expected, $value );
     }
 
@@ -503,13 +504,6 @@ class SubtreeLimitationTypeTest extends Base
                 'targets' => array( new Location() ),
                 'persistence' => array(),
             ),
-            // invalid object
-            array(
-                'limitation' => new SubtreeLimitation(),
-                'object' => new ObjectStateLimitation(),
-                'targets' => array( new Location() ),
-                'persistence' => array(),
-            ),
             // invalid target when using ContentCreateStruct
             array(
                 'limitation' => new SubtreeLimitation(),
@@ -522,7 +516,6 @@ class SubtreeLimitationTypeTest extends Base
 
     /**
      * @dataProvider providerForTestEvaluateInvalidArgument
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::evaluate
      * @expectedException \eZ\Publish\API\Repository\Exceptions\InvalidArgumentException
      */
     public function testEvaluateInvalidArgument(
@@ -551,12 +544,11 @@ class SubtreeLimitationTypeTest extends Base
             $object,
             $targets
         );
-        var_dump( $v );
+        var_dump( $v );// intentional, debug in case no exception above
     }
 
     /**
      * @depends testConstruct
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::getCriterion
      * @expectedException \RuntimeException
      *
      * @param \eZ\Publish\Core\Limitation\SubtreeLimitationType $limitationType
@@ -571,7 +563,6 @@ class SubtreeLimitationTypeTest extends Base
 
     /**
      * @depends testConstruct
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::getCriterion
      *
      * @param \eZ\Publish\Core\Limitation\SubtreeLimitationType $limitationType
      */
@@ -582,7 +573,10 @@ class SubtreeLimitationTypeTest extends Base
             $this->getUserMock()
         );
 
-        self::assertInstanceOf( '\eZ\Publish\API\Repository\Values\Content\Query\Criterion\Subtree', $criterion );
+        self::assertInstanceOf(
+            'eZ\\Publish\\Core\\Repository\\Values\\Content\\Query\\Criterion\\PermissionSubtree',
+            $criterion
+        );
         self::assertInternalType( 'array', $criterion->value );
         self::assertInternalType( 'string', $criterion->operator );
         self::assertEquals( Operator::EQ, $criterion->operator );
@@ -591,7 +585,6 @@ class SubtreeLimitationTypeTest extends Base
 
     /**
      * @depends testConstruct
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::getCriterion
      *
      * @param \eZ\Publish\Core\Limitation\SubtreeLimitationType $limitationType
      */
@@ -602,7 +595,10 @@ class SubtreeLimitationTypeTest extends Base
             $this->getUserMock()
         );
 
-        self::assertInstanceOf( '\eZ\Publish\API\Repository\Values\Content\Query\Criterion\Subtree', $criterion );
+        self::assertInstanceOf(
+            'eZ\\Publish\\Core\\Repository\\Values\\Content\\Query\\Criterion\\PermissionSubtree',
+            $criterion
+        );
         self::assertInternalType( 'array', $criterion->value );
         self::assertInternalType( 'string', $criterion->operator );
         self::assertEquals( Operator::IN, $criterion->operator );
@@ -611,7 +607,6 @@ class SubtreeLimitationTypeTest extends Base
 
     /**
      * @depends testConstruct
-     * @covers \eZ\Publish\Core\Limitation\SubtreeLimitationType::valueSchema
      *
      * @param \eZ\Publish\Core\Limitation\SubtreeLimitationType $limitationType
      */

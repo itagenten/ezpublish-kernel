@@ -2,8 +2,8 @@
 /**
  * Contains Invalid Argument Type Exception implementation
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -28,9 +28,10 @@ class InvalidArgumentValue extends InvalidArgumentException
      */
     public function __construct( $argumentName, $value, $className = null, Exception $previous = null )
     {
+        $valueStr = is_string( $value ) ? $value : var_export( $value, true );
         parent::__construct(
             $argumentName,
-            "'" . var_export( $value, true ) . "' is wrong value" . ( $className ? " in class '{$className}'" : "" ),
+            "'{$valueStr}' is wrong value" . ( $className ? " in class '{$className}'" : "" ),
             $previous
         );
     }

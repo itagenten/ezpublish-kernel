@@ -2,8 +2,8 @@
 /**
  * File containing the SignalDispatcher class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -31,19 +31,4 @@ abstract class SignalDispatcher
      * @return void
      */
     abstract public function emit( Signal $signal );
-
-    /**
-     * Attaches the Slot with $slotIdentifier to the signal with
-     * $signalIdentifier
-     *
-     * @param string $signalIdentifier
-     * @param \eZ\Publish\Core\SignalSlot\Slot $slot
-     *
-     * @return void
-     *
-     * @todo Are we sure we want to expose this method? Might lead to dynamic
-     * attachments at runtime, which can lead to hard debugging. Better only
-     * accept attachments during construction (config).
-     */
-    abstract public function attach( $signalIdentifier, Slot $slot );
 }

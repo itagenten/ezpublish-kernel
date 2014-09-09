@@ -2,8 +2,8 @@
 /**
  * File containing the RichTextStorage class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -83,8 +83,9 @@ class RichTextStorage extends GatewayBasedStorage
             }
         }
 
-        $linksIds = $gateway->getLinkIds( array_keys( $urlSet ) );
+        $urlIdMap = $gateway->getUrlIdMap( array_keys( $urlSet ) );
         $contentIds = $gateway->getContentIds( array_keys( $remoteIdSet ) );
+        $urlLinkSet = array();
 
         foreach ( $links as $index => $link )
         {
@@ -92,11 +93,22 @@ class RichTextStorage extends GatewayBasedStorage
 
             if ( empty( $scheme ) )
             {
-                if ( !isset( $linksIds[$url] ) )
+                // Insert the same URL only once
+                if ( !isset( $urlIdMap[$url] ) )
                 {
-                    $linksIds[$url] = $gateway->insertLink( $url );
+                    $urlIdMap[$url] = $gateway->insertUrl( $url );
                 }
-                $href = "ezurl://{$linksIds[$url]}{$fragment}";
+                // Link the same URL only once
+                if ( !isset( $urlLinkSet[$url] ) )
+                {
+                    $gateway->linkUrl(
+                        $urlIdMap[$url],
+                        $field->id,
+                        $versionInfo->versionNo
+                    );
+                    $urlLinkSet[$url] = true;
+                }
+                $href = "ezurl://{$urlIdMap[$url]}{$fragment}";
             }
             else
             {
@@ -140,8 +152,8 @@ class RichTextStorage extends GatewayBasedStorage
             return;
         }
 
-        $linkIdSet = array();
-        $linksInfo = array();
+        $urlIdSet = array();
+        $urlInfo = array();
 
         /** @var \DOMElement $link */
         foreach ( $links as $index => $link )
@@ -151,23 +163,23 @@ class RichTextStorage extends GatewayBasedStorage
                 $link->getAttribute( "xlink:href" ),
                 $matches
             );
-            $linksInfo[$index] = $matches;
+            $urlInfo[$index] = $matches;
 
             if ( !empty( $matches[1] ) )
             {
-                $linkIdSet[$matches[1]] = true;
+                $urlIdSet[$matches[1]] = true;
             }
         }
 
-        $linkUrls = $gateway->getLinkUrls( array_keys( $linkIdSet ) );
+        $idUrlMap = $gateway->getIdUrlMap( array_keys( $urlIdSet ) );
 
         foreach ( $links as $index => $link )
         {
-            list( , $urlId, $fragment ) = $linksInfo[$index];
+            list( , $urlId, $fragment ) = $urlInfo[$index];
 
-            if ( isset( $linkUrls[$urlId] ) )
+            if ( isset( $idUrlMap[$urlId] ) )
             {
-                $href = $linkUrls[$urlId] . $fragment;
+                $href = $idUrlMap[$urlId] . $fragment;
             }
             else
             {
@@ -187,6 +199,13 @@ class RichTextStorage extends GatewayBasedStorage
 
     public function deleteFieldData( VersionInfo $versionInfo, array $fieldIds, array $context )
     {
+        /** @var \eZ\Publish\Core\FieldType\RichText\RichTextStorage\Gateway $gateway */
+        $gateway = $this->getGateway( $context );
+
+        foreach ( $fieldIds as $fieldId )
+        {
+            $gateway->unlinkUrl( $fieldId, $versionInfo->versionNo );
+        }
     }
 
     /**

@@ -2,14 +2,14 @@
 /**
  * File containing the ContentTypeIdentifier Criterion parser class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\REST\Server\Input\Parser\Criterion;
 
-use eZ\Publish\Core\REST\Server\Input\Parser\Base;
+use eZ\Publish\Core\REST\Common\Input\BaseParser;
 use eZ\Publish\Core\REST\Common\Input\ParsingDispatcher;
 use eZ\Publish\Core\REST\Common\Exceptions;
 use eZ\Publish\API\Repository\ContentTypeService;
@@ -18,7 +18,7 @@ use eZ\Publish\API\Repository\Values\Content\Query\Criterion\ContentTypeId as Co
 /**
  * Parser for ViewInput
  */
-class ContentTypeIdentifier extends Base
+class ContentTypeIdentifier extends BaseParser
 {
     /**
      * Content type service

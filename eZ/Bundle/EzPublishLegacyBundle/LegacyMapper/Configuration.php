@@ -2,8 +2,8 @@
 /**
  * File containing the Configuration class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -20,6 +20,7 @@ use ezpEvent;
 use ezxFormToken;
 use Symfony\Component\DependencyInjection\ContainerAware;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use RuntimeException;
 
 /**
  * Maps configuration parameters to the legacy parameters
@@ -118,13 +119,36 @@ class Configuration extends ContainerAware implements EventSubscriberInterface
                 "user" => "User",
                 "password" => "Password",
                 "dbname" => "Database",
-                "unix_socket" => "Socket"
+                "unix_socket" => "Socket",
+                "driver" => "DatabaseImplementation"
             ) as $key => $iniKey
         )
         {
             if ( isset( $databaseSettings[$key] ) )
             {
-                $settings["site.ini/DatabaseSettings/$iniKey"] = $databaseSettings[$key];
+                $iniValue = $databaseSettings[$key];
+
+                switch ( $key )
+                {
+                    case "driver":
+                        $driverMap = array(
+                            'pdo_mysql' => 'ezmysqli',
+                            'pdo_pgsql' => 'ezpostgresql',
+                            'oci8' => 'ezoracle'
+                        );
+                        if ( !isset( $driverMap[$iniValue] ) )
+                        {
+                            throw new RuntimeException(
+                                "Could not map database driver to Legacy Stack database implementation.\n" .
+                                "Expected one of '" . implode( "', '", array_keys( $driverMap ) ) . "', got '" .
+                                $iniValue . "'."
+                            );
+                        }
+                        $iniValue = $driverMap[$iniValue];
+                        break;
+                }
+
+                $settings["site.ini/DatabaseSettings/$iniKey"] = $iniValue;
             }
             // Some settings need specific values when not present.
             else
@@ -133,15 +157,6 @@ class Configuration extends ContainerAware implements EventSubscriberInterface
                 {
                     case "unix_socket":
                         $settings["site.ini/DatabaseSettings/$iniKey"] = "disabled";
-                        break;
-                    case "driver":
-                        $driverMap = array(
-                            'pdo_mysql' => 'mysqli',
-                            'pdo_pgsql' => 'pgsql',
-                            'oci8' => 'oracle'
-                        );
-                        if ( isset( $driverMap[$databaseSettings[$key]] ) )
-                            $settings["site.ini/DatabaseSettings/DatabaseImplementation"] = $driverMap[$databaseSettings[$key]];
                         break;
                 }
             }
@@ -165,19 +180,22 @@ class Configuration extends ContainerAware implements EventSubscriberInterface
             $settings + (array)$event->getParameters()->get( "injected-settings" )
         );
 
-        // Inject csrf protection settings to make sure legacy & symfony stack work together
-        if (
-            $this->container->hasParameter( 'form.type_extension.csrf.enabled' ) &&
-            $this->container->getParameter( 'form.type_extension.csrf.enabled' )
-        )
+        if ( class_exists( 'ezxFormToken' ) )
         {
-            ezxFormToken::setSecret( $this->container->getParameter( 'kernel.secret' ) );
-            ezxFormToken::setFormField( $this->container->getParameter( 'form.type_extension.csrf.field_name' ) );
-        }
-        // csrf protection is disabled, disable it in legacy extension as well.
-        else
-        {
-            ezxFormToken::setIsEnabled( false );
+            // Inject csrf protection settings to make sure legacy & symfony stack work together
+            if (
+                $this->container->hasParameter( 'form.type_extension.csrf.enabled' ) &&
+                $this->container->getParameter( 'form.type_extension.csrf.enabled' )
+            )
+            {
+                ezxFormToken::setSecret( $this->container->getParameter( 'kernel.secret' ) );
+                ezxFormToken::setFormField( $this->container->getParameter( 'form.type_extension.csrf.field_name' ) );
+            }
+            // csrf protection is disabled, disable it in legacy extension as well.
+            else
+            {
+                ezxFormToken::setIsEnabled( false );
+            }
         }
 
         // Register http cache content/cache event listener
@@ -236,6 +254,7 @@ class Configuration extends ContainerAware implements EventSubscriberInterface
     private function getMultiSiteSettings()
     {
         $rootLocationId = $this->configResolver->getParameter( 'content.tree_root.location_id' );
+        $defaultPage = $this->configResolver->getParameter( 'default_page' );
         if ( $rootLocationId === null )
         {
             return array();
@@ -255,7 +274,7 @@ class Configuration extends ContainerAware implements EventSubscriberInterface
             'site.ini/SiteAccessSettings/PathPrefixExclude' => $pathPrefixExcludeItems,
             'logfile.ini/AccessLogFileSettings/PathPrefix'  => $pathPrefix,
             'site.ini/SiteSettings/IndexPage'               => "/content/view/full/$rootLocationId/",
-            'site.ini/SiteSettings/DefaultPage'             => "/content/view/full/$rootLocationId/",
+            'site.ini/SiteSettings/DefaultPage'             => $defaultPage !== null ? $defaultPage : "/content/view/full/$rootLocationId/",
             'content.ini/NodeSettings/RootNode'             => $rootLocationId,
         );
     }

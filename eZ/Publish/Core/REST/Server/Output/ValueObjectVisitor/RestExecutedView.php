@@ -2,8 +2,8 @@
 /**
  * File containing the Section ValueObjectVisitor class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -73,7 +73,7 @@ class RestExecutedView extends ValueObjectVisitor
 
         $generator->startAttribute(
             'href',
-            $this->router->generate( 'ezpublish_rest_loadView', array( 'viewId' => $data->identifier ) )
+            $this->router->generate( 'ezpublish_rest_getView', array( 'viewId' => $data->identifier ) )
         );
         $generator->endAttribute( 'href' );
 

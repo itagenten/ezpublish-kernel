@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\Core\Persistence\Legacy\Tests\HandlerTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -17,6 +17,7 @@ use eZ\Publish\SPI\Persistence\Content\FieldTypeConstraints;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use FileSystemIterator;
+use eZ\Publish\Core\IO\MimeTypeDetector\FileInfo;
 
 /**
  * Integration test for legacy storage field types
@@ -41,23 +42,13 @@ use FileSystemIterator;
 class BinaryFileIntegrationTest extends FileBaseIntegrationTest
 {
     /**
-     * Returns the storage dir used by the file service
+     * Returns the storage identifier prefix used by the file service
      *
      * @return string
      */
-    protected function getStorageDir()
-    {
-        return self::$storageDir;
-    }
-
-    /**
-     * Returns the storage identifier prefix used by the file service
-     *
-     * @return void
-     */
     protected function getStoragePrefix()
     {
-        return 'original';
+        return self::$container->getParameter( 'binaryfile_storage_prefix' );
     }
 
     /**
@@ -77,28 +68,22 @@ class BinaryFileIntegrationTest extends FileBaseIntegrationTest
      */
     public function getCustomHandler()
     {
-        $handler = $this->getHandler();
-
         $fieldType = new FieldType\BinaryFile\Type();
         $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
-        $handler->getFieldTypeRegistry()->register( 'ezbinaryfile', $fieldType );
-        $handler->getStorageRegistry()->register(
+
+        return $this->getHandler(
             'ezbinaryfile',
+            $fieldType,
+            new Legacy\Content\FieldValue\Converter\BinaryFile(),
             new FieldType\BinaryFile\BinaryFileStorage(
                 array(
                     'LegacyStorage' => new FieldType\BinaryFile\BinaryFileStorage\Gateway\LegacyStorage(),
                 ),
-                $this->getIOService(),
+                self::$container->get( "ezpublish.fieldType.ezbinaryfile.io_service" ),
                 new FieldType\BinaryBase\PathGenerator\LegacyPathGenerator(),
-                $this->getMimeTypeDetector()
+                new FileInfo()
             )
         );
-        $handler->getFieldValueConverterRegistry()->register(
-            'ezbinaryfile',
-            new Legacy\Content\FieldValue\Converter\BinaryFile()
-        );
-
-        return $handler;
     }
 
     /**
@@ -159,7 +144,8 @@ class BinaryFileIntegrationTest extends FileBaseIntegrationTest
             array(
                 'data'         => null,
                 'externalData' => array(
-                    'id' => ( $path = __DIR__ . '/_fixtures/image.jpg' ),
+                    'id' => null,
+                    'inputUri' => ( $path = __DIR__ . '/_fixtures/image.jpg' ),
                     'fileName' => 'Ice-Flower-Binary.jpg',
                     'fileSize' => filesize( $path ),
                     'mimeType' => 'image/jpeg',
@@ -184,14 +170,10 @@ class BinaryFileIntegrationTest extends FileBaseIntegrationTest
     {
         $this->assertNotNull( $field->value->externalData );
 
-        $path = $this->getStorageDir() . '/' . $this->getStoragePrefix() . '/' . $field->value->externalData['id'];
-        $this->assertTrue(
-            file_exists( $path ),
-            "Stored file $path exists"
-        );
+        $this->assertIOIdExists( $field->value->externalData['id'] );
 
         $this->assertEquals( 'Ice-Flower-Binary.jpg', $field->value->externalData['fileName'] );
-        $this->assertEquals( filesize( $path ), $field->value->externalData['fileSize'] );
+        $this->assertEquals( $this->getFilesize( $field->value->externalData['id'] ), $field->value->externalData['fileSize'] );
         $this->assertEquals( 'image/jpeg', $field->value->externalData['mimeType'] );
         $this->assertEquals( 0, $field->value->externalData['downloadCount'] );
 
@@ -211,7 +193,8 @@ class BinaryFileIntegrationTest extends FileBaseIntegrationTest
             array(
                 'data'         => null,
                 'externalData' => array(
-                    'id' => ( $path = __DIR__ . '/_fixtures/image.png' ),
+                    'id' => null,
+                    'inputUri' => ( $path = __DIR__ . '/_fixtures/image.png' ),
                     'fileName' => 'Blueish-Blue-Binary.jpg',
                     'fileSize' => filesize( $path ),
                     'mimeType' => 'image/png',
@@ -239,11 +222,9 @@ class BinaryFileIntegrationTest extends FileBaseIntegrationTest
     {
         $this->assertNotNull( $field->value->externalData );
 
-        $this->assertTrue(
-            file_exists( ( $path = $this->getStorageDir() . '/' . $this->getStoragePrefix() . '/' . $field->value->externalData['id'] ) ),
-            "Stored file $path exists"
-        );
+        $this->assertIOIdExists( $field->value->externalData['id'] );
 
+        $path = $this->getPathFromId( $field->value->externalData['id'] );
         // Check old file removed before update
         $this->assertEquals(
             1,
@@ -287,6 +268,5 @@ class BinaryFileIntegrationTest extends FileBaseIntegrationTest
                 );
             }
         }
-
     }
 }

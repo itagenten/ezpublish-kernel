@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\SPI\Tests\FieldType\CheckboxIntegrationTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -42,7 +42,7 @@ class CheckboxIntegrationTest extends BaseIntegrationTest
      */
     public function getTypeName()
     {
-        return 'ezbool';
+        return 'ezboolean';
     }
 
     /**
@@ -52,21 +52,15 @@ class CheckboxIntegrationTest extends BaseIntegrationTest
      */
     public function getCustomHandler()
     {
-        $handler = $this->getHandler();
-
         $fieldType = new FieldType\Checkbox\Type();
         $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
-        $handler->getFieldTypeRegistry()->register( 'ezbool', $fieldType );
-        $handler->getStorageRegistry()->register(
-            'ezbool',
+
+        return $this->getHandler(
+            'ezboolean',
+            $fieldType,
+            new Legacy\Content\FieldValue\Converter\Checkbox(),
             new FieldType\NullStorage()
         );
-        $handler->getFieldValueConverterRegistry()->register(
-            'ezbool',
-            new Legacy\Content\FieldValue\Converter\Checkbox()
-        );
-
-        return $handler;
     }
 
     /**
@@ -92,7 +86,7 @@ class CheckboxIntegrationTest extends BaseIntegrationTest
         return array(
             // The ezbool field type does not have any special field definition
             // properties
-            array( 'fieldType', 'ezbool' ),
+            array( 'fieldType', 'ezboolean' ),
             array( 'fieldTypeConstraints', new Content\FieldTypeConstraints( array() ) ),
         );
     }

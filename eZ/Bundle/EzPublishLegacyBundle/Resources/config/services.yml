@@ -58,7 +58,9 @@ parameters:
     ezpublish_legacy.rest_listener.class: eZ\Bundle\EzPublishLegacyBundle\EventListener\RestListener
     ezpublish_legacy.siteaccess_listener.class: eZ\Bundle\EzPublishLegacyBundle\EventListener\SiteAccessListener
     ezpublish_legacy.request_listener.class: eZ\Bundle\EzPublishLegacyBundle\EventListener\RequestListener
+    ezpublish_legacy.response_listener.class: eZ\Bundle\EzPublishLegacyBundle\EventListener\CsrfTokenResponseListener
     ezpublish_legacy.config_scope_listener.class: eZ\Bundle\EzPublishLegacyBundle\EventListener\ConfigScopeListener
+    ezpublish_legacy.legacy_kernel_listener.class: eZ\Bundle\EzPublishLegacyBundle\EventListener\LegacyKernelListener
 
     ezpublish_legacy.legacy_bundles.extension_locator.class: eZ\Bundle\EzPublishLegacyBundle\LegacyBundles\LegacyExtensionsLocator
 
@@ -113,6 +115,8 @@ services:
             - @ezpublish.config.resolver
             - @ezpublish_legacy.uri_helper
             - @ezpublish_legacy.response_manager
+            - @ezpublish_legacy.templating.legacy_helper
+            - @router
         calls:
             - [setRequest, [@?request=]]
 
@@ -167,8 +171,6 @@ services:
         class: %ezpublish_legacy.url_generator.class%
         arguments: [@ezpublish_legacy.kernel]
         parent: ezpublish.url_generator.base
-        calls:
-            - [setSiteAccess, [@ezpublish.siteaccess]]
 
     ezpublish_legacy.siteaccess_mapper:
         class: %ezpublish_legacy.siteaccess_mapper.class%
@@ -285,10 +287,19 @@ services:
         tags:
             - { name: kernel.event_subscriber }
 
+    ezpublish_legacy.response_listener:
+        class: %ezpublish_legacy.response_listener.class%
+        tags:
+            - { name: kernel.event_subscriber }
+
     ezpublish_legacy.config_scope_listener:
         class: %ezpublish_legacy.config_scope_listener.class%
-        calls:
-            - [setContainer, [@service_container]]
+        arguments: [@ezpublish_legacy.kernel.lazy_loader]
+        tags:
+            - { name: kernel.event_subscriber }
+
+    ezpublish_legacy.legacy_kernel_listener:
+        class: %ezpublish_legacy.legacy_kernel_listener.class%
         tags:
             - { name: kernel.event_subscriber }
 

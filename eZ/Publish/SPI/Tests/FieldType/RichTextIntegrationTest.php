@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\SPI\Tests\FieldType\RichTextIntegrationTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -14,8 +14,8 @@ use eZ\Publish\Core\FieldType;
 use eZ\Publish\Core\FieldType\FieldSettings;
 use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\SPI\Persistence\Content\FieldTypeConstraints;
-use DOMDocument;
 use eZ\Publish\Core\FieldType\RichText\RichTextStorage\Gateway\LegacyStorage;
+use eZ\Publish\Core\FieldType\Url\UrlStorage\Gateway\LegacyStorage as UrlGateway;
 
 /**
  * Integration test for legacy storage field types
@@ -56,8 +56,6 @@ class RichTextIntegrationTest extends BaseIntegrationTest
      */
     public function getCustomHandler()
     {
-        $handler = $this->getHandler();
-
         $fieldType = new FieldType\RichText\Type(
             new FieldType\RichText\ConverterDispatcher( array() ),
             new FieldType\RichText\ValidatorDispatcher(
@@ -72,31 +70,17 @@ class RichTextIntegrationTest extends BaseIntegrationTest
             )
         );
         $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
-        $handler->getFieldTypeRegistry()->register( 'ezrichtext', $fieldType );
-        $handler->getStorageRegistry()->register(
+
+        return $this->getHandler(
             'ezrichtext',
+            $fieldType,
+            new RichTextConverter(),
             new FieldType\RichText\RichTextStorage(
                 array(
-                    'LegacyStorage' => new LegacyStorage()
+                    'LegacyStorage' => new LegacyStorage( new UrlGateway() )
                 )
             )
         );
-        $handler->getFieldValueConverterRegistry()->register(
-            'ezrichtext',
-            new RichTextConverter(
-                new RichTextConverter\XsltConverter(
-                    $this->getAbsolutePath( "eZ/Publish/Core/Persistence/Legacy/Content/FieldValue/Converter/RichText/Resources/stylesheets/docbook_ezxml.xsl" )
-                ),
-                new RichTextConverter\XsltConverter(
-                    $this->getAbsolutePath( "eZ/Publish/Core/Persistence/Legacy/Content/FieldValue/Converter/RichText/Resources/stylesheets/ezxml_docbook.xsl" )
-                ),
-                new RichTextConverter\XsdValidator(
-                    $this->getAbsolutePath( "eZ/Publish/Core/Persistence/Legacy/Content/FieldValue/Converter/RichText/Resources/schemas/ezxml.xsd" )
-                )
-            )
-        );
-
-        return $handler;
     }
 
     /**
@@ -204,7 +188,7 @@ class RichTextIntegrationTest extends BaseIntegrationTest
         if ( $installDir === null )
         {
             $config = require 'config.php';
-            $installDir = $config['service']['parameters']['install_dir'];
+            $installDir = $config['install_dir'];
         }
         return $installDir;
     }

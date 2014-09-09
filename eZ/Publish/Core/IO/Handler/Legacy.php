@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\Core\IO\Handler\Legacy class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -129,6 +129,7 @@ class Legacy implements IOHandlerInterface
                     $dataType
                 );
             },
+            false,
             false
         );
 
@@ -200,6 +201,7 @@ class Legacy implements IOHandlerInterface
             {
                 $clusterHandler->fileDelete( $storagePath );
             },
+            false,
             false
         );
     }
@@ -266,6 +268,7 @@ class Legacy implements IOHandlerInterface
                     }
                 }
             },
+            false,
             false
         );
 
@@ -288,6 +291,7 @@ class Legacy implements IOHandlerInterface
             {
                 return $clusterHandler->fileExists( $spiBinaryFileId );
             },
+            false,
             false
         );
     }
@@ -315,6 +319,7 @@ class Legacy implements IOHandlerInterface
                 $clusterFile = eZClusterFileHandler::instance( $storagePath );
                 return $clusterFile->metaData;
             },
+            false,
             false
         );
 
@@ -376,6 +381,7 @@ class Legacy implements IOHandlerInterface
             {
                 return $clusterHandler->fileFetchContents( $storagePath );
             },
+            false,
             false
         );
     }
@@ -404,7 +410,9 @@ class Legacy implements IOHandlerInterface
                 $metadata = $metadataHandler->extract( $temporaryFileName );
                 $clusterHandler->fileDeleteLocal( $temporaryFileName );
                 return $metadata;
-            }
+            },
+            false,
+            false
         );
     }
 
@@ -447,6 +455,7 @@ class Legacy implements IOHandlerInterface
                     {
                         return eZClusterFileHandler::instance( $path );
                     },
+                    false,
                     false
                 );
             }
@@ -461,6 +470,7 @@ class Legacy implements IOHandlerInterface
                     {
                         return eZClusterFileHandler::instance();
                     },
+                    false,
                     false
                 );
             }
@@ -488,6 +498,7 @@ class Legacy implements IOHandlerInterface
                 $fileInfo = new finfo( FILEINFO_MIME_TYPE );
                 return $fileInfo->file( $path );
             },
+            false,
             false
         );
 

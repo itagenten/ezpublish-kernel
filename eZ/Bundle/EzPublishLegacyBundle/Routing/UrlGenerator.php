@@ -2,39 +2,26 @@
 /**
  * File containing the UrlGenerator class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishLegacyBundle\Routing;
 
-use eZ\Publish\Core\MVC\Symfony\SiteAccess;
-use eZ\Publish\Core\MVC\Symfony\SiteAccess\SiteAccessAware;
-use eZ\Publish\Core\MVC\Symfony\SiteAccess\URILexer;
 use eZModule;
 use eZ\Publish\Core\MVC\Symfony\Routing\Generator;
 
-class UrlGenerator extends Generator implements SiteAccessAware
+class UrlGenerator extends Generator
 {
     /**
      * @var \Closure
      */
     private $legacyKernelClosure;
 
-    /**
-     * @var SiteAccess
-     */
-    private $siteAccess;
-
     public function __construct( \Closure $legacyKernelClosure )
     {
         $this->legacyKernelClosure = $legacyKernelClosure;
-    }
-
-    public function setSiteAccess( SiteAccess $siteAccess = null )
-    {
-        $this->siteAccess = $siteAccess;
     }
 
     /**
@@ -88,13 +75,9 @@ class UrlGenerator extends Generator implements SiteAccessAware
                     $unorderedParams .= "/($paramName)/$paramValue";
                 }
 
-                if ( isset( $siteAccess ) && $siteAccess->matcher instanceof URILexer )
-                {
-                    $legacyModuleUri = trim( $siteAccess->matcher->analyseLink( "/$legacyModuleUri" ), '/' );
-                }
-
                 return "/$legacyModuleUri$unorderedParams";
             },
+            false,
             false
         );
     }

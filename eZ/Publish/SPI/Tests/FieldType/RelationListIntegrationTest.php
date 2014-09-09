@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\Core\Persistence\Legacy\Tests\HandlerTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -53,21 +53,15 @@ class RelationListIntegrationTest extends BaseIntegrationTest
      */
     public function getCustomHandler()
     {
-        $handler = $this->getHandler();
-
         $fieldType = new FieldType\RelationList\Type();
         $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
-        $handler->getFieldTypeRegistry()->register( 'ezobjectrelationlist', $fieldType );
-        $handler->getStorageRegistry()->register(
+
+        return $this->getHandler(
             'ezobjectrelationlist',
+            $fieldType,
+            new Legacy\Content\FieldValue\Converter\RelationList( $this->handler ),
             new FieldType\NullStorage()
         );
-        $handler->getFieldValueConverterRegistry()->register(
-            'ezobjectrelationlist',
-            new Legacy\Content\FieldValue\Converter\RelationList( $this->handler )
-        );
-
-        return $handler;
     }
 
     /**

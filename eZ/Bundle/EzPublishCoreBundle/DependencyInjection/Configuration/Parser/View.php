@@ -2,14 +2,15 @@
 /**
  * File containing the View class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Parser;
 
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\AbstractParser;
+use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\SiteAccessAware\ContextualizerInterface;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -70,17 +71,14 @@ EOT
             ->end();
     }
 
-    /**
-     * Translates parsed semantic config values from $config to internal key/value pairs.
-     *
-     * @param array $config
-     * @param \Symfony\Component\DependencyInjection\ContainerBuilder $container
-     *
-     * @return void
-     */
-    public function registerInternalConfig( array $config, ContainerBuilder $container )
+    public function preMap( array $config, ContextualizerInterface $contextualizer )
     {
-        $this->registerInternalConfigArray( static::NODE_KEY, $config, $container, self::MERGE_FROM_SECOND_LEVEL );
+        $contextualizer->mapConfigArray( static::NODE_KEY, $config, ContextualizerInterface::MERGE_FROM_SECOND_LEVEL );
+    }
+
+    public function mapConfig( array &$scopeSettings, $currentScope, ContextualizerInterface $contextualizer )
+    {
+        // Nothing to do here.
     }
 }
 

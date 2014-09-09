@@ -2,8 +2,8 @@
 /**
  * File containing the XmlTextStorage class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -44,6 +44,13 @@ class XmlTextStorage extends GatewayBasedStorage
 
     public function deleteFieldData( VersionInfo $versionInfo, array $fieldIds, array $context )
     {
+        /** @var \eZ\Publish\Core\FieldType\XmlText\XmlTextStorage\Gateway $gateway */
+        $gateway = $this->getGateway( $context );
+
+        foreach ( $fieldIds as $fieldId )
+        {
+            $gateway->unlinkUrl( $fieldId, $versionInfo->versionNo );
+        }
     }
 
     /**

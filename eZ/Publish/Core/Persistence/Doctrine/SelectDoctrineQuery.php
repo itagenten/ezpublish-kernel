@@ -2,8 +2,8 @@
 /**
  * File containing an interface for the Doctrine database abstractions
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -37,6 +37,18 @@ class SelectDoctrineQuery extends AbstractDoctrineQuery implements SelectQuery
      * @var integer
      */
     private $offset;
+
+    /**
+     * Holds the state of permission subtree join, which is LEFT JOIN on 'ezcontentobject_tree' table
+     * with alias 'permission_subtree'.
+     *
+     * @internal This is intended for use by PermissionSubtree criterion handler only
+     * @see \eZ\Publish\Core\Persistence\Legacy\Content\Search\Gateway\CriterionHandler\PermissionSubtree
+     * @see https://jira.ez.no/browse/EZP-23037
+     *
+     * @var boolean
+     */
+    public $permissionSubtreeJoinAdded = false;
 
     /**
      * Opens the query and selects which columns you want to return with

@@ -148,6 +148,13 @@
 {% endspaceless %}
 {% endblock %}
 
+{% block ezisbn_field %}
+{% spaceless %}
+    {% set field_value = field.value.isbn %}
+    {{ block( 'simple_inline_field' ) }}
+{% endspaceless %}
+{% endblock %}
+
 {% block ezkeyword_field %}
 {% spaceless %}
     {% if not ez_is_field_empty( content, field ) %}
@@ -202,7 +209,7 @@
                         ~ '/version/' ~ contentInfo.currentVersionNo ~  "/file/"
                         ~ field.value.fileName|escape( 'url' ) %}
         <a href="{{ path( 'ez_legacy', {'module_uri': uri} ) }}"
-            {{ block( 'field_attributes' ) }}>{{ field.value.fileName }}</a>&nbsp;({{ field.value.fileSize }})
+            {{ block( 'field_attributes' ) }}>{{ field.value.fileName }}</a>&nbsp;({{ field.value.fileSize|ez_file_size( 1 ) }})
     {% endif %}
 {% endspaceless %}
 {% endblock %}

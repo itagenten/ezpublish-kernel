@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\Core\MVC\Symfony\SiteAccess\Tests\RouterHostTextTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -28,9 +28,6 @@ class RouterHostTextTest extends PHPUnit_Framework_TestCase
         $this->matcherBuilder = new MatcherBuilder;
     }
 
-    /**
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Router::__construct
-     */
     public function testConstruct()
     {
         return new Router(
@@ -58,16 +55,8 @@ class RouterHostTextTest extends PHPUnit_Framework_TestCase
     /**
      * @depends testConstruct
      * @dataProvider matchProvider
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Router::match
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher\Map::__construct
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher\Map::match
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher\Map\URI::__construct
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher\Map\Host::__construct
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher\Regex::__construct
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher\Regex::match
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher\HostText::__construct
      */
-    public function testMatch( $request, $siteAccess, $router )
+    public function testMatch( SimplifiedRequest $request, $siteAccess, Router $router )
     {
         $sa = $router->match( $request );
         $this->assertInstanceOf( 'eZ\\Publish\\Core\\MVC\\Symfony\\SiteAccess', $sa );
@@ -132,12 +121,27 @@ class RouterHostTextTest extends PHPUnit_Framework_TestCase
         );
     }
 
-    /**
-     * @covers \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher\HostText::getName
-     */
     public function testGetName()
     {
         $matcher = new HostTextMatcher( array( 'host' => 'foo' ), array() );
         $this->assertSame( 'host:text', $matcher->getName() );
+    }
+
+    public function testReverseMatch()
+    {
+        $matcher = new HostTextMatcher(
+            array(
+                "prefix" => "www.",
+                "suffix" => ".com",
+            )
+        );
+
+        $matcher->setRequest( new SimplifiedRequest( array( 'host' => 'www.my_siteaccess.com' ) ) );
+
+        $result = $matcher->reverseMatch( 'foobar' );
+        $this->assertInstanceOf( 'eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher\HostText', $result );
+        $request = $result->getRequest();
+        $this->assertInstanceOf( 'eZ\Publish\Core\MVC\Symfony\Routing\SimplifiedRequest', $request );
+        $this->assertSame( "www.foobar.com", $request->host );
     }
 }

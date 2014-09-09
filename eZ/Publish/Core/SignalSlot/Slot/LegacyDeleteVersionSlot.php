@@ -2,8 +2,8 @@
 /**
  * File containing the Legacy\DeleteVersionSlot class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -32,16 +32,14 @@ class LegacyDeleteVersionSlot extends AbstractLegacySlot
         if ( !$signal instanceof Signal\ContentService\DeleteVersionSignal )
             return;
 
-        $kernel = $this->getLegacyKernel();
-        $kernel->runCallback(
+        $this->runLegacyKernelCallback(
             function () use ( $signal )
             {
                 eZContentCacheManager::clearContentCacheIfNeeded( $signal->contentId );
                 eZSearch::removeObjectById( $signal->contentId, null );
                 eZContentOperationCollection::registerSearchObject( $signal->contentId );
                 eZContentObject::clearCache();// Clear all object memory cache to free memory
-            },
-            false
+            }
         );
     }
 }

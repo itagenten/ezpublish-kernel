@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\Core\Persistence\Legacy\Tests\HandlerTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -17,6 +17,7 @@ use eZ\Publish\SPI\Persistence\Content\FieldTypeConstraints;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use FileSystemIterator;
+use eZ\Publish\Core\IO\MimeTypeDetector\FileInfo;
 
 /**
  * Integration test for legacy storage field types
@@ -41,23 +42,13 @@ use FileSystemIterator;
 class MediaIntegrationTest extends FileBaseIntegrationTest
 {
     /**
-     * Returns the storage dir used by the file service
+     * Returns the storage identifier prefix used by the file service
      *
      * @return string
      */
-    protected function getStorageDir()
-    {
-        return self::$storageDir;
-    }
-
-    /**
-     * Returns the storage identifier prefix used by the file service
-     *
-     * @return void
-     */
     protected function getStoragePrefix()
     {
-        return 'original';
+        return self::$container->getParameter( 'binaryfile_storage_prefix' );
     }
 
     /**
@@ -77,28 +68,22 @@ class MediaIntegrationTest extends FileBaseIntegrationTest
      */
     public function getCustomHandler()
     {
-        $handler = $this->getHandler();
-
         $fieldType = new FieldType\Media\Type();
         $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
-        $handler->getFieldTypeRegistry()->register( 'ezmedia', $fieldType );
-        $handler->getStorageRegistry()->register(
+
+        return $this->getHandler(
             'ezmedia',
+            $fieldType,
+            new Legacy\Content\FieldValue\Converter\Media(),
             new FieldType\Media\MediaStorage(
                 array(
                     'LegacyStorage' => new FieldType\Media\MediaStorage\Gateway\LegacyStorage(),
                 ),
-                $this->getIOService(),
+                self::$container->get( "ezpublish.fieldType.ezbinaryfile.io_service" ),
                 new FieldType\BinaryBase\PathGenerator\LegacyPathGenerator(),
-                $this->getMimeTypeDetector()
+                new FileInfo()
             )
         );
-        $handler->getFieldValueConverterRegistry()->register(
-            'ezmedia',
-            new Legacy\Content\FieldValue\Converter\Media()
-        );
-
-        return $handler;
     }
 
     /**
@@ -167,7 +152,8 @@ class MediaIntegrationTest extends FileBaseIntegrationTest
             array(
                 'data'         => null,
                 'externalData' => array(
-                    'id' => ( $path = __DIR__ . '/_fixtures/image.jpg' ),
+                    'id' => null,
+                    'inputUri' => ( $path = __DIR__ . '/_fixtures/image.jpg' ),
                     'fileName' => 'Ice-Flower-Media.jpg',
                     'fileSize' => filesize( $path ),
                     'mimeType' => 'image/jpeg',
@@ -198,7 +184,7 @@ class MediaIntegrationTest extends FileBaseIntegrationTest
 
         $this->assertTrue(
             file_exists( $path = $this->getStorageDir() . '/' . $this->getStoragePrefix() . '/' . $field->value->externalData['id'] ),
-            "Stored file $path exists"
+            "Stored file $path does not exists"
         );
 
         $this->assertEquals( 'Ice-Flower-Media.jpg', $field->value->externalData['fileName'] );
@@ -226,7 +212,8 @@ class MediaIntegrationTest extends FileBaseIntegrationTest
             array(
                 'data'         => null,
                 'externalData' => array(
-                    'id' => ( $path = __DIR__ . '/_fixtures/image.png' ),
+                    'id' => null,
+                    'inputUri' => ( $path = __DIR__ . '/_fixtures/image.png' ),
                     'fileName' => 'Blueish-Blue-Media.jpg',
                     'fileSize' => filesize( $path ),
                     'mimeType' => 'image/png',
@@ -260,7 +247,7 @@ class MediaIntegrationTest extends FileBaseIntegrationTest
 
         $this->assertTrue(
             file_exists( $path = $this->getStorageDir() . '/' . $this->getStoragePrefix() . '/' . $field->value->externalData['id'] ),
-            "Stored file $path exists"
+            "Stored file $path does not exists"
         );
 
         // Check old file removed before update
@@ -310,6 +297,5 @@ class MediaIntegrationTest extends FileBaseIntegrationTest
                 );
             }
         }
-
     }
 }

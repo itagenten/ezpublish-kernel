@@ -2,8 +2,8 @@
 /**
  * File containing the SimplifiedRequest class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -72,6 +72,62 @@ class SimplifiedRequest extends ValueObject
      * @var array
      */
     protected $headers;
+
+    /**
+     * @param array $headers
+     */
+    public function setHeaders( array $headers )
+    {
+        $this->headers = $headers;
+    }
+
+    /**
+     * @param string $host
+     */
+    public function setHost( $host )
+    {
+        $this->host = $host;
+    }
+
+    /**
+     * @param array $languages
+     */
+    public function setLanguages( array $languages )
+    {
+        $this->languages = $languages;
+    }
+
+    /**
+     * @param string $pathinfo
+     */
+    public function setPathinfo( $pathinfo )
+    {
+        $this->pathinfo = $pathinfo;
+    }
+
+    /**
+     * @param string $port
+     */
+    public function setPort( $port )
+    {
+        $this->port = $port;
+    }
+
+    /**
+     * @param array $queryParams
+     */
+    public function setQueryParams( array $queryParams )
+    {
+        $this->queryParams = $queryParams;
+    }
+
+    /**
+     * @param string $scheme
+     */
+    public function setScheme( $scheme )
+    {
+        $this->scheme = $scheme;
+    }
 
     /**
      * Constructs a SimplifiedRequest object from a standard URL (http://www.example.com/foo/bar?queryParam=value)

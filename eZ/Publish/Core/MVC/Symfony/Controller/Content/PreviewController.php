@@ -2,8 +2,8 @@
 /**
  * File containing the PreviewController class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -14,9 +14,11 @@ use eZ\Publish\API\Repository\Exceptions\UnauthorizedException;
 use eZ\Publish\API\Repository\Values\Content\Content;
 use eZ\Publish\API\Repository\Values\Content\Location;
 use eZ\Publish\Core\Helper\ContentPreviewHelper;
+use eZ\Publish\Core\MVC\Symfony\Templating\GlobalHelper;
 use eZ\Publish\Core\MVC\Symfony\SiteAccess;
 use eZ\Publish\Core\MVC\Symfony\View\ViewManagerInterface;
 use eZ\Publish\Core\MVC\Symfony\Security\Authorization\Attribute as AuthorizationAttribute;
+use eZ\Publish\Core\MVC\Symfony\Routing\Generator\UrlAliasGenerator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -40,6 +42,11 @@ class PreviewController
     private $previewHelper;
 
     /**
+     * @var \eZ\Publish\Core\MVC\Symfony\Templating\GlobalHelper
+     */
+    private $globalHelper;
+
+    /**
      * @var \Symfony\Component\Security\Core\SecurityContextInterface
      */
     private $securityContext;
@@ -53,12 +60,14 @@ class PreviewController
         ContentService $contentService,
         HttpKernelInterface $kernel,
         ContentPreviewHelper $previewHelper,
+        GlobalHelper $globalHelper,
         SecurityContextInterface $securityContext
     )
     {
         $this->contentService = $contentService;
         $this->kernel = $kernel;
         $this->previewHelper = $previewHelper;
+        $this->globalHelper = $globalHelper;
         $this->securityContext = $securityContext;
     }
 
@@ -79,7 +88,7 @@ class PreviewController
             throw new AccessDeniedException();
         }
 
-        if ( !$this->securityContext->isGranted( new AuthorizationAttribute( 'content', 'versionview', array( 'valueObject' => $content ) ) ) )
+        if ( !$this->securityContext->isGranted( new AuthorizationAttribute( 'content', 'versionread', array( 'valueObject' => $content ) ) ) )
         {
             throw new AccessDeniedException();
         }
@@ -113,6 +122,11 @@ class PreviewController
             null, null,
             array(
                 '_controller' => 'ez_content:viewLocation',
+                // specify a route for RouteReference generator
+                '_route' => UrlAliasGenerator::INTERNAL_LOCATION_ROUTE,
+                '_route_params' => array(
+                    'locationId' => $location->id ?: $this->globalHelper->getRootLocation()->id,
+                ),
                 'location' => $location,
                 'viewType' => ViewManagerInterface::VIEW_TYPE_FULL,
                 'layout' => true,

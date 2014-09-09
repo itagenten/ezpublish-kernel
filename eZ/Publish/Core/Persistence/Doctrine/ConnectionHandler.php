@@ -2,8 +2,8 @@
 /**
  * File containing an interface for the Doctrine database abstractions
  *
- * @copyright Copyright (C) 1999-2013 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -11,16 +11,59 @@ namespace eZ\Publish\Core\Persistence\Doctrine;
 
 use eZ\Publish\Core\Persistence\Database\DatabaseHandler;
 use eZ\Publish\Core\Persistence\Database\QueryException;
-use Doctrine\DBAL\Driver\Connection;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\DBALException;
 
 class ConnectionHandler implements DatabaseHandler
 {
     /**
-     * @var \Doctrine\DBAL\Driver\Connection
+     * @var \Doctrine\DBAL\Connection
      */
     protected $connection;
+
+    /**
+     * @param string|array $dsn
+     *
+     * @return \Doctrine\DBAL\Driver\Connection
+     */
+    public static function createConnectionFromDSN( $dsn )
+    {
+        if ( is_string( $dsn ) )
+        {
+            $parsed = self::parseDSN( $dsn );
+        }
+        else
+        {
+            $parsed = $dsn;
+        }
+
+        return DriverManager::getConnection( $parsed );
+    }
+
+    /**
+     * Create a Connection Handler from given Doctrine $connection
+     *
+     * @param \Doctrine\DBAL\Connection $connection
+     *
+     * @return \eZ\Publish\Core\Persistence\Doctrine\ConnectionHandler
+     */
+    public static function createFromConnection( Connection $connection )
+    {
+        $driver = $connection->getDriver()->getName();
+
+        if ( $driver === 'pdo_sqlite' )
+        {
+            return new ConnectionHandler\SqliteConnectionHandler( $connection );
+        }
+
+        if ( $driver === 'pdo_pgsql' )
+        {
+            return new ConnectionHandler\PostgresConnectionHandler( $connection );
+        }
+
+        return new self( $connection );
+    }
 
     /**
      * Create a Connection Handler with corresponding Doctrine connection from DSN.
@@ -265,7 +308,7 @@ class ConnectionHandler implements DatabaseHandler
     }
 
     /**
-     * @param \Doctrine\DBAL\Driver\Connection $connection
+     * @param \Doctrine\DBAL\Connection $connection
      */
     public function __construct( Connection $connection )
     {
@@ -273,7 +316,7 @@ class ConnectionHandler implements DatabaseHandler
     }
 
     /**
-     * @return \Doctrine\DBAL\Driver\Connection
+     * @return \Doctrine\DBAL\Connection
      */
     public function getConnection()
     {

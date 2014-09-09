@@ -2,8 +2,8 @@
 /**
  * File containing the Legacy\MoveSubtreeSlot class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -31,16 +31,14 @@ class LegacyMoveSubtreeSlot extends AbstractLegacySlot
         if ( !$signal instanceof Signal\LocationService\MoveSubtreeSignal )
             return;
 
-        $kernel = $this->getLegacyKernel();
-        $kernel->runCallback(
+        $this->runLegacyKernelCallback(
             function () use ( $signal )
             {
                 $node = eZContentObjectTreeNode::fetch( $signal->locationId );
                 eZContentObjectTreeNode::clearViewCacheForSubtree( $node );
                 eZContentOperationCollection::registerSearchObject( $node->attribute( 'contentobject_id' ) );
                 eZContentObject::clearCache();// Clear all object memory cache to free memory
-            },
-            false
+            }
         );
     }
 }

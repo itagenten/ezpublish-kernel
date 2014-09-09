@@ -2,8 +2,8 @@
 /**
  * File containing the VersionUpdate parser class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -13,11 +13,12 @@ use eZ\Publish\Core\REST\Common\Input\ParsingDispatcher;
 use eZ\Publish\Core\REST\Common\Input\FieldTypeParser;
 use eZ\Publish\Core\REST\Common\Exceptions;
 use eZ\Publish\API\Repository\ContentService;
+use eZ\Publish\Core\REST\Common\Input\BaseParser;
 
 /**
  * Parser for VersionUpdate
  */
-class VersionUpdate extends Base
+class VersionUpdate extends BaseParser
 {
     /**
      * Content service

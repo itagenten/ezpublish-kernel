@@ -2,8 +2,8 @@
 /**
  * File containing the UserSession class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -44,16 +44,22 @@ class UserSession extends RestValue
     public $csrfToken;
 
     /**
+     * True if session exists
+     * @var boolean
+     */
+    public $exists;
+    /**
      * @param \eZ\Publish\API\Repository\Values\User\User $user
      * @param string $sessionName
      * @param string $sessionId
      * @param string $csrfToken
      */
-    public function __construct( User $user, $sessionName, $sessionId, $csrfToken )
+    public function __construct( User $user, $sessionName, $sessionId, $csrfToken, $created )
     {
         $this->user = $user;
         $this->sessionName = $sessionName;
         $this->sessionId = $sessionId;
         $this->csrfToken = $csrfToken;
+        $this->created = $created;
     }
 }

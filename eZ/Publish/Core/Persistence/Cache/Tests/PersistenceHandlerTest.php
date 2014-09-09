@@ -2,8 +2,8 @@
 /**
  * File contains Test class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -164,6 +164,18 @@ class PersistenceHandlerTest extends HandlerTest
         $this->loggerMock->expects( $this->once() )->method( 'logUnCachedHandler' );
         $this->persistenceHandlerMock->expects( $this->once() )->method( 'urlWildcardHandler' );
         $this->persistenceCacheHandler->urlWildcardHandler();
+    }
 
+    /**
+     * Test that instance is of correct type
+     *
+     * @covers eZ\Publish\Core\Persistence\Cache\Handler::transactionHandler
+     */
+    public function testTransactionHandler()
+    {
+        $this->loggerMock->expects( $this->never() )->method( $this->anything() );
+        $handler = $this->persistenceCacheHandler->transactionHandler();
+        $this->assertInstanceOf( 'eZ\\Publish\\SPI\\Persistence\\TransactionHandler', $handler );
+        $this->assertInstanceOf( 'eZ\\Publish\\Core\\Persistence\\Cache\\TransactionHandler', $handler );
     }
 }

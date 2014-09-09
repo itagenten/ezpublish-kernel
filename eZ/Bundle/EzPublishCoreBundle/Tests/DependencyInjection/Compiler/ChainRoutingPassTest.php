@@ -2,20 +2,20 @@
 /**
  * File containing the ChainRoutingPassTest class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\Tests\DependencyInjection\Compiler;
 
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Compiler\ChainRoutingPass;
-use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractCompilerPassTest;
+use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractCompilerPassTestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
-class ChainRoutingPassTest extends AbstractCompilerPassTest
+class ChainRoutingPassTest extends AbstractCompilerPassTestCase
 {
     protected function setUp()
     {
@@ -110,6 +110,11 @@ class ChainRoutingPassTest extends AbstractCompilerPassTest
             'router.default',
             'setLegacyAwareRoutes',
             array( '%ezpublish.default_router.legacy_aware_routes%' )
+        );
+        $this->assertContainerBuilderHasServiceDefinitionWithMethodCall(
+            'router.default',
+            'setSiteAccessRouter',
+            array( new Reference( 'ezpublish.siteaccess_router' ) )
         );
         $this->assertContainerBuilderHasServiceDefinitionWithMethodCall(
             'ezpublish.chain_router',

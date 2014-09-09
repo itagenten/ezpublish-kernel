@@ -2,8 +2,8 @@
 /**
  * File containing the ViewController class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -63,18 +63,19 @@ class ViewController extends Controller
                 $response->setEtag( $etag );
             }
 
-            // Make the response vary against X-User-Hash header ensures that an HTTP
-            // reverse proxy caches the different possible variations of the
-            // response as it can depend on user role for instance.
-            if (
-                $request->headers->has( 'X-User-Hash' )
-                && $this->getParameter( 'content.ttl_cache' ) === true
-            )
+            if ( $this->getParameter( 'content.ttl_cache' ) === true )
             {
-                $response->setVary( 'X-User-Hash' );
                 $response->setSharedMaxAge(
                     $this->getParameter( 'content.default_ttl' )
                 );
+            }
+
+            // Make the response vary against X-User-Hash header ensures that an HTTP
+            // reverse proxy caches the different possible variations of the
+            // response as it can depend on user role for instance.
+            if ( $request->headers->has( 'X-User-Hash' ) )
+            {
+                $response->setVary( 'X-User-Hash' );
             }
 
             if ( $lastModified != null )
@@ -268,6 +269,7 @@ class ViewController extends Controller
                 return $response;
             }
 
+            $response->headers->set( 'X-Location-Id', $content->contentInfo->mainLocationId );
             $response->setContent(
                 $this->renderContent( $content, $viewType, $layout, $params )
             );

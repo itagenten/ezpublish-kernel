@@ -2,8 +2,8 @@
 /**
  * File containing the Legacy\PublishContentTypeDraft class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -29,8 +29,7 @@ class LegacyPublishContentTypeDraftSlot extends AbstractLegacySlot
         if ( !$signal instanceof Signal\ContentTypeService\PublishContentTypeDraftSignal )
             return;
 
-        $kernel = $this->getLegacyKernel();
-        $kernel->runCallback(
+        $this->runLegacyKernelCallback(
             function () use ( $signal )
             {
                 eZExpiryHandler::registerShutdownFunction();
@@ -40,8 +39,7 @@ class LegacyPublishContentTypeDraftSlot extends AbstractLegacySlot
                 $handler->setTimestamp( 'class-identifier-cache', $time );
                 $handler->setTimestamp( 'sort-key-cache', $time );
                 $handler->store();
-            },
-            false
+            }
         );
     }
 }

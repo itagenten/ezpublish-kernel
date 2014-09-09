@@ -14,12 +14,16 @@ parameters:
     # Common settings
     ezpublish.repositories: {}
     ezsettings.default.repository: ~
-    ezsettings.default.session_name: "eZSESSID{siteaccess_hash}"    # Using "{siteaccess_hash}" in session name makes it unique per siteaccess
-    ezsettings.default.session: { name: %ezsettings.default.session_name% } # Session options that will override options from framework
+    ezpublish.session_name.default: "eZSESSID{siteaccess_hash}"
+    ezsettings.default.session_name: %ezpublish.session_name.default%    # Using "{siteaccess_hash}" in session name makes it unique per siteaccess
+    ezsettings.default.session: { name: %ezpublish.session_name.default% } # Session options that will override options from framework
     ezsettings.default.legacy_mode: false
     ezsettings.default.url_alias_router: true                       # Use UrlAliasRouter by default
     ezsettings.default.index_page: ~                    # The page to show when accessing IndexPage (/)
+    ezsettings.default.default_page: ~                  # The default page to show, e.g. after user login this will be used for default redirection
     ezsettings.default.languages: []
+    ezsettings.default.translation_siteaccesses: []
+    ezsettings.default.related_siteaccesses: []
     ezsettings.default.cache_pool_name: "default"       # The cache pool name to use for a siteaccess / siteaccess-group
     ezsettings.default.var_dir: "var"                   # The root directory where all log files, cache files and other stored files are created
     ezsettings.default.storage_dir: "storage"           # Where to place new files for storage, it's relative to var directory
@@ -58,6 +62,34 @@ parameters:
             priority: 0
 
     ezsettings.default.fieldtypes.ezrichtext.input_custom_xsl: []
+
+    # RichText field type template tag settings
+    ezsettings.default.fieldtypes.ezrichtext.tag.default:
+        template: EzPublishCoreBundle:FieldType/RichText/tag:default.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.tag.inline.default:
+        template: EzPublishCoreBundle:FieldType/RichText/tag:default_inline.html.twig
+
+    # RichText field type embed settings
+    ezsettings.default.fieldtypes.ezrichtext.embed.default:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:default.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.embed.inline.default:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:default_inline.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.embed.content:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:content.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.embed.content.denied:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:content_denied.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.embed.content.inline:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:content_inline.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.embed.content.inline.denied:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:content_inline_denied.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.embed.location:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:location.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.embed.location.denied:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:location_denied.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.embed.location.inline:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:location_inline.html.twig
+    ezsettings.default.fieldtypes.ezrichtext.embed.location.inline.denied:
+        template: EzPublishCoreBundle:FieldType/RichText/embed:location_inline_denied.html.twig
 
     # Cache settings
     ezsettings.default.http_cache.purge_servers: ["http://localhost/"]   # Server(s) URL(s) that will be used for purging HTTP cache with PURGE requests.
@@ -253,3 +285,9 @@ parameters:
     ezpublish.siteaccess.groups: {}
     ezpublish.siteaccess.groups_by_siteaccess: {}
     ezpublish.siteaccess.default: ~
+    # SiteAccesses relation map. 2 dimensions array.
+    # First dimension is indexed by repository identifier.
+    # Second dimension is indexed by root location Id.
+    ezpublish.siteaccess.relation_map: {}
+    # SiteAccesses, indexed by language.
+    ezpublish.siteaccesses_by_language: {}

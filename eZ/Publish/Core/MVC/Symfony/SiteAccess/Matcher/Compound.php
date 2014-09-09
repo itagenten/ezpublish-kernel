@@ -2,8 +2,8 @@
 /**
  * File containing the abstract Compound Siteaccess matcher.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -26,7 +26,10 @@ abstract class Compound implements CompoundInterface, URILexer
     protected $config;
 
     /**
-     * @var \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher[]
+     * Matchers map.
+     * Consists of an array of matchers, grouped by ruleset (so array of array of matchers).
+     *
+     * @var array
      */
     protected $matchersMap = array();
 
@@ -66,6 +69,18 @@ abstract class Compound implements CompoundInterface, URILexer
     public function setRequest( SimplifiedRequest $request )
     {
         $this->request = $request;
+        foreach ( $this->matchersMap as $ruleset )
+        {
+            foreach ( $ruleset as $matcher )
+            {
+                $matcher->setRequest( $request );
+            }
+        }
+    }
+
+    public function getRequest()
+    {
+        return $this->request;
     }
 
     public function analyseURI( $uri )
@@ -94,14 +109,14 @@ abstract class Compound implements CompoundInterface, URILexer
         return $linkUri;
     }
 
-    /**
-     * Returns all used sub-matchers.
-     *
-     * @return \eZ\Publish\Core\MVC\Symfony\SiteAccess\Matcher[]
-     */
     public function getSubMatchers()
     {
         return $this->subMatchers;
+    }
+
+    public function setSubMatchers( array $subMatchers )
+    {
+        $this->subMatchers = $subMatchers;
     }
 
     /**

@@ -2,8 +2,8 @@
 /**
  * File containing the ConfigurationConverterTest class.
  *
- * @copyright Copyright (C) 2012 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 namespace eZ\Bundle\EzPublishLegacyBundle\Tests\SetupWizard;
@@ -192,7 +192,7 @@ class ConfigurationConverterTest extends LegacyBasedTestCase
             'stash' => array(
                 'caches' => array(
                     'default' => array(
-                        'handlers' => array( 'FileSystem' ),// If this fails then APC or Memcached is enabled on PHP-CLI
+                        'drivers' => array( 'FileSystem' ),// If this fails then APC or Memcached is enabled on PHP-CLI
                         'inMemory' => true,
                         'registerDoctrineAdapter' => false,
                     )

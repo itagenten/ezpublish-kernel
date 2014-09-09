@@ -2,8 +2,8 @@
 /**
  * File containing the EzxmlToDocbookTest conversion test
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -46,7 +46,7 @@ class EzxmlToDocbookTest extends BaseTest
      */
     protected function getConversionTransformationStylesheet()
     {
-        return __DIR__ . "/../../../../RichText/Resources/stylesheets/ezxml/docbook.xsl";
+        return __DIR__ . "/../../../../RichText/Resources/stylesheets/ezxml/docbook/docbook.xsl";
     }
 
     /**
@@ -74,6 +74,10 @@ class EzxmlToDocbookTest extends BaseTest
     protected function getCustomConversionTransformationStylesheets()
     {
         return array(
+            array(
+                "path" => __DIR__ . "/../../../../RichText/Resources/stylesheets/ezxml/docbook/core.xsl",
+                "priority" => 99
+            ),
             array(
                 "path" => __DIR__ . "/_fixtures/ezxml/custom_stylesheets/youtube_docbook.xsl",
                 "priority" => 100

@@ -2,8 +2,8 @@
 /**
  * File containing the Events class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -69,4 +69,12 @@ final class MVCEvents
      * The event listener method receives a eZ\Publish\Core\MVC\Symfony\Event\InteractiveLoginEvent instance.
      */
     const INTERACTIVE_LOGIN = 'ezpublish.security.interactive_login';
+
+    /**
+     * ROUTE_REFERENCE_GENERATION event occurs when a RouteReference is generated, and gives an opportunity to
+     * alter the RouteReference, e.g. by adding parameters.
+     *
+     * The event listener method receives a eZ\Publish\Core\MVC\Symfony\Event\RouteReferenceGenerationEvent instance.
+     */
+    const ROUTE_REFERENCE_GENERATION = 'ezpublish.routing.reference_generation';
 }

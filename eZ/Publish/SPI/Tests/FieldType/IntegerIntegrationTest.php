@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\SPI\Tests\FieldType\IntegerIntegrationTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -42,7 +42,7 @@ class IntegerIntegrationTest extends BaseIntegrationTest
      */
     public function getTypeName()
     {
-        return 'ezint';
+        return 'ezinteger';
     }
 
     /**
@@ -52,21 +52,15 @@ class IntegerIntegrationTest extends BaseIntegrationTest
      */
     public function getCustomHandler()
     {
-        $handler = $this->getHandler();
-
         $fieldType = new FieldType\Integer\Type();
         $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
-        $handler->getFieldTypeRegistry()->register( 'ezint', $fieldType );
-        $handler->getStorageRegistry()->register(
-            'ezint',
+
+        return $this->getHandler(
+            'ezinteger',
+            $fieldType,
+            new Legacy\Content\FieldValue\Converter\Integer(),
             new FieldType\NullStorage()
         );
-        $handler->getFieldValueConverterRegistry()->register(
-            'ezint',
-            new Legacy\Content\FieldValue\Converter\Integer()
-        );
-
-        return $handler;
     }
 
     /**
@@ -92,7 +86,7 @@ class IntegerIntegrationTest extends BaseIntegrationTest
         return array(
             // The ezint field type does not have any special field definition
             // properties
-            array( 'fieldType', 'ezint' ),
+            array( 'fieldType', 'ezinteger' ),
             array(
                 'fieldTypeConstraints',
                 new Content\FieldTypeConstraints(

@@ -2,8 +2,8 @@
 /**
  * Repository class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -12,6 +12,7 @@ namespace eZ\Publish\Core\SignalSlot;
 use eZ\Publish\API\Repository\Repository as RepositoryInterface;
 use eZ\Publish\API\Repository\Values\ValueObject;
 use eZ\Publish\API\Repository\Values\User\User;
+use eZ\Publish\SPI\Persistence\TransactionHandler;
 
 /**
  * Repository class
@@ -120,7 +121,7 @@ class Repository implements RepositoryInterface
     /**
      * Instance of URL alias service
      *
-     * @var \eZ\Publish\Core\Repository\UrlAliasService
+     * @var \eZ\Publish\Core\Repository\URLAliasService
      */
     protected $urlAliasService;
 
@@ -438,7 +439,14 @@ class Repository implements RepositoryInterface
      */
     public function beginTransaction()
     {
-        return $this->repository->beginTransaction();
+        $return = $this->repository->beginTransaction();
+
+        if ( $this->signalDispatcher instanceof TransactionHandler )
+        {
+            $this->signalDispatcher->beginTransaction();
+        }
+
+        return $return;
     }
 
     /**
@@ -450,7 +458,14 @@ class Repository implements RepositoryInterface
      */
     public function commit()
     {
-        return $this->repository->commit();
+        $return = $this->repository->commit();
+
+        if ( $this->signalDispatcher instanceof TransactionHandler )
+        {
+            $this->signalDispatcher->commit();
+        }
+
+        return $return;
     }
 
     /**
@@ -462,17 +477,23 @@ class Repository implements RepositoryInterface
      */
     public function rollback()
     {
+        if ( $this->signalDispatcher instanceof TransactionHandler )
+        {
+            $this->signalDispatcher->rollback();
+        }
+
         return $this->repository->rollback();
     }
 
     /**
      * Enqueue an event to be triggered at commit or directly if no transaction has started
      *
+     * @deprecated In 5.3.3, to be removed. Signals are emitted after transaction instead of being required to use this.
      * @param Callable $event
      */
     public function commitEvent( $event )
     {
-        $this->repository->commitEvent( $event );
+        return $this->repository->commitEvent( $event );
     }
 
     /**

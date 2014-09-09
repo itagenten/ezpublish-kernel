@@ -2,8 +2,8 @@
 /**
  * File containing the User controller class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -32,8 +32,9 @@ use eZ\Publish\Core\REST\Common\Exceptions\NotFoundException AS RestNotFoundExce
 use eZ\Publish\Core\REST\Server\Exceptions\ForbiddenException;
 use eZ\Publish\Core\REST\Common\Exceptions\NotFoundException;
 use eZ\Publish\Core\Base\Exceptions\UnauthorizedException;
-use eZ\Publish\Core\MVC\Symfony\Security\User as CoreUser;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 /**
  * User controller
@@ -961,8 +962,8 @@ class User extends RestController
     /**
      * Creates a new session based on the credentials provided as POST parameters
      *
-     * @throws \eZ\Publish\Core\Base\Exceptions\UnauthorizedException If the login or password are incorrect
-     * @return Values\UserSession|Values\Conflict|Values\SeeOther
+     * @throws \eZ\Publish\Core\Base\Exceptions\UnauthorizedException If the login or password are incorrect or invalid CSRF
+     * @return Values\UserSession|Values\Conflict
      */
     public function createSession()
     {
@@ -973,70 +974,90 @@ class User extends RestController
                 $this->request->getContent()
             )
         );
+        $this->request->attributes->set( 'username', $sessionInput->login );
+        $this->request->attributes->set( 'password', $sessionInput->password );
 
         try
         {
-            $apiUser = $this->userService->loadUserByCredentials(
-                $sessionInput->login,
-                $sessionInput->password
-            );
-        }
-        catch ( APINotFoundException $e )
-        {
-            throw new UnauthorizedException( "Invalid login or password", 0, null, $e );
-        }
-
-        /** @var $session \Symfony\Component\HttpFoundation\Session\Session */
-        $session = $this->container->get( 'session' );
-        /** @var $authenticationToken \Symfony\Component\Security\Core\Authentication\Token\TokenInterface */
-        $securityContext = $this->container->get( 'security.context' );
-        $authenticationToken = $securityContext->getToken();
-
-        if ( $session->isStarted() && $authenticationToken !== null && $authenticationToken->getUser() instanceof CoreUser )
-        {
-            /** @var $currentApiUser \eZ\Publish\API\Repository\Values\User\User */
-            $currentApiUser = $authenticationToken->getUser()->getAPIUser();
-            if ( $apiUser->id == $currentApiUser->id )
+            $csrfToken = '';
+            $csrfProvider = $this->container->get( 'form.csrf_provider', ContainerInterface::NULL_ON_INVALID_REFERENCE );
+            $session = $this->request->getSession();
+            if ( $session->isStarted() )
             {
-                return new Values\SeeOther(
-                    $this->router->generate(
-                        'ezpublish_rest_deleteSession',
-                        array( 'sessionId' => $session->getId() )
+                if ( $csrfProvider )
+                {
+                    $csrfToken = $this->request->headers->get( 'X-CSRF-Token' );
+                    if (
+                        !$csrfProvider->isCsrfTokenValid(
+                            $this->container->getParameter( 'ezpublish_rest.csrf_token_intention' ),
+                            $csrfToken
+                        )
                     )
+                    {
+                        throw new UnauthorizedException( 'Missing or invalid CSRF token', $csrfToken );
+                    }
+                }
+            }
+
+            $authenticator = $this->container->get( 'ezpublish_rest.session_authenticator' );
+            $token = $authenticator->authenticate( $this->request );
+            // If CSRF token has not been generated yet (i.e. session not started), we generate it now.
+            // This will seamlessly start the session.
+            if ( !$csrfToken )
+            {
+                $csrfToken = $csrfProvider->generateCsrfToken(
+                    $this->container->getParameter( 'ezpublish_rest.csrf_token_intention' )
                 );
             }
-            if ( $currentApiUser->id != $this->container->get( "ezpublish.config.resolver" )->getParameter( "anonymous_user_id" ) )
-            {
-                // Already logged in with another user, this will be converted to HTTP status 409
-                return new Values\Conflict();
-            }
-        }
 
-        if ( $this->container->getParameter( 'form.type_extension.csrf.enabled' ) )
+            return new Values\UserSession(
+                $token->getUser()->getAPIUser(),
+                $session->getName(),
+                $session->getId(),
+                $csrfToken,
+                !$token->hasAttribute( 'isFromSession' )
+            );
+
+        }
+        // Already logged in with another user, this will be converted to HTTP status 409
+        catch ( Exceptions\UserConflictException $e )
         {
-            /** @var $csrfProvider \Symfony\Component\Form\Extension\Csrf\CsrfProvider\CsrfProviderInterface */
-            $csrfProvider = $this->container->get( 'form.csrf_provider' );
+            return new Values\Conflict();
+        }
+        catch ( AuthenticationException $e )
+        {
+            throw new UnauthorizedException( "Invalid login or password", $this->request->getPathInfo() );
+        }
+        catch ( AccessDeniedException $e )
+        {
+            throw new UnauthorizedException( $e->getMessage(), $this->request->getPathInfo() );
+        }
+    }
+
+    /**
+     * Refresh given session.
+     *
+     * @param string $sessionId
+     *
+     * @throws \eZ\Publish\Core\REST\Common\Exceptions\NotFoundException
+     * @return \eZ\Publish\Core\REST\Server\Values\UserSession
+     */
+    public function refreshSession( $sessionId )
+    {
+        /** @var $session \Symfony\Component\HttpFoundation\Session\Session */
+        $session = $this->request->getSession();
+        $inputCsrf = $this->request->headers->get( 'X-CSRF-Token' );
+        if ( !$session->isStarted() || $session->getId() != $sessionId || $session == null )
+        {
+            throw new RestNotFoundException( "Session not valid" );
         }
 
-        $session->start();
-        $roles = array( 'ROLE_USER' );
-        $securityContext->setToken(
-            new UsernamePasswordToken(
-                new CoreUser( $apiUser, $roles ),
-                $apiUser->passwordHash,
-                'ezpublish_rest',
-                $roles
-            )
-        );
         return new Values\UserSession(
-            $apiUser,
+            $this->repository->getCurrentUser(),
             $session->getName(),
             $session->getId(),
-            isset( $csrfProvider ) ?
-                $csrfProvider->generateCsrfToken(
-                    $this->container->getParameter( 'ezpublish_rest.csrf_token_intention' )
-                ) :
-                ""
+            $inputCsrf,
+            false
         );
     }
 
@@ -1056,10 +1077,9 @@ class User extends RestController
             throw new RestNotFoundException( "Session not found: '{$sessionId}'." );
         }
 
-        $this->container->get( 'security.context' )->setToken( null );
-        $session->invalidate();
-
-        return new Values\NoContent();
+        return new Values\DeletedUserSession(
+            $this->container->get( 'ezpublish_rest.session_authenticator' )->logout( $this->request )
+        );
     }
 
     /**

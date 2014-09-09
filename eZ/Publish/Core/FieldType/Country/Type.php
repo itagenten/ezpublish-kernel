@@ -2,8 +2,8 @@
 /**
  * File containing the Country class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -139,7 +139,7 @@ class Type extends FieldType
             return $validationErrors;
         }
 
-        $fieldSettings = $fieldDefinition->fieldSettings;
+        $fieldSettings = $fieldDefinition->getFieldSettings();
 
         if ( ( !isset( $fieldSettings["isMultiple"] ) || $fieldSettings["isMultiple"] === false )
             && count( $fieldValue->countries ) > 1 )

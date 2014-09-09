@@ -2,14 +2,15 @@
 /**
  * File containing the Common class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Parser;
 
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\AbstractParser;
+use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\SiteAccessAware\ContextualizerInterface;
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\ConfigSuggestion;
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\Collector\SuggestionCollectorAwareInterface;
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\Collector\SuggestionCollectorInterface;
@@ -22,7 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 class Common extends AbstractParser implements SuggestionCollectorAwareInterface
 {
     /**
-     * @var \eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\SuggestionCollectorInterface
+     * @var \eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Configuration\Suggestion\Collector\SuggestionCollectorInterface
      */
     private $suggestionCollector;
 
@@ -36,12 +37,6 @@ class Common extends AbstractParser implements SuggestionCollectorAwareInterface
     public function addSemanticConfig( NodeBuilder $nodeBuilder )
     {
         $nodeBuilder
-            ->arrayNode( 'languages' )
-                ->cannotBeEmpty()
-                ->info( 'Available languages, in order of precedence' )
-                ->example( array( 'fre-FR', 'eng-GB' ) )
-                ->prototype( 'scalar' )->end()
-            ->end()
             ->scalarNode( 'repository' )->info( 'The repository to use. Choose among ezpublish.repositories.' )->end()
             // @deprecated
             // Use ezpublish.repositories / repository settings instead.
@@ -106,7 +101,11 @@ class Common extends AbstractParser implements SuggestionCollectorAwareInterface
             ->scalarNode( 'index_page' )
                 ->info( "The page that the index page will show. Default value is null." )
                 ->example( '/Getting-Started' )
-                ->end()
+            ->end()
+            ->scalarNode( 'default_page' )
+                ->info( 'The default page to show, e.g. after user login this will be used for default redirection. If provided, will override "default_target_path" from security.yml.' )
+                ->example( '/Getting-Started' )
+            ->end()
             ->arrayNode( 'http_cache' )
                 ->info( 'Settings related to Http cache' )
                 ->cannotBeEmpty()
@@ -138,66 +137,58 @@ class Common extends AbstractParser implements SuggestionCollectorAwareInterface
             ->end();
     }
 
-    /**
-     * Translates parsed semantic config values from $config to internal key/value pairs.
-     *
-     * @param array $config
-     * @param \Symfony\Component\DependencyInjection\ContainerBuilder $container
-     *
-     * @return void
-     */
-    public function registerInternalConfig( array $config, ContainerBuilder $container )
+    public function preMap( array $config, ContextualizerInterface $contextualizer )
     {
-        $this->registerInternalConfigArray(
-            'languages', $config, $container, self::UNIQUE
-        );
+        $contextualizer->mapConfigArray( 'session', $config );
+    }
 
-        foreach ( $config[$this->baseKey] as $sa => $settings )
+    public function mapConfig( array &$scopeSettings, $currentScope, ContextualizerInterface $contextualizer )
+    {
+        if ( isset( $scopeSettings['database'] ) )
+            $this->addDatabaseConfigSuggestion( $currentScope, $scopeSettings['database'] );
+        if ( isset( $scopeSettings['repository'] ) )
+            $contextualizer->setContextualParameter( 'repository', $currentScope, $scopeSettings['repository'] );
+        if ( isset( $scopeSettings['legacy_mode'] ) )
         {
-            if ( isset( $settings['database'] ) )
-                $this->addDatabaseConfigSuggestion( $sa, $settings['database'] );
-            if ( isset( $settings['repository'] ) )
-                $container->setParameter( "ezsettings.$sa.repository", $settings['repository'] );
-            if ( isset( $settings['legacy_mode'] ) )
-            {
-                $container->setParameter( "ezsettings.$sa.legacy_mode", $settings['legacy_mode'] );
-                $container->setParameter( "ezsettings.$sa.url_alias_router", !$settings['legacy_mode'] );
-            }
-            if ( isset( $settings['cache_pool_name'] ) )
-                $container->setParameter( "ezsettings.$sa.cache_pool_name", $settings['cache_pool_name'] );
-            if ( isset( $settings['var_dir'] ) )
-                $container->setParameter( "ezsettings.$sa.var_dir", $settings['var_dir'] );
-            if ( isset( $settings['storage_dir'] ) )
-                $container->setParameter( "ezsettings.$sa.storage_dir", $settings['storage_dir'] );
-            if ( isset( $settings['binary_dir'] ) )
-                $container->setParameter( "ezsettings.$sa.binary_dir", $settings['binary_dir'] );
-
-            $this->registerInternalConfigArray( 'session', $config, $container );
-            // session_name setting is deprecated in favor of session.name
-            $sessionOptions = $container->hasParameter( "ezsettings.$sa.session" ) ? $container->getParameter( "ezsettings.$sa.session" ) : array();
-            if ( isset( $sessionOptions['name'] ) )
-            {
-                $container->setParameter( "ezsettings.$sa.session_name", $sessionOptions['name'] );
-            }
-            // @deprecated session_name is deprecated, but if present, in addition to session.name, consider it instead (BC).
-            if ( isset( $settings['session_name'] ) )
-            {
-                $sessionOptions['name'] = $settings['session_name'];
-                $container->setParameter( "ezsettings.$sa.session_name", $settings['session_name'] );
-                $container->setParameter( "ezsettings.$sa.session", $sessionOptions );
-            }
-
-            if ( isset( $settings['http_cache']['purge_servers'] ) )
-                $container->setParameter( "ezsettings.$sa.http_cache.purge_servers", $settings['http_cache']['purge_servers'] );
-            if ( isset( $settings['anonymous_user_id'] ) )
-                $container->setParameter( "ezsettings.$sa.anonymous_user_id", $settings['anonymous_user_id'] );
-            if ( isset( $settings['user']['layout'] ) )
-                $container->setParameter( "ezsettings.$sa.security.base_layout", $settings['user']['layout'] );
-            if ( isset( $settings['user']['login_template'] ) )
-                $container->setParameter( "ezsettings.$sa.security.login_template", $settings['user']['login_template'] );
-            if ( isset( $settings['index_page'] ) )
-                $container->setParameter( "ezsettings.$sa.index_page", $settings['index_page'] );
+            $contextualizer->setContextualParameter( 'legacy_mode', $currentScope, $scopeSettings['legacy_mode'] );
+            $contextualizer->setContextualParameter( 'url_alias_router', $currentScope, !$scopeSettings['legacy_mode'] );
         }
+        if ( isset( $scopeSettings['cache_pool_name'] ) )
+            $contextualizer->setContextualParameter( 'cache_pool_name', $currentScope, $scopeSettings['cache_pool_name'] );
+        if ( isset( $scopeSettings['var_dir'] ) )
+            $contextualizer->setContextualParameter( 'var_dir', $currentScope, $scopeSettings['var_dir'] );
+        if ( isset( $scopeSettings['storage_dir'] ) )
+            $contextualizer->setContextualParameter( 'storage_dir', $currentScope, $scopeSettings['storage_dir'] );
+        if ( isset( $scopeSettings['binary_dir'] ) )
+            $contextualizer->setContextualParameter( 'binary_dir', $currentScope, $scopeSettings['binary_dir'] );
+
+        // session_name setting is deprecated in favor of session.name
+        $container = $contextualizer->getContainer();
+        $sessionOptions = $container->hasParameter( "ezsettings.$currentScope.session" ) ? $container->getParameter( "ezsettings.$currentScope.session" ) : array();
+        if ( isset( $sessionOptions['name'] ) )
+        {
+            $contextualizer->setContextualParameter( 'session_name', $currentScope, $sessionOptions['name'] );
+        }
+        // @deprecated session_name is deprecated, but if present, in addition to session.name, consider it instead (BC).
+        if ( isset( $scopeSettings['session_name'] ) )
+        {
+            $sessionOptions['name'] = $scopeSettings['session_name'];
+            $contextualizer->setContextualParameter( 'session_name', $currentScope, $scopeSettings['session_name'] );
+            $contextualizer->setContextualParameter( 'session', $currentScope, $sessionOptions );
+        }
+
+        if ( isset( $scopeSettings['http_cache']['purge_servers'] ) )
+            $contextualizer->setContextualParameter( 'http_cache.purge_servers', $currentScope, $scopeSettings['http_cache']['purge_servers'] );
+        if ( isset( $scopeSettings['anonymous_user_id'] ) )
+            $contextualizer->setContextualParameter( 'anonymous_user_id', $currentScope, $scopeSettings['anonymous_user_id'] );
+        if ( isset( $scopeSettings['user']['layout'] ) )
+            $contextualizer->setContextualParameter( 'security.base_layout', $currentScope, $scopeSettings['user']['layout'] );
+        if ( isset( $scopeSettings['user']['login_template'] ) )
+            $contextualizer->setContextualParameter( 'security.login_template', $currentScope, $scopeSettings['user']['login_template'] );
+        if ( isset( $scopeSettings['index_page'] ) )
+            $contextualizer->setContextualParameter( 'index_page', $currentScope, $scopeSettings['index_page'] );
+        if ( isset( $scopeSettings['default_page'] ) )
+            $contextualizer->setContextualParameter( 'default_page', $currentScope, '/' . ltrim( $scopeSettings['default_page'], '/' ) );
     }
 
     /**

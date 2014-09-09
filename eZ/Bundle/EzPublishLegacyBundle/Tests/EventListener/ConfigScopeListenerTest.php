@@ -2,8 +2,8 @@
 /**
  * File containing the ConfigScopeListenerTest class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -31,25 +31,20 @@ class ConfigScopeListenerTest extends PHPUnit_Framework_TestCase
 
     public function testOnConfigScopeChange()
     {
-        $container = $this->getMock( 'Symfony\Component\DependencyInjection\ContainerInterface' );
-        $container
-            ->expects( $this->exactly( 3 ) )
-            ->method( 'set' )
-            ->will(
-                $this->returnValueMap(
-                    array(
-                        array( 'ezpublish_legacy.kernel', null, ContainerInterface::SCOPE_CONTAINER, null ),
-                        array( 'ezpublish_legacy.kernel.lazy', null, ContainerInterface::SCOPE_CONTAINER, null ),
-                        array( 'ezpublish_legacy.kernel_handler.web', null, ContainerInterface::SCOPE_CONTAINER, null ),
-                    )
-                )
-            );
+        $kernelLoader = $this->getKernelLoaderMock();
+        $kernelLoader->expects( $this->once() )->method( 'resetKernel' );
 
-        $listener = new ConfigScopeListener();
-        $listener->setContainer( $container );
+        $listener = new ConfigScopeListener( $kernelLoader );
         $siteAccess = new SiteAccess( 'test' );
         $event = new ScopeChangeEvent( $siteAccess );
         $listener->onConfigScopeChange( $event );
         $this->assertSame( $siteAccess, $event->getSiteAccess() );
+    }
+
+    private function getKernelLoaderMock()
+    {
+        return $this->getMockBuilder( 'eZ\Publish\Core\MVC\Legacy\Kernel\Loader' )
+            ->disableOriginalConstructor()
+            ->getMock();
     }
 }

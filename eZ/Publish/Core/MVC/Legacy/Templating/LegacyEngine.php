@@ -2,8 +2,8 @@
 /**
  * File containing the LegacyEngine class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -12,6 +12,7 @@ namespace eZ\Publish\Core\MVC\Legacy\Templating;
 use Symfony\Component\Templating\EngineInterface;
 use eZ\Publish\Core\MVC\Legacy\Templating\Converter\MultipleObjectConverter;
 use eZTemplate;
+use ezpEvent;
 
 class LegacyEngine implements EngineInterface
 {
@@ -100,7 +101,7 @@ class LegacyEngine implements EngineInterface
                     $tpl->setVariable( $varName, $value );
                 }
 
-                return $tpl->fetch( $name );
+                return ezpEvent::getInstance()->filter( 'response/output', $tpl->fetch( $name ) );
             },
             false
         );

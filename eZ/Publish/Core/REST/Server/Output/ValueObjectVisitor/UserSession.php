@@ -2,8 +2,8 @@
 /**
  * File containing the UserSession ValueObjectVisitor class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -27,12 +27,12 @@ class UserSession extends ValueObjectVisitor
      */
     public function visit( Visitor $visitor, Generator $generator, $data )
     {
-        $visitor->setStatus( 201 );
+        $status = $data->created ? 201 : 200;
+        $visitor->setStatus( $status );
 
         $visitor->setHeader( 'Content-Type', $generator->getMediaType( 'Session' ) );
 
         $sessionHref = $this->router->generate( 'ezpublish_rest_deleteSession', array( 'sessionId' => $data->sessionId ) );
-        $visitor->setHeader( 'Location', $sessionHref );
 
         //@todo Needs refactoring, disabling certain headers should not be done this way
         $visitor->setHeader( 'Accept-Patch', false );

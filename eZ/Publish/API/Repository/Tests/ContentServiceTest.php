@@ -2,8 +2,8 @@
 /**
  * File containing the ContentServiceTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -189,7 +189,9 @@ class ContentServiceTest extends BaseContentServiceTest
                 'eng-US',
                 $this->getRepository()->getCurrentUser()->id,
                 false,
-                null
+                null,
+                // Main Location id for unpublished Content should be null
+                null,
             ),
             array(
                 $content->contentInfo->id,
@@ -201,6 +203,7 @@ class ContentServiceTest extends BaseContentServiceTest
                 $content->contentInfo->ownerId,
                 $content->contentInfo->published,
                 $content->contentInfo->publishedDate,
+                $content->contentInfo->mainLocationId,
             )
         );
     }
@@ -857,6 +860,7 @@ class ContentServiceTest extends BaseContentServiceTest
             )
         );
 
+        $this->assertNotNull( $content->contentInfo->mainLocationId );
         $date = new \DateTime( '1984/01/01' );
         $this->assertGreaterThan(
             $date->getTimestamp(),
@@ -1291,6 +1295,12 @@ class ContentServiceTest extends BaseContentServiceTest
         $this->assertInstanceOf(
             '\\eZ\\Publish\\API\\Repository\\Values\\Content\\Content',
             $draftVersion2
+        );
+
+        $this->assertEquals(
+            $this->generateId( 'user', 10 ),
+            $draftVersion2->versionInfo->creatorId,
+            "creatorId is not properly set on new Version"
         );
 
         return $draftVersion2;
@@ -2024,13 +2034,21 @@ class ContentServiceTest extends BaseContentServiceTest
         $contentService = $repository->getContentService();
 
         /* BEGIN: Use Case */
-        $contentVersion2 = $this->createContentVersion2();
+        $publishedContent = $this->createContentVersion1();
 
-        // Will return the $versionInfo of $content
-        $versionInfo = $contentService->loadVersionInfo( $contentVersion2->contentInfo, 1 );
+        $draftContent = $contentService->createContentDraft( $publishedContent->contentInfo );
+
+        // Will return the VersionInfo of the $draftContent
+        $versionInfo = $contentService->loadVersionInfoById( $publishedContent->id, 2 );
         /* END: Use Case */
 
-        $this->assertEquals( 1, $versionInfo->versionNo );
+        $this->assertEquals( 2, $versionInfo->versionNo );
+
+        // Check that ContentInfo contained in VersionInfo has correct main Location id set
+        $this->assertEquals(
+            $publishedContent->getVersionInfo()->getContentInfo()->mainLocationId,
+            $versionInfo->getContentInfo()->mainLocationId
+        );
     }
 
     /**
@@ -2070,13 +2088,21 @@ class ContentServiceTest extends BaseContentServiceTest
         $contentService = $repository->getContentService();
 
         /* BEGIN: Use Case */
-        $contentVersion2 = $this->createContentVersion2();
+        $publishedContent = $this->createContentVersion1();
 
-        // Will return the $versionInfo of $content
-        $versionInfo = $contentService->loadVersionInfoById( $contentVersion2->id, 1 );
+        $draftContent = $contentService->createContentDraft( $publishedContent->contentInfo );
+
+        // Will return the VersionInfo of the $draftContent
+        $versionInfo = $contentService->loadVersionInfoById( $publishedContent->id, 2 );
         /* END: Use Case */
 
-        $this->assertEquals( 1, $versionInfo->versionNo );
+        $this->assertEquals( 2, $versionInfo->versionNo );
+
+        // Check that ContentInfo contained in VersionInfo has correct main Location id set
+        $this->assertEquals(
+            $publishedContent->getVersionInfo()->getContentInfo()->mainLocationId,
+            $versionInfo->getContentInfo()->mainLocationId
+        );
     }
 
     /**
@@ -2277,19 +2303,27 @@ class ContentServiceTest extends BaseContentServiceTest
         $contentService = $repository->getContentService();
 
         /* BEGIN: Use Case */
-        $contentVersion2 = $this->createContentVersion2();
+        $publishedContent = $this->createContentVersion1();
 
-        // Will return a Content instance equal to $content
-        $contentReloaded = $contentService->loadContentByContentInfo(
-            $contentVersion2->contentInfo,
+        $draftContent = $contentService->createContentDraft( $publishedContent->contentInfo );
+
+        // This content instance is identical to $draftContent
+        $draftContentReloaded = $contentService->loadContentByContentInfo(
+            $publishedContent->contentInfo,
             null,
-            1
+            2
         );
         /* END: Use Case */
 
         $this->assertEquals(
-            1,
-            $contentReloaded->getVersionInfo()->versionNo
+            2,
+            $draftContentReloaded->getVersionInfo()->versionNo
+        );
+
+        // Check that ContentInfo contained in reloaded draft Content has correct main Location id set
+        $this->assertEquals(
+            $publishedContent->versionInfo->contentInfo->mainLocationId,
+            $draftContentReloaded->versionInfo->contentInfo->mainLocationId
         );
     }
 
@@ -2353,13 +2387,21 @@ class ContentServiceTest extends BaseContentServiceTest
         $contentService = $repository->getContentService();
 
         /* BEGIN: Use Case */
-        $draftVersion2 = $this->createContentDraftVersion2();
+        $publishedContent = $this->createContentVersion1();
 
-        // This content instance is identical to $contentVersion1
-        $oldContent = $contentService->loadContent( $draftVersion2->id, null, 1 );
+        $draftContent = $contentService->createContentDraft( $publishedContent->contentInfo );
+
+        // This content instance is identical to $draftContent
+        $draftContentReloaded = $contentService->loadContent( $publishedContent->id, null, 2 );
         /* END: Use Case */
 
-        $this->assertEquals( 1, $oldContent->getVersionInfo()->versionNo );
+        $this->assertEquals( 2, $draftContentReloaded->getVersionInfo()->versionNo );
+
+        // Check that ContentInfo contained in reloaded draft Content has correct main Location id set
+        $this->assertEquals(
+            $publishedContent->versionInfo->contentInfo->mainLocationId,
+            $draftContentReloaded->versionInfo->contentInfo->mainLocationId
+        );
     }
 
     /**
@@ -2427,17 +2469,25 @@ class ContentServiceTest extends BaseContentServiceTest
         $contentService = $repository->getContentService();
 
         /* BEGIN: Use Case */
-        $draftVersion2 = $this->createContentDraftVersion2();
+        $publishedContent = $this->createContentVersion1();
 
-        // This content instance is identical to $contentVersion1
-        $oldContent = $contentService->loadContentByRemoteId(
-            $draftVersion2->contentInfo->remoteId,
+        $draftContent = $contentService->createContentDraft( $publishedContent->contentInfo );
+
+        // This content instance is identical to $draftContent
+        $draftContentReloaded = $contentService->loadContentByRemoteId(
+            $publishedContent->contentInfo->remoteId,
             null,
-            1
+            2
         );
         /* END: Use Case */
 
-        $this->assertEquals( 1, $oldContent->getVersionInfo()->versionNo );
+        $this->assertEquals( 2, $draftContentReloaded->getVersionInfo()->versionNo );
+
+        // Check that ContentInfo contained in reloaded draft Content has correct main Location id set
+        $this->assertEquals(
+            $publishedContent->versionInfo->contentInfo->mainLocationId,
+            $draftContentReloaded->versionInfo->contentInfo->mainLocationId
+        );
     }
 
     /**

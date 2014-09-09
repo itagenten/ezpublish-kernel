@@ -2,8 +2,8 @@
 /**
  * File containing the PreviewControllerTest class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -41,6 +41,11 @@ class PreviewControllerTest extends PHPUnit_Framework_TestCase
     /**
      * @var \PHPUnit_Framework_MockObject_MockObject
      */
+    protected $globalHelper;
+
+    /**
+     * @var \PHPUnit_Framework_MockObject_MockObject
+     */
     protected $securityContext;
 
     protected function setUp()
@@ -51,6 +56,10 @@ class PreviewControllerTest extends PHPUnit_Framework_TestCase
         $this->httpKernel = $this->getMock( 'Symfony\Component\HttpKernel\HttpKernelInterface' );
         $this->previewHelper = $this
             ->getMockBuilder( 'eZ\Publish\Core\Helper\ContentPreviewHelper' )
+            ->disableOriginalConstructor()
+            ->getMock();
+        $this->globalHelper = $this
+            ->getMockBuilder( 'eZ\Publish\Core\MVC\Symfony\Templating\GlobalHelper' )
             ->disableOriginalConstructor()
             ->getMock();
         $this->securityContext = $this->getMock( 'Symfony\Component\Security\Core\SecurityContextInterface' );
@@ -65,6 +74,7 @@ class PreviewControllerTest extends PHPUnit_Framework_TestCase
             $this->contentService,
             $this->httpKernel,
             $this->previewHelper,
+            $this->globalHelper,
             $this->securityContext
         );
 
@@ -115,7 +125,7 @@ class PreviewControllerTest extends PHPUnit_Framework_TestCase
         $this->securityContext
             ->expects( $this->once() )
             ->method( 'isGranted' )
-            ->with( $this->equalTo( new AuthorizationAttribute( 'content', 'versionview', array( 'valueObject' => $content ) ) ) )
+            ->with( $this->equalTo( new AuthorizationAttribute( 'content', 'versionread', array( 'valueObject' => $content ) ) ) )
             ->will( $this->returnValue( false ) );
 
         $controller->previewContentAction( $contentId, $versionNo, $lang, 'test' );
@@ -146,7 +156,7 @@ class PreviewControllerTest extends PHPUnit_Framework_TestCase
         $this->securityContext
             ->expects( $this->once() )
             ->method( 'isGranted' )
-            ->with( $this->equalTo( new AuthorizationAttribute( 'content', 'versionview', array( 'valueObject' => $content ) ) ) )
+            ->with( $this->equalTo( new AuthorizationAttribute( 'content', 'versionread', array( 'valueObject' => $content ) ) ) )
             ->will( $this->returnValue( true ) );
 
         $previewSiteAccessName = 'test';

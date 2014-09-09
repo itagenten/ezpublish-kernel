@@ -2,20 +2,20 @@
 /**
  * File containing the FragmentPassTest class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Bundle\EzPublishCoreBundle\Tests\DependencyInjection\Compiler;
 
 use eZ\Bundle\EzPublishCoreBundle\DependencyInjection\Compiler\FragmentPass;
-use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractCompilerPassTest;
+use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractCompilerPassTestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
-class FragmentPassTest extends AbstractCompilerPassTest
+class FragmentPassTest extends AbstractCompilerPassTestCase
 {
     protected function registerCompilerPass( ContainerBuilder $container )
     {
@@ -24,16 +24,23 @@ class FragmentPassTest extends AbstractCompilerPassTest
 
     public function testProcess()
     {
+        $inlineClass = 'Foo';
+        $this->container->setParameter( 'ezpublish.decorated_fragment_renderer.inline.class', $inlineClass );
+        $inlineRendererDef = new Definition( $inlineClass );
+        $inlineRendererDef->addTag( 'kernel.fragment_renderer' );
         $esiRendererDef = new Definition();
-        $esiRendererMethodCalls = array( array( 'setFoo', array( 'arg1', 'arg2' ) ) );
-        $esiRendererDef->setMethodCalls( $esiRendererMethodCalls );
+        $esiRendererDef->addTag( 'kernel.fragment_renderer' );
         $hincludeRendererDef = new Definition();
-        $hincludeRendererMethodCalls = array( array( 'setBar', array( 'some', 'thing' ) ) );
-        $hincludeRendererDef->setMethodCalls( $hincludeRendererMethodCalls );
+        $hincludeRendererDef->addTag( 'kernel.fragment_renderer' );
+
+        $decoratedFragmentRendererDef = new Definition();
+        $decoratedFragmentRendererDef->setAbstract( true );
 
         $this->setDefinition( 'fragment.listener', new Definition() );
+        $this->setDefinition( 'fragment.renderer.inline', $inlineRendererDef );
         $this->setDefinition( 'fragment.renderer.esi', $esiRendererDef );
         $this->setDefinition( 'fragment.renderer.hinclude', $hincludeRendererDef );
+        $this->setDefinition( 'ezpublish.decorated_fragment_renderer', $decoratedFragmentRendererDef );
 
         $this->compile();
 
@@ -42,22 +49,39 @@ class FragmentPassTest extends AbstractCompilerPassTest
         $this->assertSame( 'ezpublish.fragment_listener.factory', $fragmentListenerDef->getFactoryService() );
         $this->assertSame( 'buildFragmentListener', $fragmentListenerDef->getFactoryMethod() );
 
-        array_unshift(
-            $esiRendererMethodCalls,
-            array(
-                'setSiteAccess',
-                array( new Reference( 'ezpublish.siteaccess' ) )
-            )
-        );
-        $this->assertEquals( $esiRendererMethodCalls, $this->container->getDefinition( 'fragment.renderer.esi' )->getMethodCalls() );
+        $this->assertTrue( $this->container->hasDefinition( 'fragment.renderer.inline.inner' ) );
+        $this->assertSame( $inlineRendererDef, $this->container->getDefinition( 'fragment.renderer.inline.inner' ) );
+        $this->assertFalse( $inlineRendererDef->isPublic() );
+        $this->assertTrue( $this->container->hasDefinition( 'fragment.renderer.esi.inner' ) );
+        $this->assertSame( $esiRendererDef, $this->container->getDefinition( 'fragment.renderer.esi.inner' ) );
+        $this->assertFalse( $esiRendererDef->isPublic() );
+        $this->assertTrue( $this->container->hasDefinition( 'fragment.renderer.hinclude.inner' ) );
+        $this->assertSame( $hincludeRendererDef, $this->container->getDefinition( 'fragment.renderer.hinclude.inner' ) );
+        $this->assertFalse( $hincludeRendererDef->isPublic() );
 
-        array_unshift(
-            $hincludeRendererMethodCalls,
-            array(
-                'setSiteAccess',
-                array( new Reference( 'ezpublish.siteaccess' ) )
-            )
+        $this->assertContainerBuilderHasServiceDefinitionWithParent( 'fragment.renderer.inline', 'ezpublish.decorated_fragment_renderer' );
+        $decoratedInlineDef = $this->container->getDefinition( 'fragment.renderer.inline' );
+        $this->assertSame( array( 'kernel.fragment_renderer' => array( array() ) ), $decoratedInlineDef->getTags() );
+        $this->assertEquals(
+            array( new Reference( 'fragment.renderer.inline.inner' ) ),
+            $decoratedInlineDef->getArguments()
         );
-        $this->assertEquals( $hincludeRendererMethodCalls, $this->container->getDefinition( 'fragment.renderer.hinclude' )->getMethodCalls() );
+        $this->assertSame( $inlineClass, $decoratedInlineDef->getClass() );
+
+        $this->assertContainerBuilderHasServiceDefinitionWithParent( 'fragment.renderer.esi', 'ezpublish.decorated_fragment_renderer' );
+        $decoratedEsiDef = $this->container->getDefinition( 'fragment.renderer.esi' );
+        $this->assertSame( array( 'kernel.fragment_renderer' => array( array() ) ), $decoratedEsiDef->getTags() );
+        $this->assertEquals(
+            array( new Reference( 'fragment.renderer.esi.inner' ) ),
+            $decoratedEsiDef->getArguments()
+        );
+
+        $this->assertContainerBuilderHasServiceDefinitionWithParent( 'fragment.renderer.hinclude', 'ezpublish.decorated_fragment_renderer' );
+        $decoratedHincludeDef = $this->container->getDefinition( 'fragment.renderer.hinclude' );
+        $this->assertSame( array( 'kernel.fragment_renderer' => array( array() ) ), $decoratedHincludeDef->getTags() );
+        $this->assertEquals(
+            array( new Reference( 'fragment.renderer.hinclude.inner' ) ),
+            $decoratedHincludeDef->getArguments()
+        );
     }
 }

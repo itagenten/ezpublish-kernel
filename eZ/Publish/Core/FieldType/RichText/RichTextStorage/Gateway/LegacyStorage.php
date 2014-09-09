@@ -2,8 +2,8 @@
 /**
  * File containing the RichText LegacyStorage class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -11,7 +11,6 @@ namespace eZ\Publish\Core\FieldType\RichText\RichTextStorage\Gateway;
 
 use eZ\Publish\Core\FieldType\RichText\RichTextStorage\Gateway;
 use eZ\Publish\Core\Persistence\Database\DatabaseHandler;
-use eZ\Publish\Core\FieldType\Url\UrlStorage\Gateway\LegacyStorage as UrlStorage;
 use RuntimeException;
 
 class LegacyStorage extends Gateway
@@ -41,6 +40,7 @@ class LegacyStorage extends Gateway
             throw new RuntimeException( "Invalid dbHandler passed" );
         }
 
+        $this->urlGateway->setConnection( $dbHandler );
         $this->dbHandler = $dbHandler;
     }
 
@@ -61,92 +61,25 @@ class LegacyStorage extends Gateway
     }
 
     /**
-     * For given array of URL ids returns a hash of corresponding URLs,
-     * with URL ids as keys.
+     * Returns a list of Content ids for a list of remote ids.
      *
      * Non-existent ids are ignored.
      *
-     * @param array $linkIds Array of link Ids
+     * @param array $remoteIds An array of Content remote ids
      *
-     * @return array
+     * @return array An array of Content ids, with remote ids as keys
      */
-    public function getLinkUrls( array $linkIds )
-    {
-        $linkUrls = array();
-
-        if ( !empty( $linkIds ) )
-        {
-            $q = $this->getConnection()->createSelectQuery();
-            $q
-                ->select( "id", "url" )
-                ->from( UrlStorage::URL_TABLE )
-                ->where( $q->expr->in( 'id', $linkIds ) );
-
-            $statement = $q->prepare();
-            $statement->execute();
-            foreach ( $statement->fetchAll( \PDO::FETCH_ASSOC ) as $row )
-            {
-                $linkUrls[$row['id']] = $row['url'];
-            }
-        }
-
-        return $linkUrls;
-    }
-
-    /**
-     * For given array of URLs returns a hash of corresponding ids,
-     * with URLs as keys.
-     *
-     * Non-existent URLs are ignored.
-     *
-     * @param array $linksUrls
-     *
-     * @return array
-     */
-    public function getLinkIds( array $linksUrls )
-    {
-        $linkIds = array();
-
-        if ( !empty( $linksUrls ) )
-        {
-            $q = $this->getConnection()->createSelectQuery();
-            $q
-                ->select( "id", "url" )
-                ->from( UrlStorage::URL_TABLE )
-                ->where( $q->expr->in( 'url', $linksUrls ) );
-
-            $statement = $q->prepare();
-            $statement->execute();
-            foreach ( $statement->fetchAll( \PDO::FETCH_ASSOC ) as $row )
-            {
-                $linkIds[$row['url']] = $row['id'];
-            }
-        }
-
-        return $linkIds;
-    }
-
-    /**
-     * For given array of Content remote ids returns a hash of corresponding
-     * Content ids, with remote ids as keys.
-     *
-     * Non-existent ids are ignored.
-     *
-     * @param array $linksRemoteIds
-     *
-     * @return array
-     */
-    public function getContentIds( array $linksRemoteIds )
+    public function getContentIds( array $remoteIds )
     {
         $objectRemoteIdMap = array();
 
-        if ( !empty( $linksRemoteIds ) )
+        if ( !empty( $remoteIds ) )
         {
             $q = $this->getConnection()->createSelectQuery();
             $q
                 ->select( "id", "remote_id" )
                 ->from( "ezcontentobject" )
-                ->where( $q->expr->in( 'remote_id', $linksRemoteIds ) );
+                ->where( $q->expr->in( 'remote_id', $remoteIds ) );
 
             $statement = $q->prepare();
             $statement->execute();
@@ -157,41 +90,5 @@ class LegacyStorage extends Gateway
         }
 
         return $objectRemoteIdMap;
-    }
-
-    /**
-     * Inserts a new URL and returns its id.
-     *
-     * @param string $url The URL to insert in the database
-     *
-     * @return mixed
-     */
-    public function insertLink( $url )
-    {
-        $time = time();
-        $dbHandler = $this->getConnection();
-
-        $q = $dbHandler->createInsertQuery();
-        $q->insertInto(
-            $dbHandler->quoteTable( UrlStorage::URL_TABLE )
-        )->set(
-            $dbHandler->quoteColumn( "created" ),
-            $q->bindValue( $time, null, \PDO::PARAM_INT )
-        )->set(
-            $dbHandler->quoteColumn( "modified" ),
-            $q->bindValue( $time, null, \PDO::PARAM_INT )
-        )->set(
-            $dbHandler->quoteColumn( "original_url_md5" ),
-            $q->bindValue( md5( $url ) )
-        )->set(
-            $dbHandler->quoteColumn( "url" ),
-            $q->bindValue( $url )
-        );
-
-        $q->prepare()->execute();
-
-        return $dbHandler->lastInsertId(
-            $dbHandler->getSequenceName( UrlStorage::URL_TABLE, "id" )
-        );
     }
 }

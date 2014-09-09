@@ -2,8 +2,8 @@
 /**
  * File containing the LegacyResponseManagerTest class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -15,6 +15,7 @@ use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use PHPUnit_Framework_TestCase;
 use Symfony\Component\Templating\EngineInterface;
 use ezpKernelResult;
+use ezpKernelRedirect;
 use DateTime;
 
 class LegacyResponseManagerTest extends PHPUnit_Framework_TestCase
@@ -170,5 +171,70 @@ class LegacyResponseManagerTest extends PHPUnit_Framework_TestCase
             array( 'custom.twig', '私は、コンテンツ管理が大好きです。' ),
             array( 'custom.twig', 'אני אוהב את ניהול תוכן.' ),
         );
+    }
+
+    /**
+     * @dataProvider generateRedirectResponseProvider
+     */
+    public function testGenerateRedirectResponse( $uri, $redirectStatus, $expectedStatusCode, $content )
+    {
+        $kernelRedirect = new ezpKernelRedirect( $uri, $redirectStatus, $content );
+        $manager = new LegacyResponseManager( $this->templateEngine, $this->configResolver );
+        $response = $manager->generateRedirectResponse( $kernelRedirect );
+        $uriInContent = htmlspecialchars( $uri );
+        $expectedContent = <<<EOT
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="refresh" content="1;url=$uriInContent" />
+
+        <title>Redirecting to $uriInContent</title>
+    </head>
+    <body>
+        Redirecting to <a href="$uriInContent">$uriInContent</a>.
+    </body>
+</html>
+EOT;
+
+        $this->assertInstanceOf( 'Symfony\Component\HttpFoundation\RedirectResponse', $response );
+        $this->assertSame( $uri, $response->getTargetUrl() );
+        $this->assertSame( $expectedStatusCode, $response->getStatusCode() );
+        $this->assertSame( $expectedContent, $response->getContent() );
+    }
+
+    public function generateRedirectResponseProvider()
+    {
+        return array(
+            array( '/foo', null, 302, null ),
+            array( '/foo', '302', 302, 'bar' ),
+            array( '/foo/bar', '301: blablabla', 301, 'Hello world!' ),
+            array( '/foo/bar?some=thing&toto=titi', '303: See other', 303, 'こんにちは、世界!' ),
+        );
+    }
+
+    public function testMapHeaders()
+    {
+        $etag = '86fb269d190d2c85f6e0468ceca42a20';
+        $date = new DateTime();
+        $dateForCache = $date->format( 'D, d M Y H:i:s' ).' GMT';
+        $headers = array( 'X-Foo: Bar', "Etag: $etag", "Last-Modified: $dateForCache", "Expires: $dateForCache" );
+
+        // Partially mock the manager to simulate calls to header_remove()
+        $manager = $this->getMockBuilder( 'eZ\Bundle\EzPublishLegacyBundle\LegacyResponse\LegacyResponseManager' )
+            ->setConstructorArgs( array( $this->templateEngine, $this->configResolver ) )
+            ->setMethods( array( 'removeHeader' ) )
+            ->getMock();
+        $manager
+            ->expects( $this->exactly( count( $headers ) ) )
+            ->method( 'removeHeader' );
+        /** @var \eZ\Bundle\EzPublishLegacyBundle\LegacyResponse\LegacyResponseManager|\PHPUnit_Framework_MockObject_MockObject $manager */
+        $response = new LegacyResponse();
+        $responseMappedHeaders = $manager->mapHeaders( $headers, $response );
+        $this->assertSame( spl_object_hash( $response ), spl_object_hash( $responseMappedHeaders ) );
+        $this->assertSame( 'Bar', $responseMappedHeaders->headers->get( 'X-Foo' ) );
+        $this->assertSame( '"' . $etag . '"', $responseMappedHeaders->getEtag() );
+        $this->assertEquals( new DateTime( $dateForCache ), $responseMappedHeaders->getLastModified() );
+        $this->assertEquals( new DateTime( $dateForCache ), $responseMappedHeaders->getExpires() );
     }
 }

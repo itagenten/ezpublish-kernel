@@ -65,6 +65,9 @@ Changes affecting version compatibility with former or future versions.
   SiteAccess is no longer injected in constructor, but with dedicated setter.
   This setter is defined in `eZ\Publish\Core\MVC\Symfony\SiteAccess\SiteAccessAware` interface, which `ConfigResolver` now implements.
 
+* REST v2 POST /user/sessions
+  For story EZP-22163 to allow for login with existing sessions+csrf token this endpoint has been slightly changed to 1. not return location header, but continue to return session info directly 2. Return 200 instead of 201 in this case if session and login matches (409 if not). See doc/specifications/rest/REST-API-V2.rst for latest info.
+
 ## Deprecations
 
 * Method `eZ\Publish\API\Repository\RoleService::removePolicy` is deprecated in
@@ -82,6 +85,12 @@ Changes affecting version compatibility with former or future versions.
 
 * In semantic configuration, `ezpublish.system.<siteAccessName>.session_name` is deprecated.
   Use `ezpublish.system.<siteAccessName>.session.name` instead.
+
+* `Regex\URI` and `Regex\Host` SiteAccess matchers are deprecated as reverse match is not possible with them (i.e. see `VersatileMatcher` interface).
+
+* All Location based SortClauses, as well as PriorityCriterion and DepthCriterion has been
+  deprecated for content search use since their behaviour is unpredictable by design when
+  content has several locations. Instead use same functionality on new Location Search API.
 
 No further changes are known in this release at the time of writing.
 See online on your corresponding eZ Publish version for

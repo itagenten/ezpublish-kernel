@@ -2,8 +2,8 @@
 /**
  * File containing the IOFactoryTest class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -40,7 +40,7 @@ class IOFactoryTest extends \PHPUnit_Framework_TestCase
             ->will( $this->returnValue( 'my_prefix' ) );
         $factory = new IOFactory( $this->configResolver, $this->mimeDetector );
         $this->assertInstanceOf(
-            'eZ\\Publish\\Core\\IO\\IOService',
+            'eZ\\Publish\\Core\\IO\\IOServiceInterface',
             $factory->getService( $this->getMock( 'eZ\\Publish\\Core\\IO\\Handler' ), $prefixSetting )
         );
     }

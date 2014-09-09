@@ -2,8 +2,8 @@
 /**
  * File containing the ContentTypeGateway class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -165,6 +165,29 @@ class ExceptionConversion extends Gateway
         try
         {
             return $this->innerGateway->loadRoleAssignmentsByGroupId( $groupId, $inherited );
+        }
+        catch ( DBALException $e )
+        {
+            throw new RuntimeException( 'Database error', 0, $e );
+        }
+        catch ( PDOException $e )
+        {
+            throw new RuntimeException( 'Database error', 0, $e );
+        }
+    }
+
+    /**
+     * Loads role assignments for given role ID
+     *
+     * @param mixed $roleId
+     *
+     * @return array
+     */
+    public function loadRoleAssignmentsByRoleId( $roleId )
+    {
+        try
+        {
+            return $this->innerGateway->loadRoleAssignmentsByRoleId( $roleId );
         }
         catch ( DBALException $e )
         {

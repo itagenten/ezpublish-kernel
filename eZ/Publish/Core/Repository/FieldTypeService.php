@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\API\Repository\FieldTypeService class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  * @package eZ\Publish\API\Repository
  */
@@ -14,7 +14,7 @@ use eZ\Publish\API\Repository\FieldTypeService as FieldTypeServiceInterface;
 use eZ\Publish\API\Repository\Repository as RepositoryInterface;
 use eZ\Publish\SPI\Persistence\Handler;
 use eZ\Publish\SPI\FieldType\FieldType as SPIFieldType;
-use eZ\Publish\Core\Base\Exceptions\NotFoundException;
+use eZ\Publish\Core\Base\Exceptions\NotFound\FieldTypeNotFoundException;
 use eZ\Publish\Core\Base\Exceptions\InvalidArgumentException;
 use eZ\Publish\Core\Repository\Values\ContentType\FieldType;
 
@@ -128,10 +128,7 @@ class FieldTypeService implements FieldTypeServiceInterface
     {
         if ( !isset( $this->settings[$identifier] ) )
         {
-            throw new NotFoundException(
-                "FieldType",
-                "Provided \$identifier is unknown: '{$identifier}', has: " . var_export( array_keys( $this->settings ), true )
-            );
+            throw new FieldTypeNotFoundException( $identifier );
         }
 
         if ( $this->settings[$identifier] instanceof SPIFieldType )

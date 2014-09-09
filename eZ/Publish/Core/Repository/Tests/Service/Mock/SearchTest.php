@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\Core\Repository\Tests\Service\Mock\SearchTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -95,11 +95,11 @@ class SearchTest extends BaseServiceMockTest
     {
         return array(
             array(
-                new Query( array( "filter" => new Criterion\Location\Id( 42 ) ) ),
+                new Query( array( "filter" => new Criterion\Location\Depth( Criterion\Operator::LT, 2 ) ) ),
                 "Argument '\$query' is invalid: Location criterions cannot be used in Content search"
             ),
             array(
-                new Query( array( "query" => new Criterion\Location\Id( 42 ) ) ),
+                new Query( array( "query" => new Criterion\Location\Depth( Criterion\Operator::LT, 2 ) ) ),
                 "Argument '\$query' is invalid: Location criterions cannot be used in Content search"
             ),
             array(
@@ -107,7 +107,7 @@ class SearchTest extends BaseServiceMockTest
                     array(
                         "query" => new Criterion\LogicalAnd(
                             array(
-                                new Criterion\Location\Id( 42 )
+                                new Criterion\Location\Depth( Criterion\Operator::LT, 2 )
                             )
                         )
                     )
@@ -160,13 +160,13 @@ class SearchTest extends BaseServiceMockTest
     {
         return array(
             array(
-                new Criterion\Location\Id( 42 ),
+                new Criterion\Location\Depth( Criterion\Operator::LT, 2 ),
                 "Argument '\$filter' is invalid: Location criterions cannot be used in Content search"
             ),
             array(
                 new Criterion\LogicalAnd(
                     array(
-                        new Criterion\Location\Id( 42 )
+                        new Criterion\Location\Depth( Criterion\Operator::LT, 2 )
                     )
                 ),
                 "Argument '\$filter' is invalid: Location criterions cannot be used in Content search"

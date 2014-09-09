@@ -2,8 +2,8 @@
 /**
  * File containing the ImageStorage Converter class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -11,11 +11,12 @@ namespace eZ\Publish\Core\FieldType\Image;
 
 use eZ\Publish\SPI\Persistence\Content\VersionInfo;
 use eZ\Publish\SPI\Persistence\Content\Field;
-use eZ\Publish\Core\IO\IOService;
+use eZ\Publish\Core\IO\IOServiceInterface;
 use eZ\Publish\Core\FieldType\GatewayBasedStorage;
 use eZ\Publish\Core\IO\MetadataHandler;
 use eZ\Publish\Core\Base\Exceptions\NotFoundException;
 use Psr\Log\LoggerInterface;
+use eZ\Publish\Core\Base\Utils\DeprecationWarnerInterface as DeprecationWarner;
 
 /**
  * Converter for Image field type external storage
@@ -34,7 +35,7 @@ class ImageStorage extends GatewayBasedStorage
     /**
      * The IO Service used to manipulate data
      *
-     * @var IOService
+     * @var IOServiceInterface
      */
     protected $IOService;
 
@@ -45,25 +46,29 @@ class ImageStorage extends GatewayBasedStorage
      */
     protected $pathGenerator;
 
-    /** @var  */
+    /** @var MetadataHandler */
     protected $imageSizeMetadataHandler;
 
     /**
-     * Construct from gateways
-     *
-     * @param \eZ\Publish\Core\FieldType\StorageGateway[] $gateways
-     * @param IOService                                   $IOService
-     * @param \eZ\Publish\Core\IO\MetadataHandler         $pathGenerator
-     * @param \eZ\Publish\Core\IO\MetadataHandler         $imageSizeMetadataHandler
-     * @param \Psr\Log\LoggerInterface                    $logger
+     * @var DeprecationWarner
      */
-    public function __construct( array $gateways, IOService $IOService, PathGenerator $pathGenerator, MetadataHandler $imageSizeMetadataHandler, LoggerInterface $logger = null )
+    private $deprecationWarner;
+
+    public function __construct(
+        array $gateways,
+        IOServiceInterface $IOService,
+        PathGenerator $pathGenerator,
+        MetadataHandler $imageSizeMetadataHandler,
+        DeprecationWarner $deprecationWarner,
+        LoggerInterface $logger = null
+    )
     {
         parent::__construct( $gateways );
         $this->IOService = $IOService;
         $this->pathGenerator = $pathGenerator;
         $this->imageSizeMetadataHandler = $imageSizeMetadataHandler;
         $this->logger = $logger;
+        $this->deprecationWarner = $deprecationWarner;
     }
 
     /**
@@ -134,9 +139,19 @@ class ImageStorage extends GatewayBasedStorage
             }
             else
             {
-                $binaryFileCreateStruct = $this->IOService->newBinaryCreateStructFromLocalFile(
-                    $field->value->externalData['id']
-                );
+                if ( isset( $field->value->externalData['inputUri'] ) )
+                {
+                    $localFilePath = $field->value->externalData['inputUri'];
+                    unset( $field->value->externalData['inputUri'] );
+                }
+                else
+                {
+                    $this->deprecationWarner->log(
+                        "Using the Image\\Value::\$id property to create images is deprecated. Use 'inputUri'"
+                    );
+                    $localFilePath = $field->value->externalData['id'];
+                }
+                $binaryFileCreateStruct = $this->IOService->newBinaryCreateStructFromLocalFile( $localFilePath );
                 $binaryFileCreateStruct->id = $targetPath;
                 $binaryFile = $this->IOService->createBinaryFile( $binaryFileCreateStruct );
             }
@@ -165,7 +180,7 @@ class ImageStorage extends GatewayBasedStorage
 
             try
             {
-                $binaryFile = $this->IOService->loadBinaryFile( $this->IOService->getExternalPath( $field->value->data['id'] ) );
+                $binaryFile = $this->IOService->loadBinaryFile( $field->value->data['id'] );
                 $metadata = $this->IOService->getMetadata( $this->imageSizeMetadataHandler, $binaryFile );
             }
             catch ( NotFoundException $e )
@@ -209,14 +224,11 @@ class ImageStorage extends GatewayBasedStorage
     {
         if ( $field->value->data !== null )
         {
-            // @todo wrap this within a dedicated service that uses the handler + service under the hood
-            // Required since images are stored with their full path, e.g. uri with a Legacy compatible IO handler
-            $binaryFileId = $this->IOService->getExternalPath( $field->value->data['id'] );
             $field->value->data['imageId'] = $versionInfo->contentInfo->id . '-' . $field->id;
 
             try
             {
-                $binaryFile = $this->IOService->loadBinaryFile( $binaryFileId );
+                $binaryFile = $this->IOService->loadBinaryFile( $field->value->data['id'] );
             }
             catch ( NotFoundException $e )
             {
@@ -258,10 +270,9 @@ class ImageStorage extends GatewayBasedStorage
                 $gateway->removeImageReferences( $storedFilePath, $versionInfo->versionNo, $fieldId );
                 if ( $gateway->countImageReferences( $storedFilePath ) === 0 )
                 {
-                    $binaryFileId = $this->IOService->getExternalPath( $storedFilePath );
                     try
                     {
-                        $binaryFile = $this->IOService->loadBinaryFile( $binaryFileId );
+                        $binaryFile = $this->IOService->loadBinaryFile( $storedFilePath );
                         $this->IOService->deleteBinaryFile( $binaryFile );
                     }
                     catch ( NotFoundException $e )

@@ -2,8 +2,8 @@
 /**
  * File containing the Integer field type
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -27,11 +27,11 @@ class Type extends FieldType
         'IntegerValueValidator' => array(
             'minIntegerValue' => array(
                 'type' => 'int',
-                'default' => 0
+                'default' => null
             ),
             'maxIntegerValue' => array(
                 'type' => 'int',
-                'default' => false
+                'default' => null
             )
         )
     );
@@ -119,8 +119,12 @@ class Type extends FieldType
 
         $validationErrors = array();
 
+        // 0 and False are unlimited value for maxIntegerValue
         if ( isset( $constraints['maxIntegerValue'] ) &&
-            $constraints['maxIntegerValue'] !== false && $fieldValue->value > $constraints['maxIntegerValue'] )
+            $constraints['maxIntegerValue'] !== 0 &&
+            $constraints['maxIntegerValue'] !== false &&
+            $fieldValue->value > $constraints['maxIntegerValue']
+        )
         {
             $validationErrors[] = new ValidationError(
                 "The value can not be higher than %size%.",

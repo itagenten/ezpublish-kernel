@@ -2,8 +2,8 @@
 /**
  * File containing the eZ\Publish\Core\FieldType\XmlText\Converter\EmbedToHtml5 class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -114,8 +114,8 @@ class EmbedToHtml5 implements Converter
                 );
 
                 if (
-                    !$this->repository->canUser( 'content', 'read', $location )
-                    && !$this->repository->canUser( 'content', 'view_embed', $location )
+                    !$this->repository->canUser( 'content', 'read', $location->getContentInfo(), $location )
+                    && !$this->repository->canUser( 'content', 'view_embed', $location->getContentInfo(), $location )
                 )
                 {
                     throw new UnauthorizedException( 'content', 'read' );

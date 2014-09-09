@@ -2,14 +2,15 @@
 /**
  * File containing the DoctrineDatabase criteria converter class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway;
 
 use eZ\Publish\API\Repository\Values\Content\Query\Criterion;
+use eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\CriterionHandler;
 use eZ\Publish\Core\Persistence\Database\SelectQuery;
 use eZ\Publish\API\Repository\Exceptions\NotImplementedException;
 
@@ -23,16 +24,26 @@ class CriteriaConverter
      *
      * @var \eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\CriterionHandler[]
      */
-    protected $handler;
+    protected $handlers;
 
     /**
      * Construct from an optional array of Criterion handlers
      *
-     * @param \eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\CriterionHandler[] $handler
+     * @param \eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\CriterionHandler[] $handlers
      */
-    public function __construct( array $handler )
+    public function __construct( array $handlers = array() )
     {
-        $this->handler = $handler;
+        $this->handlers = $handlers;
+    }
+
+    /**
+     * Adds handler
+     *
+     * @param \eZ\Publish\Core\Persistence\Legacy\Content\Search\Common\Gateway\CriterionHandler $handler
+     */
+    public function addHandler( CriterionHandler $handler )
+    {
+        $this->handlers[] = $handler;
     }
 
     /**
@@ -47,7 +58,7 @@ class CriteriaConverter
      */
     public function convertCriteria( SelectQuery $query, Criterion $criterion )
     {
-        foreach ( $this->handler as $handler )
+        foreach ( $this->handlers as $handler )
         {
             if ( $handler->accept( $criterion ) )
             {

@@ -2,8 +2,8 @@
 /**
  * File containing the ImageTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -11,6 +11,7 @@ namespace eZ\Publish\Core\FieldType\Tests;
 
 use eZ\Publish\Core\FieldType\Image\Type as ImageType;
 use eZ\Publish\Core\FieldType\Image\Value as ImageValue;
+use eZ\Publish\Core\FieldType\ValidationError;
 
 /**
  * @group fieldType
@@ -216,11 +217,10 @@ class ImageTest extends FieldTypeTest
                 $this->getImageInputPath(),
                 new ImageValue(
                     array(
-                        'id' => $this->getImageInputPath(),
+                        'inputUri' => $this->getImageInputPath(),
                         'fileName' => basename( $this->getImageInputPath() ),
                         'fileSize' => filesize( $this->getImageInputPath() ),
-                        'alternativeText' => null,
-                        'uri' => ''
+                        'alternativeText' => null
                     )
                 ),
             ),
@@ -242,6 +242,20 @@ class ImageTest extends FieldTypeTest
                     )
                 ),
             ),
+            array(
+                array(
+                    'inputUri' => $this->getImageInputPath(),
+                    'fileName' => 'My Fancy Filename',
+                    'fileSize' => 123
+                ),
+                new ImageValue(
+                    array(
+                        'inputUri' => $this->getImageInputPath(),
+                        'fileName' => 'My Fancy Filename',
+                        'fileSize' => filesize( $this->getImageInputPath() )
+                    )
+                )
+            )
         );
     }
 
@@ -306,9 +320,10 @@ class ImageTest extends FieldTypeTest
                     'alternativeText' => 'This is so Sindelfingen!',
                     'imageId' => '123-12345',
                     'uri' => 'http://' . $this->getImageInputPath(),
+                    'inputUri' => null,
                 ),
             ),
-            // BC with 5.0 (EZP-20948). Path can be used as input instead of ID.
+            // BC with 5.0 (EZP-20948). Path can be used as input instead of $inputUri.
             array(
                 new ImageValue(
                     array(
@@ -321,13 +336,14 @@ class ImageTest extends FieldTypeTest
                     )
                 ),
                 array(
-                    'id' => $this->getImageInputPath(),
+                    'id' => null,
                     'path' => $this->getImageInputPath(),
                     'fileName' => 'Sindelfingen-Squirrels.jpg',
                     'fileSize' => 23,
                     'alternativeText' => 'This is so Sindelfingen!',
                     'imageId' => '123-12345',
                     'uri' => 'http://' . $this->getImageInputPath(),
+                    'inputUri' => $this->getImageInputPath(),
                 ),
             )
         );
@@ -404,7 +420,7 @@ class ImageTest extends FieldTypeTest
                 ),
                 new ImageValue(
                     array(
-                        'id' => $this->getImageInputPath(),
+                        'inputUri' => $this->getImageInputPath(),
                         'fileName' => 'Sindelfingen-Squirrels.jpg',
                         'fileSize' => 23,
                         'alternativeText' => 'This is so Sindelfingen!',
@@ -448,6 +464,230 @@ class ImageTest extends FieldTypeTest
                 ),
                 'This is so Sindelfingen!'
             )
+        );
+    }
+
+    /**
+     * Provides data sets with validator configuration and/or field settings and
+     * field value which are considered valid by the {@link validate()} method.
+     *
+     * ATTENTION: This is a default implementation, which must be overwritten if
+     * a FieldType supports validation!
+     *
+     * For example:
+     *
+     * <code>
+     *  return array(
+     *      array(
+     *          array(
+     *              "validatorConfiguration" => array(
+     *                  "StringLengthValidator" => array(
+     *                      "minStringLength" => 2,
+     *                      "maxStringLength" => 10,
+     *                  ),
+     *              ),
+     *          ),
+     *          new TextLineValue( "lalalala" ),
+     *      ),
+     *      array(
+     *          array(
+     *              "fieldSettings" => array(
+     *                  'isMultiple' => true
+     *              ),
+     *          ),
+     *          new CountryValue(
+     *              array(
+     *                  "BE" => array(
+     *                      "Name" => "Belgium",
+     *                      "Alpha2" => "BE",
+     *                      "Alpha3" => "BEL",
+     *                      "IDC" => 32,
+     *                  ),
+     *              ),
+     *          ),
+     *      ),
+     *      // ...
+     *  );
+     * </code>
+     *
+     * @return array
+     */
+    public function provideValidDataForValidate()
+    {
+        return array(
+            array(
+                array(
+                    "validatorConfiguration" => array(
+                        "FileSizeValidator" => array(
+                            'maxFileSize' => 1
+                        ),
+                    ),
+                ),
+                new ImageValue(
+                    array(
+                        'id' => $this->getImageInputPath(),
+                        'fileName' => basename( $this->getImageInputPath() ),
+                        'fileSize' => filesize( $this->getImageInputPath() ),
+                        'alternativeText' => null,
+                        'uri' => ''
+                    )
+                ),
+            )
+        );
+    }
+
+    /**
+     * Provides data sets with validator configuration and/or field settings,
+     * field value and corresponding validation errors returned by
+     * the {@link validate()} method.
+     *
+     * ATTENTION: This is a default implementation, which must be overwritten
+     * if a FieldType supports validation!
+     *
+     * For example:
+     *
+     * <code>
+     *  return array(
+     *      array(
+     *          array(
+     *              "validatorConfiguration" => array(
+     *                  "IntegerValueValidator" => array(
+     *                      "minIntegerValue" => 5,
+     *                      "maxIntegerValue" => 10
+     *                  ),
+     *              ),
+     *          ),
+     *          new IntegerValue( 3 ),
+     *          array(
+     *              new ValidationError(
+     *                  "The value can not be lower than %size%.",
+     *                  null,
+     *                  array(
+     *                      "size" => 5
+     *                  ),
+     *              ),
+     *          ),
+     *      ),
+     *      array(
+     *          array(
+     *              "fieldSettings" => array(
+     *                  "isMultiple" => false
+     *              ),
+     *          ),
+     *          new CountryValue(
+     *              "BE" => array(
+     *                  "Name" => "Belgium",
+     *                  "Alpha2" => "BE",
+     *                  "Alpha3" => "BEL",
+     *                  "IDC" => 32,
+     *              ),
+     *              "FR" => array(
+     *                  "Name" => "France",
+     *                  "Alpha2" => "FR",
+     *                  "Alpha3" => "FRA",
+     *                  "IDC" => 33,
+     *              ),
+     *          )
+     *      ),
+     *      array(
+     *          new ValidationError(
+     *              "Field definition does not allow multiple countries to be selected."
+     *          ),
+     *      ),
+     *      // ...
+     *  );
+     * </code>
+     *
+     * @return array
+     */
+    public function provideInvalidDataForValidate()
+    {
+        return array(
+            // File is too large
+            array(
+                array(
+                    "validatorConfiguration" => array(
+                        "FileSizeValidator" => array(
+                            'maxFileSize' => 0.01
+                        ),
+                    ),
+                ),
+                new ImageValue(
+                    array(
+                        'id' => $this->getImageInputPath(),
+                        'fileName' => basename( $this->getImageInputPath() ),
+                        'fileSize' => filesize( $this->getImageInputPath() ),
+                        'alternativeText' => null,
+                        'uri' => ''
+                    )
+                ),
+                array(
+                    new ValidationError(
+                        "The file size cannot exceed %size% byte.",
+                        "The file size cannot exceed %size% bytes.",
+                        array(
+                            "size" => 0.01,
+                        )
+                    ),
+                )
+            ),
+
+            // file is not an image file
+            array(
+                array(
+                    "validatorConfiguration" => array(
+                        "FileSizeValidator" => array(
+                            'maxFileSize' => 1
+                        ),
+                    ),
+                ),
+                new ImageValue(
+                    array(
+                        'id' => __FILE__,
+                        'fileName' => basename( __FILE__ ),
+                        'fileSize' => filesize( __FILE__ ),
+                        'alternativeText' => null,
+                        'uri' => ''
+                    )
+                ),
+                array(
+                    new ValidationError(
+                        "A valid image file is required."
+                    ),
+                ),
+            ),
+
+            // file is too large and invalid
+            array(
+                array(
+                    "validatorConfiguration" => array(
+                        "FileSizeValidator" => array(
+                            'maxFileSize' => 0.01
+                        ),
+                    ),
+                ),
+                new ImageValue(
+                    array(
+                        'id' => __FILE__,
+                        'fileName' => basename( __FILE__ ),
+                        'fileSize' => filesize( __FILE__ ),
+                        'alternativeText' => null,
+                        'uri' => ''
+                    )
+                ),
+                array(
+                    new ValidationError(
+                        "A valid image file is required."
+                    ),
+                    new ValidationError(
+                        "The file size cannot exceed %size% byte.",
+                        "The file size cannot exceed %size% bytes.",
+                        array(
+                            "size" => 0.01,
+                        )
+                    ),
+                ),
+            ),
         );
     }
 }

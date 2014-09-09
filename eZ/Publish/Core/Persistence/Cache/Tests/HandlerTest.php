@@ -2,8 +2,8 @@
 /**
  * File contains Test class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -18,6 +18,7 @@ use eZ\Publish\Core\Persistence\Cache\ContentLanguageHandler as CacheContentLang
 use eZ\Publish\Core\Persistence\Cache\ContentTypeHandler as CacheContentTypeHandler;
 use eZ\Publish\Core\Persistence\Cache\UserHandler as CacheUserHandler;
 use eZ\Publish\Core\Persistence\Cache\SearchHandler as CacheSearchHandler;
+use eZ\Publish\Core\Persistence\Cache\TransactionHandler as CacheTransactionHandler;
 use eZ\Publish\Core\Persistence\Cache\TrashHandler as CacheTrashHandler;
 use eZ\Publish\Core\Persistence\Cache\UrlAliasHandler as CacheUrlAliasHandler;
 use eZ\Publish\Core\Persistence\Factory as PersistenceFactory;
@@ -37,6 +38,11 @@ abstract class HandlerTest extends PHPUnit_Framework_TestCase
      * @var \eZ\Publish\SPI\Persistence\Handler|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $persistenceHandlerMock;
+
+    /**
+     * @var \eZ\Publish\SPI\Persistence\TransactionHandler|\PHPUnit_Framework_MockObject_MockObject
+     */
+    protected $transactionHandlerMock;
 
     /**
      * @var \eZ\Publish\Core\Persistence\Cache\Handler
@@ -81,6 +87,7 @@ abstract class HandlerTest extends PHPUnit_Framework_TestCase
             new CacheContentTypeHandler( $this->cacheMock, $this->persistenceHandlerMock, $this->loggerMock ),
             new CacheUserHandler( $this->cacheMock, $this->persistenceHandlerMock, $this->loggerMock ),
             new CacheSearchHandler( $this->cacheMock, $this->persistenceHandlerMock, $this->loggerMock ),
+            new CacheTransactionHandler( $this->cacheMock, $this->persistenceHandlerMock, $this->loggerMock ),
             new CacheTrashHandler( $this->cacheMock, $this->persistenceHandlerMock, $this->loggerMock ),
             new CacheLocationSearchHandler( $this->cacheMock, $this->persistenceHandlerMock, $this->loggerMock ),
             new CacheUrlAliasHandler( $this->cacheMock, $this->persistenceHandlerMock, $this->loggerMock ),

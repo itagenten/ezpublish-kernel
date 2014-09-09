@@ -2,8 +2,8 @@
 /**
  * File containing the LegacyKernel class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -12,6 +12,7 @@ namespace eZ\Publish\Core\MVC\Legacy;
 use Exception;
 use ezpKernel;
 use ezpKernelHandler;
+use ezxFormToken;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -77,6 +78,11 @@ class Kernel extends ezpKernel
         return static::$instance !== null;
     }
 
+    public static function resetInstance()
+    {
+        static::$instance = null;
+    }
+
     /**
      * Changes the current working directory to the legacy root dir.
      * Calling this method is mandatory to use legacy kernel since a lot of resources in eZ Publish 4.x relatively defined.
@@ -139,11 +145,13 @@ class Kernel extends ezpKernel
      *                               If set to false, the kernel environment will not be reinitialized.
      *                               This can be useful to optimize several calls to the kernel within the same context.
      *
-     * @throws \RuntimeException
+     * @param bool|null $formTokenEnable Force ezxFormToken to be enabled or disabled, use system settings when null
      *
+     * @throws \RuntimeException
+     * @throws \Exception
      * @return mixed The result of the callback
      */
-    public function runCallback( \Closure $callback, $postReinitialize = true )
+    public function runCallback( \Closure $callback, $postReinitialize = true, $formTokenEnable = null )
     {
         if ( $this->runningCallback )
         {
@@ -152,6 +160,13 @@ class Kernel extends ezpKernel
 
         $this->runningCallback = true;
         $this->enterLegacyRootDir();
+
+        if ( $formTokenEnable !== null && class_exists( 'ezxFormToken' ) )
+        {
+            $formTokenWasEnabled = ezxFormToken::isEnabled();
+            ezxFormToken::setIsEnabled( $formTokenEnable );
+        }
+
         try
         {
             $return = parent::runCallback( $callback, $postReinitialize );
@@ -162,6 +177,12 @@ class Kernel extends ezpKernel
             $this->runningCallback = false;
             throw $e;
         }
+
+        if ( isset( $formTokenWasEnabled ) )
+        {
+            ezxFormToken::setIsEnabled( $formTokenWasEnabled );
+        }
+
         $this->leaveLegacyRootDir();
         $this->runningCallback = false;
         return $return;

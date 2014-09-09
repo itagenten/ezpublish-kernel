@@ -2,8 +2,8 @@
 /**
  * File contains: eZ\Publish\Core\Persistence\Legacy\Tests\HandlerTest class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -52,8 +52,6 @@ class CountryIntegrationTest extends BaseIntegrationTest
      */
     public function getCustomHandler()
     {
-        $handler = $this->getHandler();
-
         $fieldType = new FieldType\Country\Type(
             array(
                 "BE" => array(
@@ -71,17 +69,13 @@ class CountryIntegrationTest extends BaseIntegrationTest
             )
         );
         $fieldType->setTransformationProcessor( $this->getTransformationProcessor() );
-        $handler->getFieldTypeRegistry()->register( 'ezcountry', $fieldType );
-        $handler->getStorageRegistry()->register(
+
+        return $this->getHandler(
             'ezcountry',
+            $fieldType,
+            new Legacy\Content\FieldValue\Converter\Country(),
             new FieldType\NullStorage()
         );
-        $handler->getFieldValueConverterRegistry()->register(
-            'ezcountry',
-            new Legacy\Content\FieldValue\Converter\Country()
-        );
-
-        return $handler;
     }
 
     /**

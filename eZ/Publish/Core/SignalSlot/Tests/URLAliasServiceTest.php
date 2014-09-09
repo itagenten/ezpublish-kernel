@@ -2,8 +2,8 @@
 /**
  * File containing the URLAliasTest class.
  *
- * @copyright Copyright (C) 2013 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 namespace eZ\Publish\Core\SignalSlot\Tests;
@@ -105,7 +105,7 @@ class URLAliasServiceTest extends ServiceTest
             ),
             array(
                 'listLocationAliases',
-                array( $location, false, $languageCode ),
+                array( $location, false, $languageCode, false, array() ),
                 array( $locationUrlAlias ),
                 0
             ),
@@ -133,7 +133,7 @@ class URLAliasServiceTest extends ServiceTest
             ),
             array(
                 'reverseLookup',
-                array( $location, $languageCode ),
+                array( $location, $languageCode, false, array() ),
                 $locationUrlAlias,
                 0
             ),

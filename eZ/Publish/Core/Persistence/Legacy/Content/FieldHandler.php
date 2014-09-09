@@ -2,8 +2,8 @@
 /**
  * File containing the Content FieldHandler class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -29,13 +29,6 @@ class FieldHandler
      * @var \eZ\Publish\Core\Persistence\Legacy\Content\Gateway
      */
     protected $contentGateway;
-
-    /**
-     * Content Type Handler
-     *
-     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Type\Handler
-     */
-    public $typeHandler;
 
     /**
      * @var \eZ\Publish\Core\Persistence\Legacy\Content\Language\Handler
@@ -94,19 +87,19 @@ class FieldHandler
     }
 
     /**
-     * Creates new fields in the database from $content
+     * Creates new fields in the database from $content of $contentType
      *
      * @param \eZ\Publish\SPI\Persistence\Content $content
+     * @param \eZ\Publish\SPI\Persistence\Content\Type $contentType
      *
      * @return void
      */
-    public function createNewFields( Content $content )
+    public function createNewFields( Content $content, Type $contentType )
     {
         $fieldsToCopy = array();
         $languageCodes = array();
         $fields = $this->getFieldMap( $content->fields, $languageCodes );
         $languageCodes[$content->versionInfo->contentInfo->mainLanguageCode] = true;
-        $contentType = $this->typeHandler->load( $content->versionInfo->contentInfo->contentTypeId );
 
         foreach ( $contentType->fieldDefinitions as $fieldDefinition )
         {
@@ -353,10 +346,11 @@ class FieldHandler
      *
      * @param \eZ\Publish\SPI\Persistence\Content $content
      * @param \eZ\Publish\SPI\Persistence\Content\UpdateStruct $updateStruct
+     * @param \eZ\Publish\SPI\Persistence\Content\Type $contentType
      *
      * @return void
      */
-    public function updateFields( Content $content, UpdateStruct $updateStruct )
+    public function updateFields( Content $content, UpdateStruct $updateStruct, Type $contentType )
     {
         $updatedFields = array();
         $fieldsToCopy = array();
@@ -367,7 +361,6 @@ class FieldHandler
         $updateFieldMap = $this->getFieldMap( $updateStruct->fields, $languageCodes );
         $initialLanguageCode = $this->languageHandler->load( $updateStruct->initialLanguageId )->languageCode;
         $languageCodes[$initialLanguageCode] = true;
-        $contentType = $this->typeHandler->load( $content->versionInfo->contentInfo->contentTypeId );
 
         foreach ( $contentType->fieldDefinitions as $fieldDefinition )
         {

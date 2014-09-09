@@ -2,8 +2,8 @@
 /**
  * File containing the BinaryBaseStorage class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -11,7 +11,7 @@ namespace eZ\Publish\Core\FieldType\BinaryBase;
 
 use eZ\Publish\Core\Base\Exceptions\NotFoundException;
 use eZ\Publish\Core\FieldType\GatewayBasedStorage;
-use eZ\Publish\Core\IO\IOService;
+use eZ\Publish\Core\IO\IOServiceInterface;
 use eZ\Publish\SPI\FieldType\BinaryBase\PathGenerator;
 use eZ\Publish\SPI\Persistence\Content\VersionInfo;
 use eZ\Publish\SPI\Persistence\Content\Field;
@@ -31,7 +31,7 @@ class BinaryBaseStorage extends GatewayBasedStorage
     /**
      * An instance of IOService configured to store to the images folder
      *
-     * @var IOService
+     * @var IOServiceInterface
      */
     protected $IOService;
 
@@ -47,12 +47,12 @@ class BinaryBaseStorage extends GatewayBasedStorage
      * Construct from gateways
      *
      * @param \eZ\Publish\Core\FieldType\StorageGateway[] $gateways
-     * @param IOService $IOService
+     * @param IOServiceInterface $IOService
      * @param PathGenerator $pathGenerator
      * @param MimeTypeDetector $mimeTypeDetector
      * @param LoggerInterface $logger
      */
-    public function __construct( array $gateways, IOService $IOService, PathGenerator $pathGenerator, MimeTypeDetector $mimeTypeDetector, LoggerInterface $logger = null )
+    public function __construct( array $gateways, IOServiceInterface $IOService, PathGenerator $pathGenerator, MimeTypeDetector $mimeTypeDetector, LoggerInterface $logger = null )
     {
         parent::__construct( $gateways );
         $this->IOService = $IOService;
@@ -102,18 +102,19 @@ class BinaryBaseStorage extends GatewayBasedStorage
         // no mimeType means we are dealing with an input, local file
         if ( !isset( $field->value->externalData['mimeType'] ) )
         {
-            $field->value->externalData['mimeType'] = $this->mimeTypeDetector->getFromPath( $field->value->externalData['id'] );
+            $field->value->externalData['mimeType'] =
+                $this->mimeTypeDetector->getFromPath( $field->value->externalData['inputUri'] );
         }
 
         $storedValue = $field->value->externalData;
-        $storagePath = $this->pathGenerator->getStoragePathForField( $field, $versionInfo );
 
         // The file referenced in externalData MAY be an existing IOService file which we can use
-        if ( ( !$this->IOService->exists( $storedValue['id'] ) ) && ( !$this->IOService->exists( $storagePath ) ) )
+        if ( $storedValue['id'] === null )
         {
             $createStruct = $this->IOService->newBinaryCreateStructFromLocalFile(
-                $storedValue['id']
+                $storedValue['inputUri']
             );
+            $storagePath = $this->pathGenerator->getStoragePathForField( $field, $versionInfo );
             $createStruct->id = $storagePath;
             $binaryFile = $this->IOService->createBinaryFile( $createStruct );
             $storedValue['id'] = $binaryFile->id;
@@ -130,7 +131,7 @@ class BinaryBaseStorage extends GatewayBasedStorage
 
     public function copyLegacyField( VersionInfo $versionInfo, Field $field, Field $originalField, array $context )
     {
-        if ( $originalField->value->data === null )
+        if ( $originalField->value->externalData === null )
             return false;
 
         // field translations have their own file reference, but to the original file

@@ -2,12 +2,12 @@
 /**
  * File containing the EmbedToHtml5 EzXml test
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
-namespace eZ\Publish\Core\Repository\Tests\FieldType\XmlText\Converter;
+namespace eZ\Publish\Core\FieldType\Tests\XmlText\Converter;
 
 use eZ\Publish\Core\FieldType\XmlText\Converter\EmbedToHtml5;
 use eZ\Publish\API\Repository\Values\Content\VersionInfo as APIVersionInfo;
@@ -271,13 +271,20 @@ class EmbedToHtml5Test extends PHPUnit_Framework_TestCase
             ->will( $this->returnValue( $content ) );
 
         $repository = $this->getMockRepository( $contentService, null );
-        $repository->expects( $this->any() )
-            ->method( "canUser" )
-            ->will(
-                $this->returnValueMap(
-                    $this->getPermissionsValueMap( $permissionsMap, $content )
+        foreach ( $permissionsMap as $index => $permissions )
+        {
+            $repository->expects( $this->at( $index + 1 ) )
+                ->method( "canUser" )
+                ->with(
+                    $permissions[0],
+                    $permissions[1],
+                    $content,
+                    null
                 )
-            );
+                ->will(
+                    $this->returnValue( $permissions[2] )
+                );
+        }
 
         $viewManager->expects( $this->once() )
             ->method( 'renderContent' )
@@ -311,21 +318,33 @@ class EmbedToHtml5Test extends PHPUnit_Framework_TestCase
         $viewManager = $this->getMockViewManager();
         $locationService = $this->getMockLocationService();
 
+        $contentInfo = $this->getMock( 'eZ\\Publish\\API\\Repository\\Values\\Content\\ContentInfo' );
         $location = $this->getMock( 'eZ\\Publish\\API\\Repository\\Values\\Content\\Location' );
+        $location
+            ->expects( $this->atLeastOnce() )
+            ->method( "getContentInfo" )
+            ->will( $this->returnValue( $contentInfo ) );
+
         $locationService->expects( $this->once() )
             ->method( 'loadLocation' )
             ->with( $this->equalTo( $locationId ) )
             ->will( $this->returnValue( $location ) );
 
         $repository = $this->getMockRepository( null, $locationService );
-        $repository
-            ->expects( $this->any() )
-            ->method( "canUser" )
-            ->will(
-                $this->returnValueMap(
-                    $this->getPermissionsValueMap( $permissionsMap, $location )
+        foreach ( $permissionsMap as $index => $permissions )
+        {
+            $repository->expects( $this->at( $index + 1 ) )
+                ->method( "canUser" )
+                ->with(
+                    $permissions[0],
+                    $permissions[1],
+                    $contentInfo,
+                    $location
                 )
-            );
+                ->will(
+                    $this->returnValue( $permissions[2] )
+                );
+        }
 
         $viewManager->expects( $this->once() )
             ->method( 'renderLocation' )
@@ -384,14 +403,13 @@ class EmbedToHtml5Test extends PHPUnit_Framework_TestCase
                 array(
                     array( 'content', 'read', false ),
                     array( 'content', 'view_embed', true ),
-                    array( 'content', 'versionview', false ),
+                    array( 'content', 'versionread', false ),
                 )
             ),
             array(
                 array(
                     array( 'content', 'read', true ),
-                    array( 'content', 'view_embed', true ),
-                    array( 'content', 'versionview', false ),
+                    array( 'content', 'versionread', false ),
                 )
             ),
         );
@@ -426,13 +444,20 @@ class EmbedToHtml5Test extends PHPUnit_Framework_TestCase
             ->will( $this->returnValue( $content ) );
 
         $repository = $this->getMockRepository( $contentService, null );
-        $repository->expects( $this->any() )
-            ->method( "canUser" )
-            ->will(
-                $this->returnValueMap(
-                    $this->getPermissionsValueMap( $permissionsMap, $content )
+        foreach ( $permissionsMap as $index => $permissions )
+        {
+            $repository->expects( $this->at( $index + 1 ) )
+                ->method( "canUser" )
+                ->with(
+                    $permissions[0],
+                    $permissions[1],
+                    $content,
+                    null
                 )
-            );
+                ->will(
+                    $this->returnValue( $permissions[2] )
+                );
+        }
 
         $converter = new EmbedToHtml5(
             $viewManager,
@@ -454,22 +479,34 @@ class EmbedToHtml5Test extends PHPUnit_Framework_TestCase
         $viewManager = $this->getMockViewManager();
         $locationService = $this->getMockLocationService();
 
+        $contentInfo = $this->getMock( 'eZ\\Publish\\API\\Repository\\Values\\Content\\ContentInfo' );
         $location = $this->getMock( 'eZ\\Publish\\API\\Repository\\Values\\Content\\Location' );
+        $location
+            ->expects( $this->exactly( 2 ) )
+            ->method( "getContentInfo" )
+            ->will( $this->returnValue( $contentInfo ) );
+
         $locationService->expects( $this->once() )
             ->method( 'loadLocation' )
             ->with( $this->equalTo( 42 ) )
             ->will( $this->returnValue( $location ) );
 
         $repository = $this->getMockRepository( null, $locationService );
-        $repository->expects( $this->any() )
+        $repository->expects( $this->at( 1 ) )
             ->method( "canUser" )
+            ->with(
+                "content", "read", $contentInfo, $location
+            )
             ->will(
-                $this->returnValueMap(
-                    array(
-                        array( 'content', 'read', $location, null, false ),
-                        array( 'content', 'view_embed', $location, null, false ),
-                    )
-                )
+                $this->returnValue( false )
+            );
+        $repository->expects( $this->at( 2 ) )
+            ->method( "canUser" )
+            ->with(
+                "content", "view_embed", $contentInfo, $location
+            )
+            ->will(
+                $this->returnValue( false )
             );
 
         $converter = new EmbedToHtml5(
@@ -479,23 +516,5 @@ class EmbedToHtml5Test extends PHPUnit_Framework_TestCase
         );
 
         $converter->convert( $dom );
-    }
-
-    protected function getPermissionsValueMap( array $permissionsMap, $object )
-    {
-        $valueMap = array();
-        foreach ( $permissionsMap as $permissions )
-        {
-            $values = array(
-                $permissions[0],
-                $permissions[1],
-                $object,
-                null,
-                $permissions[2]
-            );
-            $valueMap[] = $values;
-        }
-
-        return $valueMap;
     }
 }

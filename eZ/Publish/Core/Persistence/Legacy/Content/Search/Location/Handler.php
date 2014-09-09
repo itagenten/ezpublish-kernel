@@ -2,8 +2,8 @@
 /**
  * File containing the Location Search Handler class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -26,9 +26,9 @@ class Handler implements LocationSearchHandler
     /**
      * Gateway for handling location data
      *
-     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Location\Gateway
+     * @var \eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Gateway
      */
-    protected $locationGateway;
+    protected $gateway;
 
     /**
      * Location locationMapper
@@ -40,12 +40,12 @@ class Handler implements LocationSearchHandler
     /**
      * Construct from search gateway and mapper
      *
-     * @param \eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Gateway $locationGateway
+     * @param \eZ\Publish\Core\Persistence\Legacy\Content\Search\Location\Gateway $gateway
      * @param \eZ\Publish\Core\Persistence\Legacy\Content\Location\Mapper $locationMapper
      */
-    public function __construct( Gateway $locationGateway, LocationMapper $locationMapper )
+    public function __construct( Gateway $gateway, LocationMapper $locationMapper )
     {
-        $this->locationGateway = $locationGateway;
+        $this->gateway = $gateway;
         $this->locationMapper = $locationMapper;
     }
 
@@ -65,7 +65,7 @@ class Handler implements LocationSearchHandler
 
         // The legacy search does not know about scores, so we just
         // combine the query with the filter
-        $data = $this->locationGateway->find(
+        $data = $this->gateway->find(
             new Criterion\LogicalAnd( array( $query->query, $query->filter ) ),
             $query->offset,
             $query->limit,

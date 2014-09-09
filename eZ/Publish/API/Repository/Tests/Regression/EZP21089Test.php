@@ -2,8 +2,8 @@
 /**
  * File containing the EZP21089Test class
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -16,6 +16,11 @@ use DateTime;
  * Test case for issue EZP-21089
  *
  * @issue EZP-21089
+ *
+ *     Creating an article with public api throw warning on xmltext in regards to relations
+ *
+ *     Creating an article with the public api will throw the following warning
+ *     Warning: array_flip(): Can only flip STRING and INTEGER values! in eZ/Publish/Core/Repository/RelationProcessor.php on line 108
  */
 class EZP21089Test extends BaseTest
 {

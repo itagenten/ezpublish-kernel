@@ -2,8 +2,8 @@
 /**
  * This file contains the Aggregate converter class.
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -18,14 +18,14 @@ use DOMDocument;
 class Aggregate implements Converter
 {
     /**
-     * An array of arrays of converters, indexed by priority.
+     * An array of converters, sorted by priority.
      *
      * @var \eZ\Publish\Core\FieldType\RichText\Converter[]
      */
     protected $converters = array();
 
     /**
-     * @param mixed $converters An array of Converters with priorities
+     * @param \eZ\Publish\Core\FieldType\RichText\Converter[] $converters An array of Converters, sorted by priority
      */
     public function __construct( array $converters = array() )
     {

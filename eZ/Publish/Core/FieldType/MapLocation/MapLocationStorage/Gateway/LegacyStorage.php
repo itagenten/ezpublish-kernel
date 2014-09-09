@@ -2,8 +2,8 @@
 /**
  * File containing the MapLocationStorage Gateway
  *
- * @copyright Copyright (C) 1999-2014 eZ Systems AS. All rights reserved.
- * @license http://www.gnu.org/licenses/gpl-2.0.txt GNU General Public License v2
+ * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @license For full copyright and license information view LICENSE file distributed with this source code.
  * @version //autogentag//
  */
 
@@ -225,7 +225,16 @@ class LegacyStorage extends Gateway
 
         $rows = $statement->fetchAll( \PDO::FETCH_ASSOC );
 
-        return ( isset( $rows[0] ) ? $rows[0] : null );
+        if ( !isset( $rows[0] ) )
+        {
+            return null;
+        }
+
+        // Cast coordinates as the DB can return them as strings
+        $rows[0]["latitude"] = (float)$rows[0]["latitude"];
+        $rows[0]["longitude"] = (float)$rows[0]["longitude"];
+
+        return $rows[0];
     }
 
     /**
